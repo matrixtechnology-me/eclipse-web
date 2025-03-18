@@ -4,21 +4,63 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "npx prisma generate && next build",
+    "postinstall": "npx prisma generate",
+    "start": "next start -p 3001",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "vitest",
+    "test:e2e": "cypress open",
+    "prisma:push": "./scripts/prisma_db_push.sh",
+    "prisma:migrate": "./scripts/prisma_migrate.sh",
+    "prisma:reset": "./scripts/prisma_reset.sh",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:validate": "prisma validate",
+    "prisma:sort": "ts-node ./prisma/utils/sort.ts",
+    "prisma:seed": "ts-node ./prisma/utils/seed.ts",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "tailwind:build": "tailwindcss -o styles/tailwind.css --minify",
+    "shadcn:add": "npx shadcn add",
+    "shadcn:update": "npx shadcn update",
+    "shadcn:remove": "npx shadcn remove",
+    "services:up": "docker compose -f infra/docker-compose.yaml up -d",
+    "services:stop": "docker compose -f infra/docker-compose.yaml stop",
+    "services:down": "docker compose -f infra/docker-compose.yaml down",
+    "docker:build": "docker build -f infra/Dockerfile ."
   },
   "dependencies": {
+    "@prisma/client": "6.5.0",
+    "clsx": "^2.1.1",
+    "css-loader": "^7.1.2",
+    "lucide-react": "^0.483.0",
+    "next": "15.3.0-canary.8",
+    "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.2.2"
+    "sharp": "^0.33.5",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@faker-js/faker": "^9.6.0",
+    "@tailwindcss/postcss": "^4.0.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "autoprefixer": "^10.4.21",
+    "prisma": "^6.5.0",
+    "tailwindcss": "^4.0.14",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
   }
 }
