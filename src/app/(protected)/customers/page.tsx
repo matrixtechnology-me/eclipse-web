@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Customers } from "./_components/customers";
+import { Suspense } from "react";
 
 const Page = () => {
   return (
@@ -7,7 +8,9 @@ const Page = () => {
       <Link href="/customers/create">
         <button>Novo cliente</button>
       </Link>
-      <Customers />
+      <Suspense>
+        <Customers />
+      </Suspense>
     </div>
   );
 };
