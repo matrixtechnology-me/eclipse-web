@@ -8,7 +8,7 @@ export const Customers = async () => {
     <div>
       {customers.data.customers.map((customer) => (
         <Link href={`/customers/${customer.id}`} key={customer.id}>
-          {customer.name}
+          {customer.firstName}
         </Link>
       ))}
     </div>

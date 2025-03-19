@@ -8,35 +8,77 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         String   @id @default(uuid()) @map("_id")
-  name       String
-  email      String
-  password   String
-  role       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+enum DocumentType {
+  Cpf  @map(name: "cpf")
+  Cnpj @map(name: "cnpj")
 }
 
-model Customer {
+model Document {
+  id        String       @id @default(uuid()) @map("_id")
+  type      DocumentType
+  number    String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model User {
   id        String   @id @default(uuid()) @map("_id")
   name      String
   email     String   @unique
-  phone     String?
-  address   String?
+  password  String
+  role      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Customer {
+  id          String   @id @default(uuid()) @map("_id")
+  firstName   String
+  lastName    String
+  phoneNumber String
+  status      String
+  addresses   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   loans Loan[]
 }
 
-model Loan {
+model Address {
+  id           String   @id @default(uuid()) @map("_id")
+  street       String
+  houseNumber  String
+  neighborhood String
+  zipCode      String
+  city         String
+  state        String
+  complement   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model LoanCategory {
   id          String   @id @default(uuid()) @map("_id")
-  status      String   @default("pending")
-  customer_id String
-  customer    Customer @relation(fields: [customer_id], references: [id])
+  name        String
+  description String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("loan_categories")
+}
+
+model Loan {
+  id         String   @id @default(uuid()) @map("_id")
+  status     String   @default("pending")
+  customerId String
+  categoryId String?
+  customer   Customer @relation(fields: [customerId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("loans")
 }
 
 model Notification {
@@ -47,4 +89,6 @@ model Notification {
   read      Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("notifications")
 }

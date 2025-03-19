@@ -6,7 +6,6 @@ export type ServerActionSuccessResult<T> = {
 
 export type ServerActionErrorResult = {
   error: string;
-  statusCode: number;
   message: string;
 };
 
@@ -15,5 +14,5 @@ export type ServerActionResult<T> =
   | ServerActionErrorResult;
 
 export type ServerAction<P = unknown, R = unknown> = (
-  payload?: ServerActionPayload<P>
+  payload: ServerActionPayload<P>
 ) => Promise<ServerActionResult<R>>;

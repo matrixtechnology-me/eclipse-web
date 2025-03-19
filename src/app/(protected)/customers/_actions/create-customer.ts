@@ -8,6 +8,6 @@ export const createCustomer = async (formData: FormData) => {
   const address = formData.get("address") as string;
 
   await prisma.customer.create({
-    data: { name, email, address },
+    data: { firstName: name, lastName: name, phoneNumber: "", status: "" },
   });
 };

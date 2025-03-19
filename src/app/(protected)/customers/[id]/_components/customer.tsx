@@ -19,5 +19,5 @@ export const Customer = ({ id }: CustomerProps) => {
 
   if (!customer) return <div>Cliente não encontrado</div>;
 
-  return <div>{customer?.name}</div>;
+  return <div>{customer?.firstName}</div>;
 };
