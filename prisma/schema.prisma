@@ -8,6 +8,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EInstallmentStatus {
+  FULLY_PAID     @map(name: "fully-paid")
+  PENDING        @map(name: "pending")
+  NON_PAID       @map(name: "non-paid")
+  PARTIALLY_PAID @map(name: "partially-paid")
+}
+
+enum EPeriod {
+  DAILY   @map(name: "daily")
+  WEEKLY  @map(name: "weekly")
+  MONTHLY @map(name: "monthly")
+}
+
 enum DocumentType {
   Cpf  @map(name: "cpf")
   Cnpj @map(name: "cnpj")
@@ -43,7 +56,7 @@ model Customer {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  loans Loan[]
+  receivables Receivable[]
 }
 
 model Address {
@@ -59,26 +72,17 @@ model Address {
   updatedAt    DateTime @updatedAt
 }
 
-model LoanCategory {
-  id          String   @id @default(uuid()) @map("_id")
-  name        String
-  description String   @default("")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("loan_categories")
-}
-
-model Loan {
+model Receivable {
   id         String   @id @default(uuid()) @map("_id")
   status     String   @default("pending")
+  startAt    DateTime
   customerId String
-  categoryId String?
-  customer   Customer @relation(fields: [customerId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@map("loans")
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("receivables")
 }
 
 model Notification {

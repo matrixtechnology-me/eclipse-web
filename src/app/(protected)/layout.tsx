@@ -3,6 +3,7 @@ import { getServerSession } from "../../lib/session";
 import { redirect } from "next/navigation";
 import { PATHS } from "@/config/paths";
 import { Header } from "./_components/header";
+import { Content } from "./_components/content";
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ const Layout: FC<LayoutProps> = async ({ children }) => {
   return (
     <div>
       <Header />
-      {children}
+      <Content>{children}</Content>
     </div>
   );
 };

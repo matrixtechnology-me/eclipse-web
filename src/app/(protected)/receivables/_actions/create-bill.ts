@@ -4,27 +4,27 @@ import prisma from "@/lib/prisma";
 import { ServerAction } from "@/types/server-actions";
 import { propagateError } from "@/utils/propagate-error";
 
-type CreateCustomerActionPayload = {
+type CreateBillActionPayload = {
   firstName: string;
   lastName: string;
   phoneNumber: string;
 };
 
-type CreateCustomerActionResult = {};
+type CreateBillActionResult = {};
 
-export const createCustomer: ServerAction<
-  CreateCustomerActionPayload,
-  CreateCustomerActionResult
+export const createBill: ServerAction<
+  CreateBillActionPayload,
+  CreateBillActionResult
 > = async ({ firstName, lastName, phoneNumber }) => {
   try {
-    await prisma.customer.create({
+    /* await prisma.bill.create({
       data: {
         firstName,
         lastName,
         phoneNumber,
         status: "active",
       },
-    });
+    }); */
 
     return { data: {} };
   } catch (error) {

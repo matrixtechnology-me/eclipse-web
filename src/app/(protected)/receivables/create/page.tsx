@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { createCustomer } from "../_actions/create-customer";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -52,14 +51,7 @@ const Page = () => {
     firstName,
     lastName,
     phoneNumber,
-  }: FormSchema) => {
-    await createCustomer({
-      firstName,
-      lastName,
-      phoneNumber,
-    });
-    router.push("/customers");
-  };
+  }: FormSchema) => {};
 
   return (
     <div className="flex flex-col gap-5">

@@ -9,8 +9,11 @@ export const PATHS = {
     CUSTOMERS: {
       INDEX: "/customers",
     },
-    LOANS: {
-      INDEX: "/loans",
+    RECEIVABLES: {
+      INDEX: "/receivables",
+    },
+    PAYABLES: {
+      INDEX: "/payables",
     },
   },
 };

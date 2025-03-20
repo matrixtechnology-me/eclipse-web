@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Customers } from "./_components/customers";
-import { Suspense } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,7 +15,7 @@ const Page = () => {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1>Clientes</h1>
+          <h1>Contas à receber</h1>
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -25,21 +23,18 @@ const Page = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Clientes</BreadcrumbPage>
+                <BreadcrumbPage>Contas à receber</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <Link href="/customers/create">
+        <Link href="/bills/create">
           <Button>
             <PlusIcon />
-            <span>Novo cliente</span>
+            <span>Nova conta</span>
           </Button>
         </Link>
       </div>
-      <Suspense>
-        <Customers />
-      </Suspense>
     </div>
   );
 };
