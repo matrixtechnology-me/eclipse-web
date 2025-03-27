@@ -6,8 +6,8 @@ type ContentProps = {
 
 export const Content: FC<ContentProps> = ({ children }) => {
   return (
-    <div className="flex-1 p-5">
-      <div className="w-full max-w-7xl mx-auto">{children}</div>
+    <div className="flex-1 h-[calc(100dvh-64px)]">
+      <div className="w-full h-full max-w-7xl mx-auto">{children}</div>
     </div>
   );
 };

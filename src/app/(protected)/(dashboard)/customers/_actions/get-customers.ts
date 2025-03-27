@@ -1,0 +1,59 @@
+"use server";
+
+import { NotFoundError } from "@/errors/not-found";
+import prisma from "@/lib/prisma";
+import { ServerAction } from "@/types/server-actions";
+import { propagateError } from "@/utils/propagate-error";
+import { reportError } from "@/utils/report-error";
+
+export type Customer = {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type GetCustomersActionPayload = {
+  page: number;
+  pageSize: number;
+};
+
+type GetCustomersActionResult = {
+  customers: Customer[];
+};
+
+export const getCustomers: ServerAction<
+  GetCustomersActionPayload,
+  GetCustomersActionResult
+> = async ({ page, pageSize }) => {
+  try {
+    const skip = (page - 1) * pageSize;
+
+    const customers = await prisma.customer.findMany({
+      skip,
+      take: pageSize,
+    });
+
+    if (!customers?.length) throw new NotFoundError("customers not found");
+
+    return {
+      data: {
+        customers: customers.map((customer) => ({
+          id: customer.id,
+          name: customer.name,
+          active: Boolean(customer.active),
+          phoneNumber: customer.phoneNumber,
+          createdAt: customer.createdAt,
+          updatedAt: customer.updatedAt,
+        })),
+      },
+    };
+  } catch (error: any) {
+    const expectedErrors = [NotFoundError.name];
+    return expectedErrors.includes(error?.name)
+      ? propagateError(error)
+      : reportError(error);
+  }
+};

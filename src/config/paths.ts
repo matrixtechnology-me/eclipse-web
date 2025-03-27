@@ -1,3 +1,5 @@
+import { generateQueryParams } from "@/utils/query";
+
 export const PATHS = {
   PUBLIC: {
     AUTH: {
@@ -7,7 +9,19 @@ export const PATHS = {
   PROTECTED: {
     HOMEPAGE: "/",
     CUSTOMERS: {
-      INDEX: "/customers",
+      INDEX: (params?: Record<string, string | undefined>) => {
+        const queryParams = generateQueryParams({ ...params });
+        return `/customers${queryParams}`;
+      },
+      CUSTOMER: (customerId: string) => `/customers/${customerId}`,
+    },
+    PRODUCTS: {
+      INDEX: "/products",
+      CREATE: "/products/create",
+    },
+    SALES: {
+      INDEX: "/sales",
+      CREATE: "/sales/create",
     },
     RECEIVABLES: {
       INDEX: "/receivables",
