@@ -58,8 +58,15 @@ const Page = () => {
     router.push(PATHS.PROTECTED.CUSTOMERS.INDEX());
   };
 
+  const handleReset = () => {
+    form.reset({
+      name: "",
+      phoneNumber: "",
+    });
+  };
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
         <div>
           <h1>Clientes</h1>
@@ -126,7 +133,12 @@ const Page = () => {
               </div>
             )}
           />
-          <Button type="submit">Adicionar</Button>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" type="button" onClick={handleReset}>
+              Cancelar
+            </Button>
+            <Button type="submit">Salvar</Button>
+          </div>
         </form>
       </Form>
     </div>
