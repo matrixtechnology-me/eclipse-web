@@ -51,7 +51,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
             </Button>
           </Link>
         </div>
-        <Suspense>
+        <Suspense fallback={<div>Carregando...</div>}>
           <Customers page={Number(page)} pageSize={Number(limit)} />
         </Suspense>
       </div>
