@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { PATHS } from "@/config/paths";
 import { PatternFormat } from "react-number-format";
+import { getServerSession } from "@/lib/session";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -50,9 +51,14 @@ const Page = () => {
   });
 
   const handleSubmit = async ({ name, phoneNumber }: FormSchema) => {
+    const session = await getServerSession();
+
+    if (!session) throw new Error("session not found");
+
     await createCustomer({
       name,
       phoneNumber,
+      tenantId: session.tenantId,
     });
 
     router.push(PATHS.PROTECTED.CUSTOMERS.INDEX());

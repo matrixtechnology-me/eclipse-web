@@ -29,7 +29,7 @@ export const RegistrationForm = () => {
 
     setCookie(null, "X-Identity", sessionId, { path: "/" });
 
-    router.push(PATHS.PROTECTED.HOMEPAGE);
+    return router.push(PATHS.PROTECTED.GET_STARTED);
   };
 
   return (

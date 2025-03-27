@@ -31,8 +31,6 @@ export const authenticateUserAction: ServerAction<
       },
     });
 
-    console.log(user, password);
-
     if (!user) throw new NotFoundError("user not found");
 
     if (user.password !== password)

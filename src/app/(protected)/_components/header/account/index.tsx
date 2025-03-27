@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { UserIcon } from "lucide-react";
 import { LogOut } from "./log-out";
+import { TenantSwicther } from "./tenant-swicther";
 
 export function Account() {
   return (
@@ -21,7 +21,7 @@ export function Account() {
       <DropdownMenuContent className="w-56 mr-5">
         <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Suporte</DropdownMenuItem>
+        <TenantSwicther />
         <DropdownMenuSeparator />
         <LogOut />
       </DropdownMenuContent>

@@ -64,26 +64,33 @@ model User {
 }
 
 model Tenant {
-  id               String             @id @default(uuid()) @db.Uuid
-  name             String
-  description      String?            @default("")
-  active           Boolean?           @default(true)
-  createdAt        DateTime           @default(now()) @map(name: "created_at")
-  updatedAt        DateTime           @updatedAt @map(name: "updated_at")
-  TenantMembership TenantMembership[]
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?  @default("")
+  active      Boolean? @default(true)
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  memberships   TenantMembership[]
+  customers     Customer[]
+  products      Product[]
+  sales         Sale[]
+  receivables   Receivable[]
+  notifications Notification[]
 
   @@map("tenants")
 }
 
 model Membership {
-  id               String             @id @default(uuid()) @db.Uuid
-  role             EMembershipRole
-  permissions      String[]
-  active           Boolean?           @default(true)
-  userId           String
-  createdAt        DateTime           @default(now()) @map(name: "created_at")
-  updatedAt        DateTime           @updatedAt @map(name: "updated_at")
-  TenantMembership TenantMembership[]
+  id          String          @id @default(uuid()) @db.Uuid
+  role        EMembershipRole
+  permissions String[]
+  active      Boolean?        @default(true)
+  userId      String
+  createdAt   DateTime        @default(now()) @map(name: "created_at")
+  updatedAt   DateTime        @updatedAt @map(name: "updated_at")
+
+  tenant_memberships TenantMembership[]
 
   @@map("memberships")
 }
@@ -105,11 +112,13 @@ model Customer {
   phoneNumber String   @map("phone_number")
   active      Boolean? @default(true)
   addresses   String[]
+  tenantId    String   @db.Uuid
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
   receivables Receivable[]
-  Sale        Sale[]
+  sale        Sale[]
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
 
   @@map("customers")
 }
@@ -122,10 +131,12 @@ model Product {
   costPrice   Float    @map("cost_price")
   salePrice   Float    @map("sale_price")
   quantity    Int      @default(0)
+  tenantId    String   @db.Uuid
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
   saleProducts SaleProduct[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
 
   @@map("products")
 }
@@ -134,12 +145,14 @@ model Sale {
   id         String   @id @default(uuid()) @db.Uuid
   status     String   @default("pending")
   customerId String   @map("customer_id") @db.Uuid
+  tenantId   String   @db.Uuid
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
   products SaleProduct[]
 
   customer Customer @relation(fields: [customerId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
 
   @@map("sales")
 }
@@ -166,10 +179,12 @@ model Receivable {
   status     String   @default("pending")
   startAt    DateTime
   customerId String   @db.Uuid
+  tenantId   String   @db.Uuid
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
   customer Customer @relation(fields: [customerId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
 
   @@map("receivables")
 }
@@ -180,19 +195,11 @@ model Notification {
   subject   String
   body      String
   read      Boolean
+  tenantId  String   @db.Uuid
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @updatedAt @map(name: "updated_at")
 
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
   @@map("notifications")
-}
-
-model Expense {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String?  @default("")
-  amount      Float
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
-
-  @@map("expenses")
 }

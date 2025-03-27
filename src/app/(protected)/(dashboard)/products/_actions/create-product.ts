@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getServerSession } from "@/lib/session";
 import { ServerAction } from "@/types/server-actions";
 import { propagateError } from "@/utils/propagate-error";
 
@@ -19,6 +20,10 @@ export const createProduct: ServerAction<
   CreateProductActionResult
 > = async ({ costPrice, description, name, salePrice, quantity }) => {
   try {
+    const session = await getServerSession();
+
+    if (!session) throw new Error("session not found");
+
     await prisma.product.create({
       data: {
         costPrice,
@@ -26,6 +31,7 @@ export const createProduct: ServerAction<
         salePrice,
         description,
         quantity,
+        tenantId: session.tenantId,
       },
     });
 
