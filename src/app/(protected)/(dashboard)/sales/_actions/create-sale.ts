@@ -6,6 +6,7 @@ import { propagateError } from "@/utils/propagate-error";
 
 type CreateSaleActionPayload = {
   customerId: string;
+  tenantId: string;
   products: {
     id: string;
     quantity: number;
@@ -17,7 +18,7 @@ type CreateSaleActionResult = {};
 export const createSale: ServerAction<
   CreateSaleActionPayload,
   CreateSaleActionResult
-> = async ({ customerId, products }) => {
+> = async ({ customerId, products, tenantId }) => {
   try {
     const existingProducts = await prisma.product.findMany({
       where: {
@@ -27,11 +28,10 @@ export const createSale: ServerAction<
       },
     });
 
-    console.log(existingProducts);
-
     await prisma.sale.create({
       data: {
         customerId,
+        tenantId,
         products: {
           createMany: {
             data: existingProducts.map((product) => {

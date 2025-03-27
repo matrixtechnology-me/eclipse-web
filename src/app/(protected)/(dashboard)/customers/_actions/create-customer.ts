@@ -7,6 +7,7 @@ import { propagateError } from "@/utils/propagate-error";
 type CreateCustomerActionPayload = {
   name: string;
   phoneNumber: string;
+  tenantId: string;
 };
 
 type CreateCustomerActionResult = {};
@@ -14,12 +15,13 @@ type CreateCustomerActionResult = {};
 export const createCustomer: ServerAction<
   CreateCustomerActionPayload,
   CreateCustomerActionResult
-> = async ({ name, phoneNumber }) => {
+> = async ({ name, phoneNumber, tenantId }) => {
   try {
     await prisma.customer.create({
       data: {
         name,
         phoneNumber,
+        tenantId,
       },
     });
 

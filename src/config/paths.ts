@@ -7,6 +7,7 @@ export const PATHS = {
     },
   },
   PROTECTED: {
+    GET_STARTED: "/get-started",
     HOMEPAGE: "/",
     CUSTOMERS: {
       INDEX: (params?: Record<string, string | undefined>) => {

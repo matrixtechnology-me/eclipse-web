@@ -18,6 +18,7 @@ export type Customer = {
 type GetCustomersActionPayload = {
   page: number;
   pageSize: number;
+  tenantId: string;
 };
 
 type GetCustomersActionResult = {
@@ -27,11 +28,12 @@ type GetCustomersActionResult = {
 export const getCustomers: ServerAction<
   GetCustomersActionPayload,
   GetCustomersActionResult
-> = async ({ page, pageSize }) => {
+> = async ({ page, pageSize, tenantId }) => {
   try {
     const skip = (page - 1) * pageSize;
 
     const customers = await prisma.customer.findMany({
+      where: { tenantId },
       skip,
       take: pageSize,
     });

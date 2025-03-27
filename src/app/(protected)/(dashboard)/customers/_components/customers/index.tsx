@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCustomers } from "../../_actions/get-customers";
 import { Customer } from "./customer";
+import { getServerSession } from "@/lib/session";
 
 type CustomersProps = {
   page: number;
@@ -8,9 +9,14 @@ type CustomersProps = {
 };
 
 export const Customers = async ({ page = 1, pageSize = 5 }: CustomersProps) => {
+  const session = await getServerSession();
+
+  if (!session) throw new Error("session not found");
+
   const result = await getCustomers({
     page,
     pageSize,
+    tenantId: session.tenantId,
   });
 
   if ("error" in result) {

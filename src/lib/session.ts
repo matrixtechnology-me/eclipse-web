@@ -6,8 +6,9 @@ export const getServerSession = async () => {
   const cookieStore = await cookies();
 
   const sessionId = cookieStore.get("X-Identity")?.value;
+  const tenantId = cookieStore.get("X-Tenant")?.value;
 
-  if (!sessionId) return null;
+  if (!sessionId || !tenantId) return null;
 
-  return { id: sessionId };
+  return { id: sessionId, tenantId };
 };

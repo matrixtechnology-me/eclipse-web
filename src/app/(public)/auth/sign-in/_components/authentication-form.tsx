@@ -18,6 +18,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getUserTenants } from "../_actions/get-user-tenants";
+import { NotFoundError } from "@/errors/not-found";
 
 const formSchema = z.object({
   email: z.string().min(1, {
@@ -54,6 +56,24 @@ export const AuthenticationForm = () => {
     const { sessionId } = result.data;
 
     setCookie(null, "X-Identity", sessionId, { path: "/" });
+
+    const fetchedUserTenants = await getUserTenants({ userId: sessionId });
+
+    if ("error" in fetchedUserTenants) {
+      const { error } = fetchedUserTenants;
+
+      if (error === NotFoundError.name) {
+        return router.push(PATHS.PROTECTED.GET_STARTED);
+      } else {
+        return alert("Aconteceu um erro ao buscar as empresas");
+      }
+    }
+
+    const { tenants } = fetchedUserTenants.data;
+
+    const targetTenant = tenants[0];
+
+    setCookie(null, "X-Tenant", targetTenant.id, { path: "/" });
 
     router.push(PATHS.PROTECTED.HOMEPAGE);
   };

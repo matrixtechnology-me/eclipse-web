@@ -2,16 +2,19 @@
 
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
+
 type CreateNotificationPayload = {
   type: string;
   subject: string;
   body: string;
+  tenantId: string;
 };
 
 export const createNotification = async ({
   type,
   subject,
   body,
+  tenantId,
 }: CreateNotificationPayload) => {
   await prisma.notification.create({
     data: {
@@ -19,10 +22,11 @@ export const createNotification = async ({
       subject,
       body,
       read: false,
+      tenantId,
     },
   });
 
-  revalidateTag("notifications");
+  revalidateTag(`notifications:${tenantId}`);
 
   return { data: {} };
 };

@@ -38,6 +38,7 @@ import {
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { createSale } from "../_actions/create-sale";
+import { getServerSession } from "@/lib/session";
 
 const Page = () => {
   const router = useRouter();
@@ -51,8 +52,13 @@ const Page = () => {
   });
 
   const handleSubmit = async ({ customerId, products }: CreateSaleSchema) => {
+    const session = await getServerSession();
+
+    if (!session) throw new Error("session not found");
+
     await createSale({
       customerId,
+      tenantId: session.tenantId,
       products: products.map((product) => ({
         id: product.id,
         quantity: +product.quantity,
