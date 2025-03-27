@@ -35,6 +35,10 @@ export const AuthenticationForm = () => {
 
   const form = useForm({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const handleSubmit = async ({ email, password }: FormSchema) => {
@@ -58,7 +62,7 @@ export const AuthenticationForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-8 w-full max-w-sm"
+        className="space-y-5 w-full max-w-sm"
       >
         {/* E-mail */}
         <FormField
@@ -92,6 +96,12 @@ export const AuthenticationForm = () => {
             </FormItem>
           )}
         />
+        <div className="flex items-center justify-between">
+          <div />
+          <span className="text-sm text-muted-foreground">
+            Esqueceu a senha?
+          </span>
+        </div>
         <Button type="submit" className="w-full h-10">
           Entrar
         </Button>

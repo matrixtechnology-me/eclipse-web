@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -26,59 +26,148 @@ enum DocumentType {
   Cnpj @map(name: "cnpj")
 }
 
+enum EMembershipRole {
+  Owner @map(name: "owner")
+}
+
 model Document {
-  id        String       @id @default(uuid()) @map("_id")
+  id        String       @id @default(uuid()) @db.Uuid
   type      DocumentType
   number    String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime     @default(now()) @map(name: "created_at")
+  updatedAt DateTime     @updatedAt @map(name: "updated_at")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid
+  street       String
+  houseNumber  String   @map(name: "house_number")
+  neighborhood String
+  zipCode      String   @map(name: "zip_code")
+  city         String
+  state        String
+  complement   String
+  createdAt    DateTime @default(now()) @map(name: "created_at")
+  updatedAt    DateTime @updatedAt @map(name: "updated_at")
 }
 
 model User {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(uuid()) @db.Uuid
   name      String
   email     String   @unique
   password  String
   role      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
 
   @@map("users")
 }
 
-model Customer {
-  id          String   @id @default(uuid()) @map("_id")
-  firstName   String
-  lastName    String
-  phoneNumber String
-  status      String
-  addresses   String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Tenant {
+  id               String             @id @default(uuid()) @db.Uuid
+  name             String
+  description      String?            @default("")
+  active           Boolean?           @default(true)
+  createdAt        DateTime           @default(now()) @map(name: "created_at")
+  updatedAt        DateTime           @updatedAt @map(name: "updated_at")
+  TenantMembership TenantMembership[]
 
-  receivables Receivable[]
+  @@map("tenants")
 }
 
-model Address {
-  id           String   @id @default(uuid()) @map("_id")
-  street       String
-  houseNumber  String
-  neighborhood String
-  zipCode      String
-  city         String
-  state        String
-  complement   String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Membership {
+  id               String             @id @default(uuid()) @db.Uuid
+  role             EMembershipRole
+  permissions      String[]
+  active           Boolean?           @default(true)
+  userId           String
+  createdAt        DateTime           @default(now()) @map(name: "created_at")
+  updatedAt        DateTime           @updatedAt @map(name: "updated_at")
+  TenantMembership TenantMembership[]
+
+  @@map("memberships")
+}
+
+model TenantMembership {
+  membershipId String @db.Uuid
+  tenantId     String @db.Uuid
+
+  membership Membership @relation(fields: [membershipId], references: [id])
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+
+  @@id([membershipId, tenantId])
+  @@map("tenant_memberships")
+}
+
+model Customer {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @default("")
+  phoneNumber String   @map("phone_number")
+  active      Boolean? @default(true)
+  addresses   String[]
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  receivables Receivable[]
+  Sale        Sale[]
+
+  @@map("customers")
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?  @default("")
+  active      Boolean? @default(true)
+  costPrice   Float    @map("cost_price")
+  salePrice   Float    @map("sale_price")
+  quantity    Int      @default(0)
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  saleProducts SaleProduct[]
+
+  @@map("products")
+}
+
+model Sale {
+  id         String   @id @default(uuid()) @db.Uuid
+  status     String   @default("pending")
+  customerId String   @map("customer_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+
+  products SaleProduct[]
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("sales")
+}
+
+model SaleProduct {
+  name        String
+  description String? @default("")
+  costPrice   Float   @map("cost_price")
+  salePrice   Float   @map("sale_price")
+  quantity    Int
+
+  saleId    String @map("sale_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([saleId, productId])
+  @@map("sale_products")
 }
 
 model Receivable {
-  id         String   @id @default(uuid()) @map("_id")
+  id         String   @id @default(uuid()) @db.Uuid
   status     String   @default("pending")
   startAt    DateTime
-  customerId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  customerId String   @db.Uuid
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
   customer Customer @relation(fields: [customerId], references: [id])
 
@@ -86,13 +175,24 @@ model Receivable {
 }
 
 model Notification {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(uuid()) @db.Uuid
   type      String
   subject   String
   body      String
   read      Boolean
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
 
   @@map("notifications")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?  @default("")
+  amount      Float
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  @@map("expenses")
 }
