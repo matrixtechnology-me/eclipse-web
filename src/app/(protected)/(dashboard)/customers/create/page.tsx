@@ -55,7 +55,7 @@ const Page = () => {
       phoneNumber,
     });
 
-    router.push(PATHS.PROTECTED.CUSTOMERS.INDEX);
+    router.push(PATHS.PROTECTED.CUSTOMERS.INDEX());
   };
 
   return (

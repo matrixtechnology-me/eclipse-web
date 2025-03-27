@@ -67,7 +67,7 @@ const Page = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.CUSTOMERS.INDEX}>
+                <BreadcrumbLink href={PATHS.PROTECTED.CUSTOMERS.INDEX()}>
                   Clientes
                 </BreadcrumbLink>
               </BreadcrumbItem>
