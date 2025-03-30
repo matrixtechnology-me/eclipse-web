@@ -8,22 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useEffect, useMemo, useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { z } from "zod";
@@ -41,8 +27,7 @@ import {
   CreateSaleSchema,
   productSchema,
 } from "../../../_utils/validations/create-sale";
-import { Product } from "@prisma/client";
-import { getProducts } from "../../../../_actions/get-products";
+import { getProducts, Product } from "../../../../_actions/get-products";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 
 interface IProps {

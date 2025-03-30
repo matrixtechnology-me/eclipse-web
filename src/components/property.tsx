@@ -16,10 +16,10 @@ export const Property: FC<PropertyProps> = ({
   value,
   copyable = false,
 }) => {
-  const handleCopy = (value: string) => {
+  const handleCopy = (value: string | number) => {
     return () =>
       navigator.clipboard
-        .writeText(value)
+        .writeText(String(value))
         .then(() => {
           toast("Copiado para a área de transferência", {
             description: `O valor "${value}" foi copiado com sucesso e já está disponível para uso.`,

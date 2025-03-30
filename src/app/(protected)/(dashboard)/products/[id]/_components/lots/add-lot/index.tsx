@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, useState } from "react";
 import { getServerSession } from "@/lib/session";
-import { createLot } from "../../../_actions/create-lot";
+import { createLot } from "../../../../_actions/create-lot";
 import { DatePicker } from "./date-picker";
 
 import "moment/locale/pt-br";

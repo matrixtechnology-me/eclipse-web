@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
-import { Variations } from "./_components/variations";
 import {
   CreateProductSchema,
   createProductSchema,
 } from "./_utils/validations/create-product";
+import { Specifications } from "./_components/specifications";
 
 const Page = () => {
   const router = useRouter();
@@ -39,14 +39,19 @@ const Page = () => {
     defaultValues: {
       name: "",
       description: "",
-      variations: [{ costPrice: 0, salePrice: 0, specifications: [] }],
+      costPrice: 0,
+      salePrice: 0,
+      specifications: [],
     },
   });
 
   const onSubmit = async ({
     description,
     name,
-    variations,
+    costPrice,
+    salePrice,
+    specifications,
+    barCode,
   }: CreateProductSchema) => {
     const session = await getServerSession();
 
@@ -55,7 +60,10 @@ const Page = () => {
     const result = await createProduct({
       description,
       name,
-      variations,
+      barCode,
+      costPrice,
+      salePrice,
+      specifications,
       tenantId: session.tenantId,
     });
 
@@ -63,7 +71,7 @@ const Page = () => {
       return alert("Não foi possível criar o produto");
     }
 
-    router.push(PATHS.PROTECTED.PRODUCTS.INDEX);
+    router.push(PATHS.PROTECTED.PRODUCTS.INDEX());
   };
 
   return (
@@ -80,7 +88,7 @@ const Page = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.PRODUCTS.INDEX}>
+                <BreadcrumbLink href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
                   Produtos
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -132,8 +140,56 @@ const Page = () => {
                 </FormItem>
               )}
             />
+            {/* Bar code */}
+            <FormField
+              control={form.control}
+              name="barCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Código de barras <span>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Cost price */}
+            <FormField
+              control={form.control}
+              name="costPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Preço de custo <span>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Sale price */}
+            <FormField
+              control={form.control}
+              name="salePrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Preço de venda <span>*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-          <Variations form={form} />
+          <Specifications form={form} />
           <div className="flex items-center justify-end gap-3">
             <Button variant="outline" type="button" className="h-10">
               Cancelar

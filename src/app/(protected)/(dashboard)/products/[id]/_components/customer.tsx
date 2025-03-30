@@ -1,23 +1,26 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getCustomer } from "../../_actions/get-product";
+import { getProduct } from "../../_actions/get-product";
 
 type CustomerProps = {
   id: string;
 };
 
 export const Customer = ({ id }: CustomerProps) => {
-  const { data: customer } = useQuery({
-    queryKey: ["customer", id],
+  const { data: product } = useQuery({
+    queryKey: ["product", id],
     queryFn: async () => {
-      const result = await getCustomer({ id });
-      const { customer } = result.data;
-      return customer;
+      const result = await getProduct({ id });
+
+      if ("error" in result) return;
+
+      const { product } = result.data;
+      return product;
     },
   });
 
-  if (!customer) return <div>Cliente não encontrado</div>;
+  if (!product) return <div>Produto não encontrado</div>;
 
-  return <div>{customer.name}</div>;
+  return <div>{product.name}</div>;
 };

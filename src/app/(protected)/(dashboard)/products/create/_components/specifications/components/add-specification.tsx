@@ -16,46 +16,44 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
+import { UseFieldArrayAppend, useForm } from "react-hook-form";
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { z } from "zod";
-import { PatternFormat } from "react-number-format";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CreateProductSchema,
-  createVariationSchema,
-} from "../../../../_utils/validations/create-product";
-import { Specifications } from "./specifications";
+  createSpecificationsSchema,
+} from "@/app/(protected)/(dashboard)/products/create/_utils/validations/create-product";
 
 interface IProps {
-  appendVariation: UseFieldArrayAppend<CreateProductSchema, "variations">;
+  appendSpecification: UseFieldArrayAppend<
+    CreateProductSchema,
+    "specifications"
+  >;
 }
 
-type CreateVariationSchema = z.infer<typeof createVariationSchema>;
+type CreateSpecificationSchema = z.infer<typeof createSpecificationsSchema>;
 
-const formDefaultValues: CreateVariationSchema = {
-  salePrice: 0,
-  costPrice: 0,
-  image: new File([], ""),
-  specifications: [],
+const formDefaultValues: CreateSpecificationSchema = {
+  label: "",
+  value: "",
 };
 
-export const AddVariation = ({ appendVariation }: IProps) => {
+export const AddSpecification = ({ appendSpecification }: IProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
-  const form = useForm<CreateVariationSchema>({
+  const form = useForm<CreateSpecificationSchema>({
     defaultValues: formDefaultValues,
-    resolver: zodResolver(createVariationSchema),
+    resolver: zodResolver(createSpecificationsSchema),
   });
 
   // call this function on form 'onSubmit' property causes dialogs to close
   const onSubmit = () => {
     const submissionFn = form.handleSubmit(
-      (formData: CreateVariationSchema) => {
-        appendVariation(formData);
+      (formData: CreateSpecificationSchema) => {
+        appendSpecification(formData);
         setOpen(false);
         form.reset(formDefaultValues);
       },
@@ -80,11 +78,11 @@ export const AddVariation = ({ appendVariation }: IProps) => {
             terminar.
           </DialogDescription>
         </DialogHeader>
-        <Form<CreateVariationSchema> {...form}>
+        <Form<CreateSpecificationSchema> {...form}>
           <form className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5">
             <FormField
               control={form.control}
-              name="costPrice"
+              name="label"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -99,7 +97,7 @@ export const AddVariation = ({ appendVariation }: IProps) => {
             />
             <FormField
               control={form.control}
-              name="salePrice"
+              name="value"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -112,7 +110,6 @@ export const AddVariation = ({ appendVariation }: IProps) => {
                 </FormItem>
               )}
             />
-            <Specifications form={form} />
           </form>
           <DialogFooter className="p-5 bg-primary-foreground/25">
             <Button className="min-w-32" type="button" onClick={onSubmit}>

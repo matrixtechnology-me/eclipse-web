@@ -136,65 +136,52 @@ model Customer {
   @@map("customers")
 }
 
-model Product {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String?  @default("")
-  active      Boolean? @default(true)
-  tenantId    String   @map("tenant_id") @db.Uuid
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  saleProducts SaleProduct[]
-  variations   ProductVariation[]
-
-  @@map("products")
-}
-
-model ProductVariationSpecification {
-  id               String   @id @default(uuid()) @db.Uuid
-  label            String
-  value            String
-  productVariantId String   @map("product_variant_id") @db.Uuid
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  product ProductVariation @relation(fields: [productVariantId], references: [id])
-
-  @@map("product_specification")
-}
-
-model ProductVariation {
+model ProductSpecification {
   id        String   @id @default(uuid()) @db.Uuid
+  label     String
+  value     String
   productId String   @map("product_id") @db.Uuid
-  skuCode   String   @unique @map("sku_code")
-  salePrice Decimal
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id])
 
-  stock          Stock?
+  @@map("product_specification")
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  barCode     String   @map("bar_code")
+  active      Boolean  @default(true)
+  skuCode     String   @unique @map("sku_code")
+  tenantId    String   @db.Uuid
+  salePrice   Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stock  Stock?
+  Tenant Tenant @relation(fields: [tenantId], references: [id])
+
   saleProducts   SaleProduct[]
-  specifications ProductVariationSpecification[]
+  specifications ProductSpecification[]
 
   @@map("product_variations")
 }
 
 model Stock {
-  id                 String         @id @default(uuid()) @db.Uuid
-  strategy           EStockStrategy
-  productVariationId String         @unique @map("sku_id") @db.Uuid
-  totalQty           Int            @default(0) @map("total_qty")
-  availableQty       Int            @default(0) @map("available_qty")
-  tenantId           String         @map("tenant_id") @db.Uuid
-  createdAt          DateTime       @default(now()) @map(name: "created_at")
-  updatedAt          DateTime       @updatedAt @map(name: "updated_at")
+  id           String         @id @default(uuid()) @db.Uuid
+  strategy     EStockStrategy
+  productId    String         @unique @map("sku_id") @db.Uuid
+  totalQty     Int            @default(0) @map("total_qty")
+  availableQty Int            @default(0) @map("available_qty")
+  tenantId     String         @map("tenant_id") @db.Uuid
+  createdAt    DateTime       @default(now()) @map(name: "created_at")
+  updatedAt    DateTime       @updatedAt @map(name: "updated_at")
 
-  tenant           Tenant           @relation(fields: [tenantId], references: [id])
-  productVariation ProductVariation @relation(fields: [productVariationId], references: [id])
+  tenant           Tenant  @relation(fields: [tenantId], references: [id])
+  productVariation Product @relation(fields: [productId], references: [id])
 
   lots StockLot[]
 
@@ -235,19 +222,17 @@ model Sale {
 }
 
 model SaleProduct {
-  name               String
-  description        String? @default("")
-  costPrice          Float   @map("cost_price")
-  salePrice          Float   @map("sale_price")
-  totalQty           Int     @default(0) @map("total_qty")
-  productVariationId String  @map("sku_id") @db.Uuid
+  name        String
+  description String @default("")
+  costPrice   Float  @map("cost_price")
+  salePrice   Float  @map("sale_price")
+  totalQty    Int    @default(0) @map("total_qty")
 
   saleId    String @map("sale_id") @db.Uuid
   productId String @map("product_id") @db.Uuid
 
-  sale             Sale             @relation(fields: [saleId], references: [id])
-  product          Product          @relation(fields: [productId], references: [id])
-  productVariation ProductVariation @relation(fields: [productVariationId], references: [id])
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@id([saleId, productId])
   @@map("sale_products")

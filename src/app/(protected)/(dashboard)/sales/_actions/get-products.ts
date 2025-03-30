@@ -1,13 +1,20 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Prisma, Product } from "@prisma/client";
+import { EStockStrategy, Prisma } from "@prisma/client";
 
 type GetProductsActionPayload = {
   searchValue: string;
   page: number;
   limit: number;
   active: boolean;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  costPrice: number;
+  salePrice: number;
 };
 
 export type GetProductsActionResult = {
@@ -51,6 +58,19 @@ export const getProducts = async ({
       where: whereCondition,
       skip,
       take: limit,
+      include: {
+        stock: {
+          select: {
+            strategy: true,
+            lots: {
+              select: {
+                costPrice: true,
+                expiresAt: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: { name: "asc" },
     }),
     prisma.product.count({ where: whereCondition }),
@@ -58,7 +78,27 @@ export const getProducts = async ({
 
   return {
     data: {
-      results,
+      results: results.map((result) => {
+        const orderDirection =
+          result.stock?.strategy === EStockStrategy.Fifo ? "asc" : "desc";
+
+        const ordenedLots = result.stock?.lots.sort((a, b) => {
+          if (a.expiresAt === null && b.expiresAt === null) return 0;
+          if (a.expiresAt === null) return 1;
+          if (b.expiresAt === null) return -1;
+
+          return orderDirection === "asc"
+            ? new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime()
+            : new Date(b.expiresAt).getTime() - new Date(a.expiresAt).getTime();
+        });
+
+        return {
+          costPrice: ordenedLots?.[0]?.costPrice.toNumber() ?? 0,
+          id: result.id,
+          name: result.name,
+          salePrice: result.salePrice.toNumber(),
+        };
+      }),
       pagination: {
         limit,
         currentPage: page,

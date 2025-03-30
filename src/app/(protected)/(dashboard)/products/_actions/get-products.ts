@@ -10,5 +10,12 @@ type GetCustomersActionResult = {
 
 export const getProducts = async () => {
   const products = await prisma.product.findMany();
-  return { data: { products } };
+  return {
+    data: {
+      products: products.map((product) => ({
+        ...product,
+        salePrice: product.salePrice.toNumber(),
+      })),
+    },
+  };
 };

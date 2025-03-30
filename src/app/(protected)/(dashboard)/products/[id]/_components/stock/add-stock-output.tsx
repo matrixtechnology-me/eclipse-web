@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addStockOutput } from "../../_actions/add-stock-output";
+import { addStockOutput } from "../../../_actions/add-stock-output";
 
 const addStockOutputSchema = z.object({
   stockLotId: z.string(),
@@ -55,7 +55,7 @@ export const AddStockOutput: FC<AddStockOutputProps> = ({
   const [open, setOpen] = useState<boolean>(false);
 
   const formDefaultValues: AddStockOutputSchema = {
-    stockLotId: stockLots[0].id,
+    stockLotId: stockLots[0]?.id,
     totalQty: 0,
   };
 

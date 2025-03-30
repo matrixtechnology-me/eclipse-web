@@ -15,7 +15,7 @@ export const Products = async () => {
             </div>
             <div>
               <h1>{product.name}</h1>
-              <span>{product.amount}</span>
+              <span>{product.salePrice}</span>
             </div>
           </div>
         </Link>

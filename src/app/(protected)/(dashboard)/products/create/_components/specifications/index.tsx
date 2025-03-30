@@ -1,16 +1,16 @@
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 import { AddSpecification } from "./components/add-specification";
-import { CreateProductVariationSchema } from "../../../../../_utils/validations/create-product";
 import { FC } from "react";
 import { SpecificationsTable } from "./components/specifications-table";
+import { CreateProductSchema } from "../../_utils/validations/create-product";
 
 type SpecificationsProps = {
-  form: UseFormReturn<CreateProductVariationSchema>;
+  form: UseFormReturn<CreateProductSchema>;
 };
 
 export const Specifications: FC<SpecificationsProps> = ({ form }) => {
   const specificationsFieldArray = useFieldArray<
-    CreateProductVariationSchema,
+    CreateProductSchema,
     "specifications"
   >({
     name: "specifications",

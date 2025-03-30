@@ -11,7 +11,9 @@ import { PATHS } from "@/config/paths";
 import { getProduct } from "../_actions/get-product";
 import { Property } from "@/components/property";
 import { DeleteCustomer } from "./_components/delete-customer";
-import { VariationsTable } from "./_components/variations-table";
+import { SpecificationsTable } from "./_components/specifications-table";
+import { Stock } from "./_components/stock";
+import { Lots } from "./_components/lots";
 
 type PageParams = {
   id: string;
@@ -86,7 +88,25 @@ const Page: NextPage<PageProps> = async ({ params }) => {
             />
           ))}
         </div>
-        <VariationsTable data={product.variations} productId={id} />
+        {/* Specifications */}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col">
+            <h1 className="font-bold">Especificações</h1>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Detalhes essenciais do produto, como dimensões, material e outras
+              características relevantes.
+            </p>
+          </div>
+          <SpecificationsTable data={product.specifications} />
+        </div>
+        <Stock
+          id={product.stock.id}
+          lots={product.stock.lots}
+          availableQty={product.stock.availableQty}
+          strategy={product.stock.strategy}
+          totalQty={product.stock.totalQty}
+        />
+        <Lots data={product.stock.lots} stockId={product.stock.id} />
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ const Page = () => {
       tenantId: session.tenantId,
       products: products.map((product) => ({
         id: product.id,
-        quantity: +product.quantity,
+        totalQty: +product.quantity,
       })),
     });
 
