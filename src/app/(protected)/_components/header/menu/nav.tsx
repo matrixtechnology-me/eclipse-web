@@ -40,7 +40,7 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
           Clientes
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.PRODUCTS.INDEX}>
+      <Link href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
         <Button variant="ghost">
           <BoxIcon className="size-4" />
           Produtos

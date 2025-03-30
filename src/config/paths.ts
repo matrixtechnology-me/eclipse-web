@@ -17,8 +17,16 @@ export const PATHS = {
       CUSTOMER: (customerId: string) => `/customers/${customerId}`,
     },
     PRODUCTS: {
-      INDEX: "/products",
+      INDEX: (params?: Record<string, string | undefined>) => {
+        const queryParams = generateQueryParams({ ...params });
+        return `/products${queryParams}`;
+      },
       CREATE: "/products/create",
+      PRODUCT: (productId: string) => ({
+        INDEX: `/products/${productId}`,
+        VARIATION: (skuCode: string) =>
+          `/products/${productId}/variations/${skuCode}`,
+      }),
     },
     SALES: {
       INDEX: "/sales",

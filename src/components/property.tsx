@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 type PropertyProps = {
   label: string;
-  value: string;
+  value: string | number;
   copyable?: boolean;
 };
 

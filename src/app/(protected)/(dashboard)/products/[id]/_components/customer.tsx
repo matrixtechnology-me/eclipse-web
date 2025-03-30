@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getCustomer } from "../../_actions/get-customer";
+import { getCustomer } from "../../_actions/get-product";
 
 type CustomerProps = {
   id: string;

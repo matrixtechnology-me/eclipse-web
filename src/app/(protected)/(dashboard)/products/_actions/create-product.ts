@@ -52,7 +52,7 @@ export const createProduct: ServerAction<
                   })),
                 },
               },
-              stocks: {
+              stock: {
                 create: {
                   strategy: EStockStrategy.Fifo,
                   availableQty: 0,
