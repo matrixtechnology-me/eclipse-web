@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import { Pagination } from "@/app/(protected)/(dashboard)/customers/_components/pagination";
 import { NextPage } from "next";
+import { Search } from "./_components/search";
 
 type PageSearchParams = {
   page?: string;
   limit?: string;
+  query?: string;
 };
 
 type PageProps = {
@@ -24,12 +26,12 @@ type PageProps = {
 };
 
 const Page: NextPage<PageProps> = async ({ searchParams }) => {
-  const { page = 1, limit = 5 } = await searchParams;
+  const { page = 1, limit = 5, query = "" } = await searchParams;
 
   return (
     <div className="flex flex-col h-full flex-1">
       <div className="flex flex-col gap-5 p-5 h-[calc(100%-64px)]">
-        <div className="w-full flex items-center justify-between flex-col gap-3 lg:flex-row">
+        <div className="w-full flex flex-col items-center justify-between gap-3">
           <div className="w-full">
             <h1>Clientes</h1>
             <Breadcrumb>
@@ -44,15 +46,22 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <Link href="/customers/create" className="w-full lg:w-fit">
-            <Button variant="outline" className="w-full lg:w-fit">
-              <PlusIcon />
-              <span>Novo cliente</span>
-            </Button>
-          </Link>
+          <div className="w-full flex items-center justify-between">
+            <Search query={query} />
+            <Link href="/customers/create" className="w-full lg:w-fit">
+              <Button variant="outline" className="w-full lg:w-fit">
+                <PlusIcon />
+                <span>Novo cliente</span>
+              </Button>
+            </Link>
+          </div>
         </div>
         <Suspense fallback={<div>Carregando...</div>}>
-          <Customers page={Number(page)} pageSize={Number(limit)} />
+          <Customers
+            page={Number(page)}
+            pageSize={Number(limit)}
+            query={query}
+          />
         </Suspense>
       </div>
       <Pagination initialPage={Number(page)} initialPageSize={Number(limit)} />

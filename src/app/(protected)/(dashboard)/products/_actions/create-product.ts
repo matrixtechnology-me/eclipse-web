@@ -1,16 +1,22 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getServerSession } from "@/lib/session";
 import { ServerAction } from "@/types/server-actions";
 import { propagateError } from "@/utils/propagate-error";
+import { EStockStrategy } from "@prisma/client";
 
 type CreateProductActionPayload = {
   name: string;
   description: string;
-  costPrice: number;
-  salePrice: number;
-  quantity: number;
+  variations: {
+    salePrice: number;
+    costPrice: number;
+    specifications: {
+      label: string;
+      value: string;
+    }[];
+  }[];
+  tenantId: string;
 };
 
 type CreateProductActionResult = {};
@@ -18,25 +24,50 @@ type CreateProductActionResult = {};
 export const createProduct: ServerAction<
   CreateProductActionPayload,
   CreateProductActionResult
-> = async ({ costPrice, description, name, salePrice, quantity }) => {
+> = async ({ description, name, variations, tenantId }) => {
   try {
-    const session = await getServerSession();
-
-    if (!session) throw new Error("session not found");
-
-    await prisma.product.create({
+    const product = await prisma.product.create({
       data: {
-        costPrice,
         name,
-        salePrice,
         description,
-        quantity,
-        tenantId: session.tenantId,
+        tenantId,
       },
     });
 
+    await Promise.all(
+      variations.map(
+        async (variation) =>
+          await prisma.productVariation.create({
+            data: {
+              skuCode: Math.floor(Math.random() * 0xffffffffffff)
+                .toString(16)
+                .padStart(12, "0"),
+              salePrice: variation.salePrice,
+              productId: product.id,
+              specifications: {
+                createMany: {
+                  data: variation.specifications.map((specification) => ({
+                    label: specification.label,
+                    value: specification.value,
+                  })),
+                },
+              },
+              stocks: {
+                create: {
+                  strategy: EStockStrategy.Fifo,
+                  availableQty: 0,
+                  totalQty: 0,
+                  tenantId,
+                },
+              },
+            },
+          })
+      )
+    );
+
     return { data: {} };
   } catch (error) {
+    console.log(error);
     return propagateError(error as Error);
   }
 };

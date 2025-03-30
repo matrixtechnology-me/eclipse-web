@@ -6,9 +6,14 @@ import { getServerSession } from "@/lib/session";
 type CustomersProps = {
   page: number;
   pageSize: number;
+  query: string;
 };
 
-export const Customers = async ({ page = 1, pageSize = 5 }: CustomersProps) => {
+export const Customers = async ({
+  page = 1,
+  pageSize = 5,
+  query,
+}: CustomersProps) => {
   const session = await getServerSession();
 
   if (!session) throw new Error("session not found");
@@ -17,6 +22,7 @@ export const Customers = async ({ page = 1, pageSize = 5 }: CustomersProps) => {
     page,
     pageSize,
     tenantId: session.tenantId,
+    query,
   });
 
   if ("error" in result) {

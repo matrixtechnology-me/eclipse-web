@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { ServerAction } from "@/types/server-actions";
 import { propagateError } from "@/utils/propagate-error";
 import { reportError } from "@/utils/report-error";
+import { Prisma } from "@prisma/client";
 
 export type Customer = {
   id: string;
@@ -18,6 +19,7 @@ export type Customer = {
 type GetCustomersActionPayload = {
   page: number;
   pageSize: number;
+  query: string;
   tenantId: string;
 };
 
@@ -28,12 +30,17 @@ type GetCustomersActionResult = {
 export const getCustomers: ServerAction<
   GetCustomersActionPayload,
   GetCustomersActionResult
-> = async ({ page, pageSize, tenantId }) => {
+> = async ({ page, pageSize, tenantId, query }) => {
   try {
     const skip = (page - 1) * pageSize;
 
     const customers = await prisma.customer.findMany({
-      where: { tenantId },
+      where: {
+        tenantId,
+        name: {
+          contains: query,
+        },
+      },
       skip,
       take: pageSize,
     });

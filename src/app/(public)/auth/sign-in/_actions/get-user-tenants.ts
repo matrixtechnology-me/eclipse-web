@@ -55,6 +55,7 @@ export const getUserTenants: ServerAction<
       },
     };
   } catch (error: any) {
+    console.error(error);
     const expectedErrors = [NotFoundError.name];
     return expectedErrors.includes(error?.name)
       ? propagateError(error)

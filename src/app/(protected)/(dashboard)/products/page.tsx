@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Customers } from "./_components/products";
+import { Products } from "./_components/products";
 import { Suspense } from "react";
 import {
   Breadcrumb,
@@ -15,7 +15,7 @@ import { PATHS } from "@/config/paths";
 
 const Page = () => {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
         <div>
           <h1>Produtos</h1>
@@ -39,7 +39,7 @@ const Page = () => {
         </Link>
       </div>
       <Suspense>
-        <Customers />
+        <Products />
       </Suspense>
     </div>
   );

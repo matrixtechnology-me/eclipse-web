@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,50 +24,50 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PATHS } from "@/config/paths";
-
-const formSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  costPrice: z.string().transform((raw) => Number(raw)),
-  salePrice: z.string().transform((raw) => Number(raw)),
-  quantity: z.string().transform((raw) => Number(raw)),
-});
-type FormSchema = z.infer<typeof formSchema>;
+import { getServerSession } from "@/lib/session";
+import { Variations } from "./_components/variations";
+import {
+  CreateProductSchema,
+  createProductSchema,
+} from "./_utils/validations/create-product";
 
 const Page = () => {
   const router = useRouter();
 
   const form = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createProductSchema),
     defaultValues: {
       name: "",
       description: "",
-      costPrice: 0,
-      salePrice: 0,
-      quantity: 0,
+      variations: [{ costPrice: 0, salePrice: 0, specifications: [] }],
     },
   });
 
-  const handleSubmit = async ({
-    costPrice,
+  const onSubmit = async ({
     description,
-    salePrice,
     name,
-    quantity,
-  }: FormSchema) => {
-    await createProduct({
-      costPrice,
+    variations,
+  }: CreateProductSchema) => {
+    const session = await getServerSession();
+
+    if (!session) throw new Error("session not found");
+
+    const result = await createProduct({
       description,
-      salePrice,
       name,
-      quantity,
+      variations,
+      tenantId: session.tenantId,
     });
+
+    if ("error" in result) {
+      return alert("Não foi possível criar o produto");
+    }
 
     router.push(PATHS.PROTECTED.PRODUCTS.INDEX);
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
         <div>
           <h1>Produtos</h1>
@@ -94,8 +93,13 @@ const Page = () => {
         </div>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-          <div className="grid grid-cols-2 gap-5">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (errors) =>
+            console.error(errors)
+          )}
+          className="space-y-8"
+        >
+          <div className="flex flex-col gap-3">
             {/* Name */}
             <FormField
               control={form.control}
@@ -106,7 +110,7 @@ const Page = () => {
                     Nome <span>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex.: Marcos" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,57 +126,14 @@ const Page = () => {
                     Descrição <span>*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex.: Marcos" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Quantity */}
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantidade</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Cost price */}
-            <FormField
-              control={form.control}
-              name="costPrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Preço de custo <span>*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex.: R$29,90" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Sale price */}
-            <FormField
-              control={form.control}
-              name="salePrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço de venda</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex.: R$99,90" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
+          <Variations form={form} />
           <div className="flex items-center justify-end gap-3">
             <Button variant="outline" type="button" className="h-10">
               Cancelar

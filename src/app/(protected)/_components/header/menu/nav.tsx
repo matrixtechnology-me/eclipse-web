@@ -4,6 +4,7 @@ import { cn } from "@/lib/shadcn";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  BlocksIcon,
   BoxIcon,
   CircleDollarSignIcon,
   CircleGaugeIcon,
@@ -45,13 +46,19 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
           Produtos
         </Button>
       </Link>
+      <Link href={PATHS.PROTECTED.PAYABLES.INDEX}>
+        <Button variant="ghost">
+          <BlocksIcon className="size-4" />
+          Estoques
+        </Button>
+      </Link>
       <Link href={PATHS.PROTECTED.SALES.INDEX}>
         <Button variant="ghost">
           <CircleDollarSignIcon className="size-4" />
           Vendas
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.PAYABLES.INDEX}>
+      {/* <Link href={PATHS.PROTECTED.PAYABLES.INDEX}>
         <Button variant="ghost">
           <ArrowUpIcon className="size-4" />
           Contas à pagar
@@ -62,7 +69,7 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
           <ArrowDownIcon className="size-4" />
           Contas à receber
         </Button>
-      </Link>
+      </Link> */}
     </div>
   );
 };

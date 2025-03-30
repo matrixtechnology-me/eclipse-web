@@ -1,6 +1,6 @@
 {
-  "name": "poc-notifications",
-  "version": "0.1.0",
+  "name": "eclipse",
+  "version": "0.1.0-rc",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -11,9 +11,10 @@
     "test:coverage": "jest --coverage",
     "test:watch": "vitest",
     "test:e2e": "cypress open",
-    "prisma:push": "./scripts/prisma_db_push.sh",
-    "prisma:migrate": "./scripts/prisma_migrate.sh",
-    "prisma:reset": "./scripts/prisma_reset.sh",
+    "prisma:push": "prisma db push",
+    "prisma:create-migration": "prisma migrate dev --create-only",
+    "prisma:apply-migration": "prisma migrate dev",
+    "prisma:reset": "prisma migrate reset",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:validate": "prisma validate",

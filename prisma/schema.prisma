@@ -30,12 +30,19 @@ enum EMembershipRole {
   Owner @map(name: "owner")
 }
 
+enum EStockStrategy {
+  Fifo @map(name: "fifo")
+  Lifo @map(name: "lifo")
+}
+
 model Document {
   id        String       @id @default(uuid()) @db.Uuid
   type      DocumentType
   number    String
   createdAt DateTime     @default(now()) @map(name: "created_at")
   updatedAt DateTime     @updatedAt @map(name: "updated_at")
+
+  @@map("documents")
 }
 
 model Address {
@@ -49,6 +56,8 @@ model Address {
   complement   String
   createdAt    DateTime @default(now()) @map(name: "created_at")
   updatedAt    DateTime @updatedAt @map(name: "updated_at")
+
+  @@map("addresses")
 }
 
 model User {
@@ -77,6 +86,9 @@ model Tenant {
   sales         Sale[]
   receivables   Receivable[]
   notifications Notification[]
+  stocks        Stock[]
+  stockLots     StockLot[]
+  payables      Payable[]
 
   @@map("tenants")
 }
@@ -86,7 +98,7 @@ model Membership {
   role        EMembershipRole
   permissions String[]
   active      Boolean?        @default(true)
-  userId      String
+  userId      String          @map("user_id")
   createdAt   DateTime        @default(now()) @map(name: "created_at")
   updatedAt   DateTime        @updatedAt @map(name: "updated_at")
 
@@ -96,8 +108,8 @@ model Membership {
 }
 
 model TenantMembership {
-  membershipId String @db.Uuid
-  tenantId     String @db.Uuid
+  membershipId String @map("membership_id") @db.Uuid
+  tenantId     String @map("tenant_id") @db.Uuid
 
   membership Membership @relation(fields: [membershipId], references: [id])
   tenant     Tenant     @relation(fields: [tenantId], references: [id])
@@ -111,14 +123,15 @@ model Customer {
   name        String   @default("")
   phoneNumber String   @map("phone_number")
   active      Boolean? @default(true)
-  addresses   String[]
-  tenantId    String   @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
   receivables Receivable[]
+  payables    Payable[]
   sale        Sale[]
-  tenant      Tenant       @relation(fields: [tenantId], references: [id])
 
   @@map("customers")
 }
@@ -128,24 +141,88 @@ model Product {
   name        String
   description String?  @default("")
   active      Boolean? @default(true)
-  costPrice   Float    @map("cost_price")
-  salePrice   Float    @map("sale_price")
-  quantity    Int      @default(0)
-  tenantId    String   @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
   saleProducts SaleProduct[]
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  variations   ProductVariation[]
 
   @@map("products")
+}
+
+model ProductVariationSpecification {
+  id               String   @id @default(uuid()) @db.Uuid
+  label            String
+  value            String
+  productVariantId String   @map("product_variant_id") @db.Uuid
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  product ProductVariation @relation(fields: [productVariantId], references: [id])
+
+  @@map("product_specification")
+}
+
+model ProductVariation {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  skuCode   String   @unique @map("sku_code")
+  salePrice Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+
+  stocks         Stock[]
+  saleProducts   SaleProduct[]
+  specifications ProductVariationSpecification[]
+
+  @@map("product_variations")
+}
+
+model Stock {
+  id                 String         @id @default(uuid()) @db.Uuid
+  strategy           EStockStrategy
+  productVariationId String         @unique @map("sku_id") @db.Uuid
+  totalQty           Int            @default(0) @map("total_qty")
+  availableQty       Int            @default(0) @map("available_qty")
+  tenantId           String         @map("tenant_id") @db.Uuid
+  createdAt          DateTime       @default(now()) @map(name: "created_at")
+  updatedAt          DateTime       @updatedAt @map(name: "updated_at")
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  productVariation ProductVariation @relation(fields: [productVariationId], references: [id])
+
+  lots StockLot[]
+
+  @@map("stocks")
+}
+
+model StockLot {
+  id        String    @id @default(uuid()) @db.Uuid
+  lotNumber String    @unique @map("lot_number")
+  totalQty  Int       @default(0) @map("total_qty")
+  costPrice Decimal   @default(0.00) @map("cost_price")
+  stockId   String    @map("stock_id") @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map(name: "created_at")
+  updatedAt DateTime  @updatedAt @map(name: "updated_at")
+
+  stock  Stock  @relation(fields: [stockId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("stock_lots")
 }
 
 model Sale {
   id         String   @id @default(uuid()) @db.Uuid
   status     String   @default("pending")
   customerId String   @map("customer_id") @db.Uuid
-  tenantId   String   @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
@@ -158,17 +235,19 @@ model Sale {
 }
 
 model SaleProduct {
-  name        String
-  description String? @default("")
-  costPrice   Float   @map("cost_price")
-  salePrice   Float   @map("sale_price")
-  quantity    Int
+  name               String
+  description        String? @default("")
+  costPrice          Float   @map("cost_price")
+  salePrice          Float   @map("sale_price")
+  totalQty           Int     @default(0) @map("total_qty")
+  productVariationId String  @map("sku_id") @db.Uuid
 
   saleId    String @map("sale_id") @db.Uuid
   productId String @map("product_id") @db.Uuid
 
-  sale    Sale    @relation(fields: [saleId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  sale             Sale             @relation(fields: [saleId], references: [id])
+  product          Product          @relation(fields: [productId], references: [id])
+  productVariation ProductVariation @relation(fields: [productVariationId], references: [id])
 
   @@id([saleId, productId])
   @@map("sale_products")
@@ -177,9 +256,9 @@ model SaleProduct {
 model Receivable {
   id         String   @id @default(uuid()) @db.Uuid
   status     String   @default("pending")
-  startAt    DateTime
-  customerId String   @db.Uuid
-  tenantId   String   @db.Uuid
+  startAt    DateTime @map("start_at")
+  customerId String   @map("customer_id") @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
@@ -189,13 +268,28 @@ model Receivable {
   @@map("receivables")
 }
 
+model Payable {
+  id         String   @id @default(uuid()) @db.Uuid
+  status     String   @default("pending")
+  startAt    DateTime @map("start_at")
+  customerId String   @map("customer_id") @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("payables")
+}
+
 model Notification {
   id        String   @id @default(uuid()) @db.Uuid
   type      String
   subject   String
   body      String
   read      Boolean
-  tenantId  String   @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @updatedAt @map(name: "updated_at")
 
