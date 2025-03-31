@@ -62,11 +62,11 @@ export const getSales: ServerAction<
       data: {
         sales: sales.map((sale) => ({
           costPrice: sale.products.reduce(
-            (acc, product) => (acc += product.costPrice),
+            (acc, product) => acc + product.costPrice,
             0
           ),
           salePrice: sale.products.reduce(
-            (acc, product) => (acc += product.salePrice),
+            (acc, product) => acc + product.salePrice,
             0
           ),
           createdAt: sale.createdAt,
@@ -74,7 +74,10 @@ export const getSales: ServerAction<
           id: sale.id,
           status: sale.status as "completed" | "pending" | "canceled",
           updatedAt: sale.updatedAt,
-          totalItems: sale.products.length,
+          totalItems: sale.products.reduce(
+            (acc, product) => acc + product.totalQty,
+            0
+          ),
         })),
       },
     };

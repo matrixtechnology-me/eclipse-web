@@ -72,14 +72,17 @@ export const Sale = ({ data }: SaleProps) => {
         <div>
           <p className="text-muted-foreground">Valor</p>
           <p className="font-medium">
-            {CurrencyFormatter.format(data.salePrice)}
+            {CurrencyFormatter.format(data.salePrice * data.totalItems)}
           </p>
         </div>
       </div>
 
       {data.status === "completed" && (
         <div className="mt-2 text-xs text-muted-foreground">
-          Lucro: {CurrencyFormatter.format(data.salePrice - data.costPrice)}
+          Lucro:{" "}
+          {CurrencyFormatter.format(
+            (data.salePrice - data.costPrice) * data.totalItems
+          )}
         </div>
       )}
     </Link>
