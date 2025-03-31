@@ -14,6 +14,7 @@ import { PlusIcon } from "lucide-react";
 import { Pagination } from "@/app/(protected)/(dashboard)/customers/_components/pagination";
 import { NextPage } from "next";
 import { Search } from "./_components/search";
+import { PATHS } from "@/config/paths";
 
 type PageSearchParams = {
   page?: string;
@@ -46,12 +47,15 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="w-full flex items-center justify-between">
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
             <Search query={query} />
-            <Link href="/customers/create" className="w-full lg:w-fit">
+            <Link
+              href={PATHS.PROTECTED.CUSTOMERS.CREATE}
+              className="w-full lg:w-fit"
+            >
               <Button variant="outline" className="w-full lg:w-fit">
                 <PlusIcon />
-                <span>Novo cliente</span>
+                <span>Adicionar cliente</span>
               </Button>
             </Link>
           </div>

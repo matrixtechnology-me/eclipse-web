@@ -40,7 +40,8 @@ export const getUserTenants: ServerAction<
       },
     });
 
-    if (!tenants?.length) throw new NotFoundError("tenants not found");
+    if (!tenants?.length)
+      throw new NotFoundError({ message: "tenants not found" });
 
     return {
       data: {

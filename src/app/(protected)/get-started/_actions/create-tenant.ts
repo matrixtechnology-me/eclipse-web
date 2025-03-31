@@ -28,7 +28,7 @@ export const createTenant: ServerAction<
       },
     });
 
-    if (!user) throw new NotFoundError("user not found");
+    if (!user) throw new NotFoundError({ message: "user not found" });
 
     const tenant = await prisma.tenant.create({
       data: {

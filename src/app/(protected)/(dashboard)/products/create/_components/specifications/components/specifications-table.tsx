@@ -28,7 +28,6 @@ export const SpecificationsTable = ({
           <TableRow>
             <TableHead className="text-left">Preço de venda</TableHead>
             <TableHead className="text-left">Nome</TableHead>
-            <TableHead className="text-left">Valor</TableHead>
             <TableHead className="text-center">Ações</TableHead>
           </TableRow>
         </TableHeader>

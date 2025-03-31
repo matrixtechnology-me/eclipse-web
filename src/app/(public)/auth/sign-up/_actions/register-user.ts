@@ -1,5 +1,8 @@
 "use server";
 
+import { InvalidEmailError } from "@/errors/invalid-email";
+import { NotFoundError } from "@/errors/not-found";
+import { WeakPasswordError } from "@/errors/weak-password";
 import prisma from "@/lib/prisma";
 import { ServerAction } from "@/types/server-actions";
 import { propagateError } from "@/utils/propagate-error";
@@ -19,6 +22,14 @@ export const registerUserAction: ServerAction<
   RegisterUserActionResult
 > = async ({ email, name, password }) => {
   try {
+    if (!email.includes("@") || !email.includes(".")) {
+      throw new InvalidEmailError();
+    }
+
+    if (password.length < 8) {
+      throw new WeakPasswordError();
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -28,9 +39,11 @@ export const registerUserAction: ServerAction<
       },
     });
 
+    if (!user) throw new NotFoundError();
+
     return { data: { sessionId: user.id } };
   } catch (error) {
-    console.log(error);
+    const expectedErrors = [InvalidEmailError, WeakPasswordError];
     return propagateError(error as Error);
   }
 };

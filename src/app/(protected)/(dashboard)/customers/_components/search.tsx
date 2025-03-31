@@ -50,17 +50,21 @@ export const Search: React.FC<SearchProps> = ({ query = "" }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex items-end gap-2"
+        className="w-full flex items-end gap-2"
       >
         <FormField
           name="query"
           control={form.control}
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="w-full">
               <FormLabel htmlFor="query">Pesquisar</FormLabel>
               <FormControl>
                 <div className="flex items-center gap-2">
-                  <Input placeholder="Insira a sua busca..." {...field} />
+                  <Input
+                    className="flex-1"
+                    placeholder="Insira a sua busca..."
+                    {...field}
+                  />
                   <Button variant="outline" size="icon" type="submit">
                     <SearchIcon className="size-4" />
                   </Button>

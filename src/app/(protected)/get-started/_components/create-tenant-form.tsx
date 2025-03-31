@@ -14,24 +14,33 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/session";
 import { createTenant } from "../_actions/create-tenant";
 import { setCookie } from "nookies";
+import { ApplicationError } from "@/errors/application";
+import { propagateError } from "@/utils/propagate-error";
 
 const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "Nome é obrigatório.",
-  }),
-  description: z.string().optional().default(""),
+  name: z
+    .string()
+    .min(1, { message: "Nome é obrigatório." })
+    .min(3, { message: "Nome deve ter pelo menos 3 caracteres." })
+    .max(100, { message: "Nome não pode exceder 100 caracteres." }),
+  description: z
+    .string()
+    .max(255, { message: "Descrição não pode exceder 255 caracteres." })
+    .optional()
+    .default(""),
 });
 
-type FormSchema = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 export const CreateTenantForm = () => {
   const router = useRouter();
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -39,57 +48,48 @@ export const CreateTenantForm = () => {
     },
   });
 
-  const handleSubmit = async ({ description, name }: FormSchema) => {
-    const session = await getServerSession();
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const session = await getServerSession();
 
-    if (!session) throw new Error("session not found");
+      if (!session) {
+        throw new Error("Sessão não encontrada");
+      }
 
-    const result = await createTenant({
-      description,
-      name,
-      userId: session.id,
-    });
+      const result = await createTenant({
+        ...values,
+        userId: session.id,
+      });
 
-    if ("error" in result) throw new Error("cannot create a new tenant");
+      if ("error" in result) {
+        throw new Error("Erro ao criar tenant");
+      }
 
-    const { tenantId } = result.data;
-
-    setCookie(null, "X-Tenant", tenantId, { path: "/" });
-
-    router.push(PATHS.PROTECTED.HOMEPAGE);
+      setCookie(null, "X-Tenant", result.data.tenantId, { path: "/" });
+      router.push(PATHS.PROTECTED.HOMEPAGE);
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        return propagateError(error);
+      }
+      return propagateError(new Error("Erro desconhecido"));
+    }
   };
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-5 w-full max-w-sm"
       >
-        {/* Name */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome do seu negócio" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* Description */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição (Opcional)</FormLabel>
+              <FormLabel>Nome da organização *</FormLabel>
               <FormControl>
                 <Input
-                  type="text"
-                  placeholder="Descrição da sua empresa"
+                  placeholder="Digite o nome da sua organização"
                   {...field}
                 />
               </FormControl>
@@ -97,8 +97,31 @@ export const CreateTenantForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full h-10">
-          Continuar
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Breve descrição sobre sua organização (opcional)"
+                  className="min-h-36"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button
+          type="submit"
+          className="w-full h-10"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Criando..." : "Criar organização"}
         </Button>
       </form>
     </Form>

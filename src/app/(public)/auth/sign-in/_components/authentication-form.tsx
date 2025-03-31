@@ -20,6 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getUserTenants } from "../_actions/get-user-tenants";
 import { NotFoundError } from "@/errors/not-found";
+import { PasswordInput } from "./password-input";
+import { toast } from "sonner";
+import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
+import { InvalidCredentialsError } from "@/errors";
 
 const formSchema = z.object({
   email: z.string().min(1, {
@@ -50,7 +54,24 @@ export const AuthenticationForm = () => {
     });
 
     if ("error" in result) {
-      return alert("Não foi possível efetuar o login");
+      switch (result.error) {
+        case NotFoundError.name:
+          return toast("Usuário não encontrado", {
+            description: "Verifique o e-mail informado e tente novamente",
+            icon: <UserIcon className="size-4" />,
+          });
+        case InvalidCredentialsError.name:
+          return toast("Credenciais inválidas", {
+            description: "E-mail ou senha incorretos. Tente novamente",
+            icon: <CircleSlash className="size-4" />,
+          });
+        default:
+          return toast("Erro inesperado", {
+            description:
+              "Ocorreu um erro ao fazer login. Tente novamente mais tarde",
+            icon: <CircleHelpIcon className="size-4" />,
+          });
+      }
     }
 
     const { sessionId } = result.data;
@@ -99,23 +120,7 @@ export const AuthenticationForm = () => {
           )}
         />
         {/* Password */}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Senha</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Sua senha segura"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <PasswordInput form={form} name="password" label="Sua senha segura" />
         <div className="flex items-center justify-between">
           <div />
           <span className="text-sm text-muted-foreground">

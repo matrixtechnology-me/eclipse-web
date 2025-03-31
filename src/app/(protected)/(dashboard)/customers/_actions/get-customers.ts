@@ -45,7 +45,7 @@ export const getCustomers: ServerAction<
       take: pageSize,
     });
 
-    if (!customers?.length) throw new NotFoundError("customers not found");
+    if (!customers?.length) throw new NotFoundError();
 
     return {
       data: {

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getCustomers } from "../../_actions/get-customers";
 import { Customer } from "./customer";
 import { getServerSession } from "@/lib/session";
+import { PlusIcon, UsersIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PATHS } from "@/config/paths";
 
 type CustomersProps = {
   page: number;
@@ -26,7 +29,26 @@ export const Customers = async ({
   });
 
   if ("error" in result) {
-    return <div>Nenhum cliente encontrado</div>;
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
+        <UsersIcon className="size-8 text-muted-foreground" />
+        <div>
+          <p className="font-medium">Nenhum cliente cadastrado</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Cadastre seu primeiro cliente para começar
+          </p>
+        </div>
+        <Link
+          href={PATHS.PROTECTED.CUSTOMERS.CREATE}
+          className="w-full lg:w-fit"
+        >
+          <Button variant="outline" className="mt-2">
+            <PlusIcon className="size-4 mr-2" />
+            Adicionar cliente
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   const { customers } = result.data;

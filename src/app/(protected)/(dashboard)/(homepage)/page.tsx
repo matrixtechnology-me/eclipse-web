@@ -30,11 +30,13 @@ const Page: NextPage = async () => {
   };
 
   return (
-    <div className="grid grid-cols-5 gap-5 p-5">
-      <CustomersCounter either={results.customersCount} />
-      <ProductsCounter either={results.productsCount} />
-      <AverageTicket either={results.averageTicket} />
-      <Invoicing either={results.invoicing} />
+    <div className="p-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 ">
+        <CustomersCounter either={results.customersCount} />
+        <ProductsCounter either={results.productsCount} />
+        <AverageTicket either={results.averageTicket} />
+        <Invoicing either={results.invoicing} />
+      </div>
     </div>
   );
 };

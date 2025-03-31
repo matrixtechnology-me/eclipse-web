@@ -17,13 +17,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FieldErrors, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { PlusIcon } from "lucide-react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, useState } from "react";
+import { useState } from "react";
 import { getServerSession } from "@/lib/session";
+import { addStockOutput } from "../../../_actions/add-stock-output";
 import {
   Select,
   SelectContent,
@@ -31,11 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addStockOutput } from "../../../_actions/add-stock-output";
+import { toast } from "sonner";
 
 const addStockOutputSchema = z.object({
-  stockLotId: z.string(),
-  totalQty: z.number(),
+  stockLotId: z.string().min(1, "Selecione um lote válido"),
+  totalQty: z.number().min(1, "Quantidade deve ser maior que zero"),
 });
 
 type AddStockOutputSchema = z.infer<typeof addStockOutputSchema>;
@@ -44,44 +45,65 @@ type AddStockOutputProps = {
   stockLots: {
     id: string;
     lotNumber: string;
+    totalQty: number;
   }[];
   stockId: string;
 };
 
-export const AddStockOutput: FC<AddStockOutputProps> = ({
-  stockId,
-  stockLots,
-}) => {
-  const [open, setOpen] = useState<boolean>(false);
-
-  const formDefaultValues: AddStockOutputSchema = {
-    stockLotId: stockLots[0]?.id,
-    totalQty: 0,
-  };
+export const AddStockOutput = ({ stockId, stockLots }: AddStockOutputProps) => {
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<AddStockOutputSchema>({
-    defaultValues: formDefaultValues,
+    defaultValues: {
+      stockLotId: stockLots[0]?.id || "",
+      totalQty: 0,
+    },
     resolver: zodResolver(addStockOutputSchema),
   });
 
+  const selectedLotId = form.watch("stockLotId");
+  const selectedLot = stockLots.find((lot) => lot.id === selectedLotId);
+
   const onSubmit = async (formData: AddStockOutputSchema) => {
-    const session = await getServerSession();
+    try {
+      setIsSubmitting(true);
+      const session = await getServerSession();
+      if (!session) throw new Error("Sessão não encontrada");
 
-    if (!session) throw new Error("session not found");
+      // Validate available quantity
+      const selectedLot = stockLots.find(
+        (lot) => lot.id === formData.stockLotId
+      );
+      if (selectedLot && formData.totalQty > selectedLot.totalQty) {
+        throw new Error("Quantidade indisponível no lote selecionado");
+      }
 
-    await addStockOutput({
-      stockId,
-      stockLotId: formData.stockLotId,
-      tenantId: session.tenantId,
-      totalQty: formData.totalQty,
-    });
+      await addStockOutput({
+        stockId,
+        stockLotId: formData.stockLotId,
+        tenantId: session.tenantId,
+        totalQty: formData.totalQty,
+      });
 
-    form.reset(formDefaultValues);
-    setOpen(false);
+      toast.success("Saída de estoque registrada com sucesso");
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao registrar saída"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const onErrors = (errors: FieldErrors<AddStockOutputSchema>) => {
-    console.log(errors);
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Remove leading zeros and convert to number
+    const numericValue =
+      value === "" ? 0 : parseInt(value.replace(/^0+/, "")) || 0;
+    form.setValue("totalQty", numericValue);
   };
 
   return (
@@ -89,42 +111,39 @@ export const AddStockOutput: FC<AddStockOutputProps> = ({
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
           <PlusIcon className="size-4" />
-          Adicionar saída
+          Registrar saída
         </Button>
       </DialogTrigger>
-      <DialogContent className="!p-0 flex flex-col no-scrollbar md:max-w-2xl h-fit overflow-hidden">
-        <DialogHeader className="p-5 bg-primary-foreground">
-          <DialogTitle>Adicionar saída</DialogTitle>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Registrar saída de estoque</DialogTitle>
           <DialogDescription>
-            Faça inserções para nova saída em estoque aqui. Clique em salvar
-            quando terminar.
+            Registre a saída de produtos do estoque
           </DialogDescription>
         </DialogHeader>
-        <Form<AddStockOutputSchema> {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, onErrors)}
-            className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5"
-          >
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="stockLotId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Número do lote<span>*</span>
-                  </FormLabel>
+                  <FormLabel>Lote*</FormLabel>
                   <FormControl>
-                    <Select
-                      {...field}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione um lote" />
                       </SelectTrigger>
                       <SelectContent>
-                        {stockLots.map((stockLot) => (
-                          <SelectItem key={stockLot.id} value={stockLot.id}>
-                            {stockLot.lotNumber.toUpperCase()}
+                        {stockLots.map((lot) => (
+                          <SelectItem
+                            key={lot.id}
+                            value={lot.id}
+                            disabled={lot.totalQty <= 0}
+                          >
+                            {lot.lotNumber.toUpperCase()} (Disponível:{" "}
+                            {lot.totalQty})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -134,29 +153,41 @@ export const AddStockOutput: FC<AddStockOutputProps> = ({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="totalQty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Quantidade<span>*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target: { value } }) => {
-                        field.onChange(Number(value));
-                      }}
-                    />
-                  </FormControl>
+                  <FormLabel>Quantidade*</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max={selectedLot?.totalQty}
+                        placeholder="Quantidade"
+                        value={field.value || ""}
+                        onChange={handleQuantityChange}
+                      />
+                    </FormControl>
+                    {selectedLot && (
+                      <span className="absolute right-3 top-2 text-sm text-muted-foreground">
+                        Máx: {selectedLot.totalQty}
+                      </span>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="p-5 bg-primary-foreground/25">
-              <Button className="min-w-32" type="submit">
-                Salvar
+
+            <div className="flex justify-end pt-2">
+              <Button
+                type="submit"
+                disabled={isSubmitting || !selectedLot?.totalQty}
+              >
+                {isSubmitting ? "Registrando..." : "Registrar saída"}
               </Button>
             </div>
           </form>

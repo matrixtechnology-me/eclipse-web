@@ -45,6 +45,11 @@ model Document {
   @@map("documents")
 }
 
+enum EDiscountVariant {
+  Percentage @map("percentage")
+  Amount     @map("amount")
+}
+
 model Address {
   id           String   @id @default(uuid()) @db.Uuid
   street       String
@@ -167,7 +172,7 @@ model Product {
   saleProducts   SaleProduct[]
   specifications ProductSpecification[]
 
-  @@map("product_variations")
+  @@map("products")
 }
 
 model Stock {
@@ -206,12 +211,14 @@ model StockLot {
 }
 
 model Sale {
-  id         String   @id @default(uuid()) @db.Uuid
-  status     String   @default("pending")
-  customerId String   @map("customer_id") @db.Uuid
-  tenantId   String   @map("tenant_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+  id              String           @id @default(uuid()) @db.Uuid
+  status          String           @default("pending")
+  customerId      String           @map("customer_id") @db.Uuid
+  tenantId        String           @map("tenant_id") @db.Uuid
+  discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
+  discountValue   Decimal          @default(0) @map("discount_value")
+  createdAt       DateTime         @default(now()) @map(name: "created_at")
+  updatedAt       DateTime         @updatedAt @map(name: "updated_at")
 
   products SaleProduct[]
 

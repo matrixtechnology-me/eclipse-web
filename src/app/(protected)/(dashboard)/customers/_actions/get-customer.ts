@@ -32,7 +32,7 @@ export const getCustomer: ServerAction<
       },
     });
 
-    if (!customer) throw new NotFoundError("customer not found");
+    if (!customer) throw new NotFoundError({ message: "customer not found" });
 
     return {
       data: { customer: { ...customer, active: Boolean(customer.active) } },

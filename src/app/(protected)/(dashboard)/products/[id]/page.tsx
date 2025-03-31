@@ -75,7 +75,6 @@ const Page: NextPage<PageProps> = async ({ params }) => {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <DeleteCustomer id={product.id} />
       </div>
       <div className="flex flex-col gap-5">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

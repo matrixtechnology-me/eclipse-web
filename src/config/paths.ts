@@ -14,7 +14,9 @@ export const PATHS = {
         const queryParams = generateQueryParams({ ...params });
         return `/customers${queryParams}`;
       },
+      CREATE: "/customers/create",
       CUSTOMER: (customerId: string) => `/customers/${customerId}`,
+      EDIT: (customerId: string) => `/customers/${customerId}/update`,
     },
     PRODUCTS: {
       INDEX: (params?: Record<string, string | undefined>) => {
@@ -31,6 +33,9 @@ export const PATHS = {
     SALES: {
       INDEX: "/sales",
       CREATE: "/sales/create",
+      SALE: (saleId: string) => ({
+        INDEX: `/sales/${saleId}`,
+      }),
     },
     RECEIVABLES: {
       INDEX: "/receivables",

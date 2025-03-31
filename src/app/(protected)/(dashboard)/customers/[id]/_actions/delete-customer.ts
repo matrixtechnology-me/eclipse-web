@@ -19,7 +19,7 @@ export const deleteCustomer: ServerAction<
       where: { id },
     });
 
-    if (!customer) throw new NotFoundError("customer not found");
+    if (!customer) throw new NotFoundError({ message: "customer not found" });
 
     await prisma.customer.delete({
       where: {

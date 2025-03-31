@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
+import { Form, FormMessage } from "@/components/ui/form";
 import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
 import { useEffect, useMemo, useState } from "react";
 import { PlusIcon } from "lucide-react";
@@ -132,172 +134,91 @@ export const AddProduct = ({ appendProduct }: IProps) => {
           Adicionar produto
         </Button>
       </DialogTrigger>
-      <DialogContent className="!p-0 flex flex-col no-scrollbar md:max-w-2xl h-fit overflow-hidden">
-        <DialogHeader className="p-5 bg-primary-foreground">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
           <DialogTitle>Adicionar produto</DialogTitle>
           <DialogDescription>
-            Faça inserções para novo produto aqui. Clique em salvar quando
-            terminar.
+            Selecione um produto e informe a quantidade
           </DialogDescription>
         </DialogHeader>
-        <Form<OrderItemFormType> {...form}>
-          <form className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5">
-            <div className="flex flex-col items-start gap-4">
-              <Label htmlFor="product.id" className="text-right">
-                Produto
-              </Label>
+
+        <Form {...form}>
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label>Produto*</Label>
               <Controller
                 control={form.control}
                 name="id"
-                render={({ field: { onChange } }) => (
-                  <div className="w-full flex flex-col gap-2">
-                    {form.formState.errors.id && (
-                      <span className="text-sm text-destructive">
-                        {form.formState.errors.id.message}
-                      </span>
-                    )}
-                    <SelectPaginated<Product>
-                      className="text-sm"
-                      placeholder="Buscar um produto..."
-                      menuPlacement="bottom"
-                      loadOptions={loadPaginatedSearchProducts}
-                      debounceTimeout={1000}
-                      onInputChange={() => form.clearErrors("id")}
-                      onChange={(option) => {
-                        onChange(option!.value.id);
-                        form.setValue("name", option!.label);
-                        form.setValue("salePrice", option!.value.salePrice);
-                        form.setValue("costPrice", option!.value.costPrice);
-                      }}
-                      additional={{
-                        page: 1,
-                        itemsPerPage: 10,
-                      }}
-                    />
-                    {salePrice > 0 && (
-                      <p className="opacity-80 text-[13px]">
-                        Preço de venda: {CurrencyFormatter.format(salePrice)}
-                      </p>
-                    )}
-                  </div>
+                render={({ field }) => (
+                  <SelectPaginated<Product>
+                    className="text-sm"
+                    placeholder="Buscar um produto..."
+                    menuPlacement="bottom"
+                    loadOptions={loadPaginatedSearchProducts}
+                    debounceTimeout={1000}
+                    onInputChange={() => form.clearErrors("id")}
+                    onChange={(option) => {
+                      field.onChange(option!.value.id);
+                      form.setValue("name", option!.label);
+                      form.setValue("salePrice", option!.value.salePrice);
+                      form.setValue("costPrice", option!.value.costPrice);
+                    }}
+                    additional={{
+                      page: 1,
+                      itemsPerPage: 10,
+                    }}
+                  />
                 )}
               />
+
+              <FormMessage>{form.formState.errors.id?.message}</FormMessage>
             </div>
-            <div className="flex flex-col items-start gap-4">
-              <Label htmlFor="quantity" className="text-right">
-                Quantidade
-              </Label>
+
+            <div className="space-y-2">
+              <Label>Quantidade*</Label>
               <Controller
                 control={form.control}
                 name="quantity"
-                render={({ field: { name, value, onChange } }) => (
-                  <div className="w-full flex flex-col gap-2">
-                    <NumericFormat
-                      customInput={Input}
-                      className="h-9"
-                      placeholder="Quantidade do item"
-                      name={name}
-                      value={value}
-                      onChange={onChange}
-                    />
-                    {form.formState.errors.quantity && (
-                      <span className="text-sm text-destructive">
-                        {form.formState.errors.quantity.message}
-                      </span>
-                    )}
-                  </div>
+                render={({ field }) => (
+                  <NumericFormat
+                    customInput={Input}
+                    placeholder="Quantidade"
+                    value={field.value}
+                    onValueChange={(values) => {
+                      field.onChange(values.value);
+                    }}
+                  />
                 )}
               />
+              <FormMessage>
+                {form.formState.errors.quantity?.message}
+              </FormMessage>
             </div>
-            {/* Discount */}
-            {/* <div className="flex flex-col gap-3">
-              <div className="flex flex-col">
-                <Heading>Desconto</Heading>
-                <Paragraph className="text-xs">
-                  Aplique um desconto ao produto.
-                </Paragraph>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="discount.variant"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Variante</FormLabel>
-                      <FormControl>
-                        <Select
-                          name={field.name}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-full h-9">
-                            <SelectValue placeholder="Escolha um método de pagamento" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="cash">Dinheiro</SelectItem>
-                            <SelectItem value="percentage">
-                              Porcentagem
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="discount.amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantia</FormLabel>
-                      <FormControl>
-                        <NumericFormat
-                          customInput={Input}
-                          className="h-9"
-                          placeholder="Valor do desconto"
-                          prefix={
-                            discount.variant === "cash" ? "R$" : undefined
-                          }
-                          suffix={
-                            discount.variant === "percentage" ? "%" : undefined
-                          }
-                          decimalScale={2}
-                          fixedDecimalScale={true}
-                          thousandSeparator={
-                            discount.variant === "cash" ? "." : undefined
-                          }
-                          decimalSeparator=","
-                          name={field.name}
-                          value={field.value}
-                          onChange={({ target }) => {
-                            field.onChange(NumericParser.parse(target.value));
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              {form.formState.errors.discount && (
-                <p className="text-destructive text-[13px]">
-                  {form.formState.errors.discount.message}
+
+            {salePrice > 0 && (
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">
+                  Preço unitário: {CurrencyFormatter.format(salePrice)}
                 </p>
-              )}
-              {!!subTotal && subTotal > 0 && (
-                <p className="opacity-80 text-[13px]">
+                <p className="text-sm font-medium">
                   Subtotal: {CurrencyFormatter.format(subTotal)}
                 </p>
-              )}
-            </div> */}
+              </div>
+            )}
           </form>
-          <DialogFooter className="p-5 bg-primary-foreground/25">
-            <Button className="min-w-32" type="button" onClick={onSubmit}>
-              Adicionar item
-            </Button>
-          </DialogFooter>
         </Form>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting
+              ? "Adicionando..."
+              : "Adicionar produto"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

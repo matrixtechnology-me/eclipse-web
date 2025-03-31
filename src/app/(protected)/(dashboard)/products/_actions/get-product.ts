@@ -61,10 +61,10 @@ export const getProduct: ServerAction<
       },
     });
 
-    if (!product) throw new NotFoundError("product not found");
+    if (!product) throw new NotFoundError({ message: "product not found" });
 
     if (!product.stock)
-      throw new NotFoundError("product variation stock not found");
+      throw new NotFoundError({ message: "product variation stock not found" });
 
     return {
       data: {

@@ -44,7 +44,7 @@ export const createSale: ServerAction<
           });
 
           if (!product?.stock)
-            throw new NotFoundError("product stock not found");
+            throw new NotFoundError({ message: "product stock not found" });
 
           const lots = await prisma.stockLot.findMany({
             where: {
@@ -57,7 +57,7 @@ export const createSale: ServerAction<
           });
 
           if (!lots?.length)
-            throw new NotFoundError("no lots in product stock");
+            throw new NotFoundError({ message: "no lots in product stock" });
 
           const targetLot = lots[0];
 

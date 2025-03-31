@@ -26,6 +26,9 @@ import {
   CreateProductSchema,
   createSpecificationsSchema,
 } from "@/app/(protected)/(dashboard)/products/create/_utils/validations/create-product";
+import { toast } from "sonner";
+import { NumericFormat } from "react-number-format";
+import { forwardRef } from "react";
 
 interface IProps {
   appendSpecification: UseFieldArrayAppend<
@@ -41,25 +44,42 @@ const formDefaultValues: CreateSpecificationSchema = {
   value: "",
 };
 
+// Componente customizado para Currency Input
+const CurrencyInput = forwardRef<
+  HTMLInputElement,
+  { onChange: (value: number) => void; value?: number; placeholder?: string }
+>(({ onChange, value, placeholder, ...props }, ref) => (
+  <NumericFormat
+    getInputRef={ref}
+    thousandSeparator="."
+    decimalSeparator=","
+    decimalScale={2}
+    fixedDecimalScale
+    prefix="R$ "
+    placeholder={placeholder}
+    value={value}
+    onValueChange={(values) => onChange(values.floatValue || 0)}
+    {...props}
+  />
+));
+
 export const AddSpecification = ({ appendSpecification }: IProps) => {
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<CreateSpecificationSchema>({
     defaultValues: formDefaultValues,
     resolver: zodResolver(createSpecificationsSchema),
   });
 
-  // call this function on form 'onSubmit' property causes dialogs to close
-  const onSubmit = () => {
-    const submissionFn = form.handleSubmit(
-      (formData: CreateSpecificationSchema) => {
-        appendSpecification(formData);
-        setOpen(false);
-        form.reset(formDefaultValues);
-      },
-      (errors) => console.log(errors)
-    );
-    submissionFn();
+  const onSubmit = (formData: CreateSpecificationSchema) => {
+    try {
+      appendSpecification(formData);
+      setOpen(false);
+      form.reset(formDefaultValues);
+      toast.success("Variação adicionada com sucesso");
+    } catch (error) {
+      toast.error("Erro ao adicionar variação");
+    }
   };
 
   return (
@@ -74,46 +94,49 @@ export const AddSpecification = ({ appendSpecification }: IProps) => {
         <DialogHeader className="p-5 bg-primary-foreground">
           <DialogTitle>Adicionar variação</DialogTitle>
           <DialogDescription>
-            Faça inserções para nova variação aqui. Clique em salvar quando
+            Adicione as especificações do produto. Clique em salvar quando
             terminar.
           </DialogDescription>
         </DialogHeader>
-        <Form<CreateSpecificationSchema> {...form}>
+
+        <Form {...form}>
           <form className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5">
             <FormField
               control={form.control}
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Preço de custo<span>*</span>
-                  </FormLabel>
+                  <FormLabel>Nome da especificação*</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Ex: Cor, Tamanho" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Preço de venda<span>*</span>
-                  </FormLabel>
+                  <FormLabel>Valor*</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Ex: Vermelho, P" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </form>
+
           <DialogFooter className="p-5 bg-primary-foreground/25">
-            <Button className="min-w-32" type="button" onClick={onSubmit}>
-              Adicionar item
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Salvando..." : "Adicionar item"}
             </Button>
           </DialogFooter>
         </Form>

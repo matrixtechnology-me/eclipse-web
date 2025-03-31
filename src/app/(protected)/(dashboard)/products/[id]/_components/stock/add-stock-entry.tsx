@@ -17,12 +17,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FieldErrors, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { PlusIcon } from "lucide-react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, useState } from "react";
+import { useState } from "react";
 import { getServerSession } from "@/lib/session";
 import { addStockEntry } from "../../../_actions/add-stock-entry";
 import {
@@ -32,10 +32,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { NumericFormat } from "react-number-format";
 
 const addStockEntrySchema = z.object({
-  stockLotId: z.string(),
-  totalQty: z.number(),
+  stockLotId: z.string().min(1, "Selecione um lote"),
+  totalQty: z.number().min(1, "Quantidade mínima é 1"),
 });
 
 type AddStockEntrySchema = z.infer<typeof addStockEntrySchema>;
@@ -48,40 +50,53 @@ type AddStockEntryProps = {
   stockId: string;
 };
 
-export const AddStockEntry: FC<AddStockEntryProps> = ({
-  stockId,
-  stockLots,
-}) => {
-  const [open, setOpen] = useState<boolean>(false);
-
-  const formDefaultValues: AddStockEntrySchema = {
-    stockLotId: stockLots[0]?.id,
-    totalQty: 0,
-  };
+export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<AddStockEntrySchema>({
-    defaultValues: formDefaultValues,
+    defaultValues: {
+      stockLotId: stockLots[0]?.id || "",
+      totalQty: 0,
+    },
     resolver: zodResolver(addStockEntrySchema),
   });
 
   const onSubmit = async (formData: AddStockEntrySchema) => {
-    const session = await getServerSession();
+    try {
+      setIsSubmitting(true);
+      const session = await getServerSession();
+      if (!session) throw new Error("Sessão não encontrada");
 
-    if (!session) throw new Error("session not found");
+      await addStockEntry({
+        stockId,
+        stockLotId: formData.stockLotId,
+        tenantId: session.tenantId,
+        totalQty: formData.totalQty,
+      });
 
-    await addStockEntry({
-      stockId,
-      stockLotId: formData.stockLotId,
-      tenantId: session.tenantId,
-      totalQty: formData.totalQty,
-    });
-
-    form.reset(formDefaultValues);
-    setOpen(false);
+      toast.success("Entrada de estoque registrada com sucesso");
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao registrar entrada"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const onErrors = (errors: FieldErrors<AddStockEntrySchema>) => {
-    console.log(errors);
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+
+    // Remove leading zeros
+    if (value.length > 1 && value.startsWith("0")) {
+      value = value.replace(/^0+/, "");
+      if (value === "") value = "0";
+    }
+
+    form.setValue("totalQty", Number(value));
   };
 
   return (
@@ -92,39 +107,31 @@ export const AddStockEntry: FC<AddStockEntryProps> = ({
           Adicionar entrada
         </Button>
       </DialogTrigger>
-      <DialogContent className="!p-0 flex flex-col no-scrollbar md:max-w-2xl h-fit overflow-hidden">
-        <DialogHeader className="p-5 bg-primary-foreground">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
           <DialogTitle>Adicionar entrada</DialogTitle>
           <DialogDescription>
-            Faça inserções para nova entrada em estoque aqui. Clique em salvar
-            quando terminar.
+            Registre uma nova entrada no estoque
           </DialogDescription>
         </DialogHeader>
-        <Form<AddStockEntrySchema> {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, onErrors)}
-            className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5"
-          >
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="stockLotId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Número do lote<span>*</span>
-                  </FormLabel>
+                  <FormLabel>Lote*</FormLabel>
                   <FormControl>
-                    <Select
-                      {...field}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione um lote" />
                       </SelectTrigger>
                       <SelectContent>
-                        {stockLots.map((stockLot) => (
-                          <SelectItem key={stockLot.id} value={stockLot.id}>
-                            {stockLot.lotNumber.toUpperCase()}
+                        {stockLots.map((lot) => (
+                          <SelectItem key={lot.id} value={lot.id}>
+                            {lot.lotNumber.toUpperCase()}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -134,29 +141,30 @@ export const AddStockEntry: FC<AddStockEntryProps> = ({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="totalQty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Quantidade<span>*</span>
-                  </FormLabel>
+                  <FormLabel>Quantidade*</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
-                      onChange={({ target: { value } }) => {
-                        field.onChange(Number(value));
-                      }}
+                      type="number"
+                      min="1"
+                      placeholder="Quantidade"
+                      value={field.value}
+                      onChange={handleQuantityChange}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="p-5 bg-primary-foreground/25">
-              <Button className="min-w-32" type="submit">
-                Salvar
+
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Registrando..." : "Registrar entrada"}
               </Button>
             </div>
           </form>

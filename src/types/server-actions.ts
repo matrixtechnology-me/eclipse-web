@@ -7,6 +7,9 @@ export type ServerActionSuccessResult<T> = {
 export type ServerActionErrorResult = {
   error: string;
   message: string;
+  title?: string;
+  statusCode?: number;
+  details?: string;
 };
 
 export type ServerActionResult<T> =

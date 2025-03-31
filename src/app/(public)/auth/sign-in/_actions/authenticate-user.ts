@@ -31,7 +31,7 @@ export const authenticateUserAction: ServerAction<
       },
     });
 
-    if (!user) throw new NotFoundError("user not found");
+    if (!user) throw new NotFoundError({ message: "user not found" });
 
     if (user.password !== password)
       throw new InvalidCredentialsError("passwords dont match");

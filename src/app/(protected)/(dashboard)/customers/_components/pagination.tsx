@@ -35,7 +35,7 @@ export const Pagination: FC<PaginationProps> = ({
   };
 
   return (
-    <div className="h-16 border-t lg:border-none flex items-center justify-between px-5">
+    <div className="h-16 border-t lg:border-none flex items-center justify-between px-5 mt-4">
       <div className="flex items-center gap-2">
         <Button
           size="icon"

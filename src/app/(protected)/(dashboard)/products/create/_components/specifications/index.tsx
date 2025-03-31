@@ -22,7 +22,6 @@ export const Specifications: FC<SpecificationsProps> = ({ form }) => {
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <div className="flex flex-col">
           <h1>Especificações</h1>
-          <p className="text-sm text-muted-foreground max-w-2xl">-</p>
         </div>
         <AddSpecification
           appendSpecification={specificationsFieldArray.append}

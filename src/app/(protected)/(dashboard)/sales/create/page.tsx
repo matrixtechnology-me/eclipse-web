@@ -2,8 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import {
   Breadcrumb,
@@ -30,18 +27,22 @@ import {
 } from "./_utils/validations/create-sale";
 import { Products } from "./_components/products";
 import { getCustomers } from "../_actions/get-customers";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   DefaultOptionType,
   SelectPaginated,
 } from "@/components/select-paginated";
-import { GroupBase } from "react-select";
-import { LoadOptions } from "react-select-async-paginate";
 import { createSale } from "../_actions/create-sale";
 import { getServerSession } from "@/lib/session";
+import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { ShoppingCart } from "lucide-react";
+import { LoadOptions } from "react-select-async-paginate";
+import { GroupBase } from "react-select";
 
 const Page = () => {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreateSaleSchema>({
     resolver: zodResolver(createSaleSchema),
@@ -51,21 +52,34 @@ const Page = () => {
     },
   });
 
-  const handleSubmit = async ({ customerId, products }: CreateSaleSchema) => {
-    const session = await getServerSession();
+  const onSubmit = async (values: CreateSaleSchema) => {
+    try {
+      setIsSubmitting(true);
+      const session = await getServerSession();
+      if (!session) throw new Error("Sessão não encontrada");
 
-    if (!session) throw new Error("session not found");
+      const result = await createSale({
+        customerId: values.customerId,
+        tenantId: session.tenantId,
+        products: values.products.map((product) => ({
+          id: product.id,
+          totalQty: Number(product.quantity),
+        })),
+      });
 
-    await createSale({
-      customerId,
-      tenantId: session.tenantId,
-      products: products.map((product) => ({
-        id: product.id,
-        totalQty: +product.quantity,
-      })),
-    });
+      if ("error" in result) {
+        throw new Error(result.error);
+      }
 
-    router.push(PATHS.PROTECTED.SALES.INDEX);
+      toast.success("Venda registrada com sucesso");
+      router.push(PATHS.PROTECTED.SALES.INDEX);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao registrar venda"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const loadCustomers: LoadOptions<
@@ -104,39 +118,41 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 md:p-6 max-w-4xl mx-auto">
+      <div className="flex items-center gap-3">
+        <ShoppingCart className="size-8 text-primary" />
         <div>
-          <h1>Vendas</h1>
+          <h1 className="text-2xl font-bold">Nova Venda</h1>
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
-                  Painel de controle
+                  Dashboard
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.CUSTOMERS.INDEX()}>
+                <BreadcrumbLink href={PATHS.PROTECTED.SALES.INDEX}>
                   Vendas
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Novo venda</BreadcrumbPage>
+                <BreadcrumbPage>Nova</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="customerId"
             render={({ field }) => (
-              <FormItem className="mx-1">
-                <FormLabel>Cliente</FormLabel>
+              <FormItem>
+                <FormLabel>Cliente*</FormLabel>
                 <FormControl>
                   <SelectPaginated<string>
                     className="text-sm"
@@ -157,8 +173,21 @@ const Page = () => {
               </FormItem>
             )}
           />
+
           <Products form={form} />
-          <Button type="submit">Adicionar</Button>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(PATHS.PROTECTED.SALES.INDEX)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Registrando..." : "Finalizar Venda"}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

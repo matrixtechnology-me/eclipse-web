@@ -4,7 +4,7 @@ import { EclipseIcon } from "lucide-react";
 
 const Page: NextPage = () => {
   return (
-    <div className="h-dvh w-screen flex flex-col items-center justify-center ">
+    <div className="h-dvh w-screen flex flex-col items-center justify-center px-5 md:px-0">
       <div className="w-full max-w-sm flex flex-col gap-5">
         <div className="flex flex-col gap-5">
           <div className="size-9 flex items-center justify-center border rounded-md bg-primary">

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -29,12 +28,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({ onChange, value }) => {
         <Button
           variant={"outline"}
           className={cn(
-            "w-[240px] justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal",
             !value && "text-muted-foreground"
           )}
         >
           <CalendarIcon />
-          {value ? format(value, "PPP") : <span>Selecione uma data</span>}
+          {value ? (
+            moment(value ?? new Date()).format("LL")
+          ) : (
+            <span>Selecione uma data</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

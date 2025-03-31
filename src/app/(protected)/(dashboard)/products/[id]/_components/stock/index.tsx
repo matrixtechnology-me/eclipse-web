@@ -21,6 +21,7 @@ type StockProps = {
   lots: {
     id: string;
     lotNumber: string;
+    totalQty: number;
   }[];
 };
 
@@ -56,7 +57,7 @@ export const Stock: FC<StockProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex flex-col">
           <h1 className="font-bold">Estoque</h1>
           <p className="text-sm text-muted-foreground max-w-md">
@@ -64,7 +65,7 @@ export const Stock: FC<StockProps> = ({
             e reposição eficiente.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <AddStockEntry stockId={id} stockLots={lots} />
           <AddStockOutput stockId={id} stockLots={lots} />
         </div>

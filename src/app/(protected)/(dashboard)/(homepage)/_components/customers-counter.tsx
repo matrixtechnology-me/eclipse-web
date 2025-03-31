@@ -15,13 +15,18 @@ export const CustomersCounter: FC<CustomersCounterProps> = ({ either }) => {
   const { count } = either.data;
 
   return (
-    <div className="flex-1 border border-secondary p-5">
-      <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
-        <UsersIcon className="size-4" />
+    <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <UsersIcon className="size-4" />
+        </div>
+        <span className="font-bold">{count}</span>
       </div>
       <div>
         <h1>Clientes</h1>
-        <span>{count}</span>
+        <p className="text-sm text-muted-foreground">
+          Seu total de clientes ativos
+        </p>
       </div>
     </div>
   );

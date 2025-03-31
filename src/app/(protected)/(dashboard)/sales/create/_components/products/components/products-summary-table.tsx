@@ -26,8 +26,6 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Unidades</TableHead>
             <TableHead className="text-left">Preço de venda</TableHead>
-            <TableHead className="text-left">Soma</TableHead>
-            <TableHead className="text-left">Desconto</TableHead>
             <TableHead className="text-left">Subtotal</TableHead>
             <TableHead className="text-center">Ações</TableHead>
           </TableRow>
@@ -48,11 +46,6 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
                   ? CurrencyFormatter.format(Number(field.discount.amount))
                   : PercentageFormatter.format(Number(field.discount.amount))}
               </TableCell> */}
-              <TableCell className="text-left">
-                {CurrencyFormatter.format(
-                  (field.salePrice - field.costPrice) * Number(field.quantity)
-                )}
-              </TableCell>
               <TableCell className="text-center">
                 <Button
                   variant="outline"

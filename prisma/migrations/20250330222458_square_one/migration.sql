@@ -13,6 +13,9 @@ CREATE TYPE "EMembershipRole" AS ENUM ('owner');
 -- CreateEnum
 CREATE TYPE "EStockStrategy" AS ENUM ('fifo', 'lifo');
 
+-- CreateEnum
+CREATE TYPE "EDiscountVariant" AS ENUM ('percentage', 'amount');
+
 -- CreateTable
 CREATE TABLE "documents" (
     "id" UUID NOT NULL,
@@ -100,29 +103,31 @@ CREATE TABLE "customers" (
 );
 
 -- CreateTable
-CREATE TABLE "products" (
+CREATE TABLE "product_specification" (
     "id" UUID NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT DEFAULT '',
-    "active" BOOLEAN DEFAULT true,
-    "tenant_id" UUID NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "SKU" (
-    "id" UUID NOT NULL,
+    "label" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
     "product_id" UUID NOT NULL,
-    "sku_code" TEXT NOT NULL,
-    "salePrice" DECIMAL(65,30) NOT NULL,
-    "attributes" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "SKU_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "product_specification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "products" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "bar_code" TEXT NOT NULL,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "sku_code" TEXT NOT NULL,
+    "tenantId" UUID NOT NULL,
+    "salePrice" DECIMAL(65,30) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -160,6 +165,8 @@ CREATE TABLE "sales" (
     "status" TEXT NOT NULL DEFAULT 'pending',
     "customer_id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
+    "discount_variant" "EDiscountVariant" NOT NULL DEFAULT 'percentage',
+    "discount_value" DECIMAL(65,30) NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -169,11 +176,10 @@ CREATE TABLE "sales" (
 -- CreateTable
 CREATE TABLE "sale_products" (
     "name" TEXT NOT NULL,
-    "description" TEXT DEFAULT '',
+    "description" TEXT NOT NULL DEFAULT '',
     "cost_price" DOUBLE PRECISION NOT NULL,
     "sale_price" DOUBLE PRECISION NOT NULL,
     "total_qty" INTEGER NOT NULL DEFAULT 0,
-    "sku_id" UUID NOT NULL,
     "sale_id" UUID NOT NULL,
     "product_id" UUID NOT NULL,
 
@@ -224,7 +230,7 @@ CREATE TABLE "notifications" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "SKU_sku_code_key" ON "SKU"("sku_code");
+CREATE UNIQUE INDEX "products_sku_code_key" ON "products"("sku_code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "stocks_sku_id_key" ON "stocks"("sku_id");
@@ -242,16 +248,16 @@ ALTER TABLE "tenant_memberships" ADD CONSTRAINT "tenant_memberships_tenant_id_fk
 ALTER TABLE "customers" ADD CONSTRAINT "customers_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "product_specification" ADD CONSTRAINT "product_specification_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SKU" ADD CONSTRAINT "SKU_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "stocks" ADD CONSTRAINT "stocks_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "stocks" ADD CONSTRAINT "stocks_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "SKU"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "stocks" ADD CONSTRAINT "stocks_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "stock_lots" ADD CONSTRAINT "stock_lots_stock_id_fkey" FOREIGN KEY ("stock_id") REFERENCES "stocks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -270,9 +276,6 @@ ALTER TABLE "sale_products" ADD CONSTRAINT "sale_products_sale_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "sale_products" ADD CONSTRAINT "sale_products_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "sale_products" ADD CONSTRAINT "sale_products_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "SKU"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "receivables" ADD CONSTRAINT "receivables_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
