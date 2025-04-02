@@ -2,9 +2,9 @@
 
 import { NotFoundError } from "@/errors/not-found";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction } from "@/core/either";
+import { propagateError } from "@/utils/propagate-error.util";
+import { reportError } from "@/utils/report-error.util";
 import { EMembershipRole } from "@prisma/client";
 
 type CreateTenantActionPayload = {

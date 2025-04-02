@@ -16,11 +16,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { NotFoundError } from "@/errors/not-found";
 import { PasswordInput } from "./password-input";
 import { toast } from "sonner";
-import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
-import { InvalidCredentialsError } from "@/errors";
+import {
+  AlertTriangleIcon,
+  CircleHelpIcon,
+  CircleSlash,
+  UserIcon,
+} from "lucide-react";
+import { InvalidCredentialsError, NotFoundError } from "@/errors";
 import { registerUserAction } from "../_actions/register-user";
 
 const formSchema = z
@@ -85,38 +89,54 @@ export const RegistrationForm = () => {
     password,
     name,
   }: Omit<FormSchema, "confirmPassword">) => {
-    const result = await registerUserAction({
-      email,
-      password,
-      name,
-    });
+    try {
+      const result = await registerUserAction({
+        email,
+        password,
+        name,
+      });
 
-    if ("error" in result) {
-      switch (result.error) {
-        case NotFoundError.name:
+      if (!result.isSuccess) {
+        if (result.error instanceof NotFoundError) {
           return toast("Usuário não encontrado", {
             description: "Verifique o e-mail informado e tente novamente",
             icon: <UserIcon className="size-4" />,
           });
-        case InvalidCredentialsError.name:
+        }
+
+        if (result.error instanceof InvalidCredentialsError) {
           return toast("Credenciais inválidas", {
-            description: "E-mail ou senha incorretos. Tente novamente",
+            description:
+              result.error.message ||
+              "E-mail ou senha incorretos. Tente novamente",
             icon: <CircleSlash className="size-4" />,
           });
-        default:
-          return toast("Erro inesperado", {
-            description:
-              "Ocorreu um erro ao fazer login. Tente novamente mais tarde",
-            icon: <CircleHelpIcon className="size-4" />,
-          });
+        }
+
+        return toast("Erro inesperado", {
+          description:
+            "Ocorreu um erro ao registrar. Tente novamente mais tarde",
+          icon: <CircleHelpIcon className="size-4" />,
+        });
       }
+
+      const { sessionId } = result.value!;
+
+      setCookie(null, "X-Identity", sessionId, {
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      router.push(PATHS.PROTECTED.GET_STARTED);
+    } catch (error) {
+      console.error("Registration error:", error);
+      return toast("Erro no sistema", {
+        description: "Falha ao processar o registro. Contate o suporte",
+        icon: <AlertTriangleIcon className="size-4" />,
+      });
     }
-
-    const { sessionId } = result.data;
-
-    setCookie(null, "X-Identity", sessionId, { path: "/" });
-
-    router.push(PATHS.PROTECTED.GET_STARTED);
   };
 
   return (
@@ -169,8 +189,12 @@ export const RegistrationForm = () => {
           name="confirmPassword"
           label="Confirmar senha"
         />
-        <Button type="submit" className="w-full h-10">
-          Cadastre-se
+        <Button
+          type="submit"
+          className="w-full h-10"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? "Cadastrando..." : "Cadastre-se"}
         </Button>
       </form>
     </Form>

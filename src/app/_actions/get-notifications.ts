@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
+import { ServerAction } from "@/core/either";
 
 type GetNotificationsPayload = {
   userId: string;

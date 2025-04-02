@@ -1,10 +1,9 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 
 export type Tenant = {
   id: string;
@@ -15,17 +14,9 @@ export type Tenant = {
   updatedAt: Date;
 };
 
-type GetUserTenantsActionPayload = {
-  userId: string;
-};
-
-type GetUserTenantsActionResult = {
-  tenants: Tenant[];
-};
-
 export const getUserTenants: ServerAction<
-  GetUserTenantsActionPayload,
-  GetUserTenantsActionResult
+  { userId: string },
+  Tenant[]
 > = async ({ userId }) => {
   try {
     const tenants = await prisma.tenant.findMany({
@@ -37,28 +28,26 @@ export const getUserTenants: ServerAction<
             },
           },
         },
+        active: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 
-    if (!tenants?.length)
-      throw new NotFoundError({ message: "tenants not found" });
+    if (!tenants.length) {
+      return failure(new NotFoundError("No tenants found for this user"));
+    }
 
-    return {
-      data: {
-        tenants: tenants.map((tenant) => ({
-          id: tenant.id,
-          name: tenant.name,
-          description: tenant.description ?? "",
-          active: Boolean(tenant.active),
-          createdAt: tenant.createdAt,
-          updatedAt: tenant.updatedAt,
-        })),
-      },
-    };
-  } catch (error: any) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes(error?.name)
-      ? propagateError(error)
-      : reportError(error);
+    return success(
+      tenants.map((tenant) => ({
+        ...tenant,
+        description: tenant.description ?? "",
+        active: Boolean(tenant.active),
+      }))
+    );
+  } catch (error: unknown) {
+    console.error(`Failed to get tenants for user ${userId}:`, error);
+    return reportError(error);
   }
 };

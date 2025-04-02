@@ -1,4 +1,4 @@
-import { ServerActionResult } from "@/types/server-actions";
+import { ServerActionResult } from "@/core/either";
 import { GetCustomersCountActionResult } from "../_actions/get-customers-count";
 import { FC } from "react";
 import { UsersIcon } from "lucide-react";

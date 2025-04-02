@@ -19,11 +19,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getUserTenants } from "../_actions/get-user-tenants";
-import { NotFoundError } from "@/errors/not-found";
 import { PasswordInput } from "./password-input";
 import { toast } from "sonner";
 import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
-import { InvalidCredentialsError } from "@/errors";
+import { InvalidCredentialsError, NotFoundError } from "@/errors";
 
 const formSchema = z.object({
   email: z.string().min(1, {
@@ -53,8 +52,8 @@ export const AuthenticationForm = () => {
       password,
     });
 
-    if ("error" in result) {
-      switch (result.error) {
+    if (result.isSuccess) {
+      switch (result.error!.name) {
         case NotFoundError.name:
           return toast("Usuário não encontrado", {
             description: "Verifique o e-mail informado e tente novamente",
@@ -74,7 +73,7 @@ export const AuthenticationForm = () => {
       }
     }
 
-    const { sessionId } = result.data;
+    const { sessionId } = result.value!;
 
     setCookie(null, "X-Identity", sessionId, { path: "/" });
 

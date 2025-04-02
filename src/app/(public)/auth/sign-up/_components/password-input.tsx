@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { FC, useState } from "react";
+import { useState } from "react";
 import { UseFormReturn, Path, FieldValues } from "react-hook-form";
 
 type PasswordInputProps<T extends FieldValues> = {

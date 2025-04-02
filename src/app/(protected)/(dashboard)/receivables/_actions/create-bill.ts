@@ -1,8 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
+import { ServerAction } from "@/core/either";
+import { propagateError } from "@/utils/propagate-error.util";
 
 type CreateBillActionPayload = {
   firstName: string;

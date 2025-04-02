@@ -1,28 +1,24 @@
+"use server";
+
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
-
-export type GetProductsCountActionPayload = {
-  tenantId: string;
-};
-
-export type GetProductsCountActionResult = {
-  count: number;
-};
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { BadRequestError } from "@/errors/http/bad-request.error";
 
 export const getProductsCount: ServerAction<
-  GetProductsCountActionPayload,
-  GetProductsCountActionResult
+  { tenantId: string },
+  number
 > = async ({ tenantId }) => {
   try {
-    const productsCount = await prisma.product.count({
-      where: {
-        tenantId,
-      },
+    if (!tenantId) throw new BadRequestError("Tenant ID is required");
+
+    const count = await prisma.product.count({
+      where: { tenantId },
     });
 
-    return { data: { count: productsCount } };
-  } catch (error) {
-    return reportError(error as Error);
+    return success(count);
+  } catch (error: unknown) {
+    if (error instanceof BadRequestError) return failure(error);
+    return reportError(error);
   }
 };

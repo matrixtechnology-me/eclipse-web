@@ -1,10 +1,9 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 import { Prisma } from "@prisma/client";
 
 export type Customer = {
@@ -16,6 +15,16 @@ export type Customer = {
   updatedAt: Date;
 };
 
+type PaginatedCustomers = {
+  customers: Customer[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+  };
+};
+
 type GetCustomersActionPayload = {
   page: number;
   pageSize: number;
@@ -23,46 +32,48 @@ type GetCustomersActionPayload = {
   tenantId: string;
 };
 
-type GetCustomersActionResult = {
-  customers: Customer[];
-};
-
 export const getCustomers: ServerAction<
   GetCustomersActionPayload,
-  GetCustomersActionResult
+  PaginatedCustomers
 > = async ({ page, pageSize, tenantId, query }) => {
   try {
     const skip = (page - 1) * pageSize;
-
-    const customers = await prisma.customer.findMany({
-      where: {
-        tenantId,
-        name: {
-          contains: query,
-        },
-      },
-      skip,
-      take: pageSize,
-    });
-
-    if (!customers?.length) throw new NotFoundError();
-
-    return {
-      data: {
-        customers: customers.map((customer) => ({
-          id: customer.id,
-          name: customer.name,
-          active: Boolean(customer.active),
-          phoneNumber: customer.phoneNumber,
-          createdAt: customer.createdAt,
-          updatedAt: customer.updatedAt,
-        })),
-      },
+    const whereCondition: Prisma.CustomerWhereInput = {
+      tenantId,
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { phoneNumber: { contains: query, mode: "insensitive" } },
+      ],
     };
-  } catch (error: any) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes(error?.name)
-      ? propagateError(error)
-      : reportError(error);
+
+    const [customers, totalCount] = await Promise.all([
+      prisma.customer.findMany({
+        where: whereCondition,
+        skip,
+        take: pageSize,
+        orderBy: { name: "asc" },
+      }),
+      prisma.customer.count({ where: whereCondition }),
+    ]);
+
+    if (!customers.length) {
+      return failure(new NotFoundError("No customers found"));
+    }
+
+    return success({
+      customers: customers.map((customer) => ({
+        ...customer,
+        active: Boolean(customer.active),
+      })),
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    });
+  } catch (error: unknown) {
+    console.error("Failed to fetch customers:", error);
+    return reportError(error);
   }
 };

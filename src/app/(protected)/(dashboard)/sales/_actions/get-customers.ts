@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { Prisma, Customer } from "@prisma/client";
+import { ServerAction, success } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 
 type GetCustomersActionPayload = {
   searchValue: string;
@@ -10,51 +12,45 @@ type GetCustomersActionPayload = {
   active: boolean;
 };
 
-export type GetCustomersActionResult = {
-  data: {
-    results: Customer[];
-    pagination: Pagination;
+type CustomerWithPagination = {
+  results: Customer[];
+  pagination: {
+    limit: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
   };
 };
 
-export type Pagination = {
-  limit: number;
-  currentPage: number;
-  totalItems: number;
-  totalPages: number;
-};
+export const getCustomers: ServerAction<
+  GetCustomersActionPayload,
+  CustomerWithPagination
+> = async ({ searchValue, page, limit, active }) => {
+  try {
+    const skip = (page - 1) * limit;
 
-export const getCustomers = async ({
-  searchValue,
-  page,
-  limit,
-  active,
-}: GetCustomersActionPayload): Promise<GetCustomersActionResult> => {
-  const skip = (page - 1) * limit;
+    const whereCondition: Prisma.CustomerWhereInput = {
+      AND: [
+        searchValue
+          ? {
+              OR: [{ name: { contains: searchValue, mode: "insensitive" } }],
+            }
+          : {},
+        { active },
+      ],
+    };
 
-  const whereCondition: Prisma.CustomerWhereInput = {
-    AND: [
-      searchValue
-        ? {
-            OR: [{ name: { contains: searchValue, mode: "insensitive" } }],
-          }
-        : {},
-      { active },
-    ],
-  };
+    const [results, totalItems] = await Promise.all([
+      prisma.customer.findMany({
+        where: whereCondition,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+      }),
+      prisma.customer.count({ where: whereCondition }),
+    ]);
 
-  const [results, totalItems] = await Promise.all([
-    prisma.customer.findMany({
-      where: whereCondition,
-      skip,
-      take: limit,
-      orderBy: { name: "asc" },
-    }),
-    prisma.customer.count({ where: whereCondition }),
-  ]);
-
-  return {
-    data: {
+    return success({
       results,
       pagination: {
         limit,
@@ -62,6 +58,9 @@ export const getCustomers = async ({
         totalItems,
         totalPages: Math.ceil(totalItems / limit),
       },
-    },
-  };
+    });
+  } catch (error: unknown) {
+    console.error("Failed to fetch customers:", error);
+    return reportError(error);
+  }
 };

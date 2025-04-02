@@ -1,53 +1,60 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
-
-type CreateLotActionPayload = {
-  costPrice: number;
-  totalQty: number;
-  expiresAt?: Date;
-  stockId: string;
-  tenantId: string;
-};
-
-type CreateLotActionResult = {};
+import { ServerAction, success } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { BadRequestError, NotFoundError } from "@/errors";
 
 export const createLot: ServerAction<
-  CreateLotActionPayload,
-  CreateLotActionResult
+  {
+    costPrice: number;
+    totalQty: number;
+    expiresAt?: Date;
+    stockId: string;
+    tenantId: string;
+  },
+  void
 > = async ({ costPrice, stockId, totalQty, tenantId, expiresAt = null }) => {
   try {
-    await prisma.stockLot.create({
-      data: {
-        stockId,
-        lotNumber: Math.floor(Math.random() * 0xffffff)
-          .toString(16)
-          .padStart(6, "0"),
-        tenantId,
-        costPrice,
-        totalQty,
-        expiresAt,
-      },
+    if (!stockId || !tenantId || totalQty <= 0 || costPrice <= 0) {
+      throw new BadRequestError("Invalid input parameters");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const stock = await tx.stock.findUnique({
+        where: { id: stockId, tenantId },
+      });
+      if (!stock) throw new NotFoundError("Stock not found");
+
+      await tx.stockLot.create({
+        data: {
+          stockId,
+          lotNumber: generateLotNumber(),
+          tenantId,
+          costPrice,
+          totalQty,
+          expiresAt,
+        },
+      });
+
+      await tx.stock.update({
+        where: { id: stockId },
+        data: {
+          totalQty: { increment: totalQty },
+          availableQty: { increment: totalQty },
+        },
+      });
     });
 
-    await prisma.stock.update({
-      where: {
-        id: stockId,
-      },
-      data: {
-        totalQty: {
-          increment: totalQty,
-        },
-        availableQty: {
-          increment: totalQty,
-        },
-      },
-    });
-
-    return { data: {} };
-  } catch (error) {
+    return success(undefined);
+  } catch (error: unknown) {
+    console.error("Failed to create lot:", error);
     return reportError(error);
   }
 };
+
+function generateLotNumber(): string {
+  return Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, "0");
+}

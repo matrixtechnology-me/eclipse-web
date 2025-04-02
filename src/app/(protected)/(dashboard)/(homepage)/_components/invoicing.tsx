@@ -1,4 +1,4 @@
-import { ServerActionResult } from "@/types/server-actions";
+import { ServerActionResult } from "@/core/either";
 import { GetInvoicingActionResult } from "../_actions/get-invoicing";
 import { FC } from "react";
 import { DollarSignIcon } from "lucide-react";

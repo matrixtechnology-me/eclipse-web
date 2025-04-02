@@ -1,28 +1,35 @@
+"use server";
+
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
-
-export type GetCustomersCountActionPayload = {
-  tenantId: string;
-};
-
-export type GetCustomersCountActionResult = {
-  count: number;
-};
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { BadRequestError } from "@/errors/http/bad-request.error";
 
 export const getCustomersCount: ServerAction<
-  GetCustomersCountActionPayload,
-  GetCustomersCountActionResult
+  { tenantId: string },
+  number
 > = async ({ tenantId }) => {
   try {
-    const customersCount = await prisma.customer.count({
-      where: {
-        tenantId,
-      },
+    if (!tenantId) {
+      throw new BadRequestError("Tenant ID is required");
+    }
+
+    const count = await prisma.customer.count({
+      where: { tenantId },
     });
 
-    return { data: { count: customersCount } };
-  } catch (error) {
-    return reportError(error as Error);
+    return success(count);
+  } catch (error: unknown) {
+    console.error(
+      `Failed to get customer count for tenant ${tenantId}:`,
+      error
+    );
+
+    if (error instanceof BadRequestError) {
+      return failure(error);
+    }
+
+    // Report unexpected errors
+    return reportError(error);
   }
 };

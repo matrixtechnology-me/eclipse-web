@@ -19,8 +19,6 @@ import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/session";
 import { createTenant } from "../_actions/create-tenant";
 import { setCookie } from "nookies";
-import { ApplicationError } from "@/errors/application";
-import { propagateError } from "@/utils/propagate-error";
 
 const formSchema = z.object({
   name: z
@@ -49,30 +47,23 @@ export const CreateTenantForm = () => {
   });
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      const session = await getServerSession();
+    const session = await getServerSession();
 
-      if (!session) {
-        throw new Error("Sessão não encontrada");
-      }
-
-      const result = await createTenant({
-        ...values,
-        userId: session.id,
-      });
-
-      if ("error" in result) {
-        throw new Error("Erro ao criar tenant");
-      }
-
-      setCookie(null, "X-Tenant", result.data.tenantId, { path: "/" });
-      router.push(PATHS.PROTECTED.HOMEPAGE);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        return propagateError(error);
-      }
-      return propagateError(new Error("Erro desconhecido"));
+    if (!session) {
+      throw new Error("Sessão não encontrada");
     }
+
+    const result = await createTenant({
+      ...values,
+      userId: session.id,
+    });
+
+    if ("error" in result) {
+      throw new Error("Erro ao criar tenant");
+    }
+
+    setCookie(null, "X-Tenant", result.data.tenantId, { path: "/" });
+    router.push(PATHS.PROTECTED.HOMEPAGE);
   };
 
   return (

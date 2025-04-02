@@ -1,4 +1,4 @@
-import { ServerActionResult } from "@/types/server-actions";
+import { ServerActionResult } from "@/core/either";
 import { GetAverageTicketActionResult } from "../_actions/get-average-ticket";
 import { FC } from "react";
 import { TicketIcon } from "lucide-react";

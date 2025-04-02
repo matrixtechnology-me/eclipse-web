@@ -1,38 +1,28 @@
+"use server";
+
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { BadRequestError } from "@/errors/http/bad-request.error";
 
-export type GetInvoicingActionPayload = {
-  tenantId: string;
-};
-
-export type GetInvoicingActionResult = {
-  invoicing: number;
-};
-
-export const getInvoicing: ServerAction<
-  GetInvoicingActionPayload,
-  GetInvoicingActionResult
-> = async ({ tenantId }) => {
+export const getInvoicing: ServerAction<{ tenantId: string }, number> = async ({
+  tenantId,
+}) => {
   try {
-    const sales = await prisma.sale.findMany({
-      where: {
-        tenantId,
-      },
-      select: {
-        products: true,
-      },
+    if (!tenantId) {
+      throw new BadRequestError("Tenant ID is required");
+    }
+
+    const aggregation = await prisma.sale.aggregate({
+      where: { tenantId },
+      _sum: { total: true },
     });
 
-    const invoicing = sales.reduce((accumulator, sale) => {
-      const saleTotal = sale.products.reduce((productAccumulator, product) => {
-        return productAccumulator + product.salePrice;
-      }, 0);
-      return accumulator + saleTotal;
-    }, 0);
-
-    return { data: { invoicing } };
-  } catch (error) {
-    return reportError(error as Error);
+    return success(aggregation._sum.total?.toNumber() || 0);
+  } catch (error: unknown) {
+    if (error instanceof BadRequestError) {
+      return failure(error);
+    }
+    return reportError(error);
   }
 };

@@ -1,8 +1,9 @@
-import { NotFoundError } from "@/errors/not-found";
+"use server";
+
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 
 export type Customer = {
   id: string;
@@ -13,34 +14,34 @@ export type Customer = {
   updatedAt: Date;
 };
 
-type GetCustomersActionPayload = {
+type GetCustomerActionPayload = {
   id: string;
 };
 
-type GetCustomersActionResult = {
-  customer: Customer;
-};
-
 export const getCustomer: ServerAction<
-  GetCustomersActionPayload,
-  GetCustomersActionResult
+  GetCustomerActionPayload,
+  Customer
 > = async ({ id }) => {
   try {
     const customer = await prisma.customer.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
-    if (!customer) throw new NotFoundError({ message: "customer not found" });
+    if (!customer) {
+      throw new NotFoundError("Customer not found");
+    }
 
-    return {
-      data: { customer: { ...customer, active: Boolean(customer.active) } },
-    };
-  } catch (error: any) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes(error.name)
-      ? propagateError(error)
-      : reportError(error);
+    return success({
+      ...customer,
+      active: Boolean(customer.active),
+    });
+  } catch (error: unknown) {
+    console.error(`Failed to fetch customer ${id}:`, error);
+
+    if (error instanceof NotFoundError) {
+      return failure(error);
+    }
+
+    return reportError(error);
   }
 };

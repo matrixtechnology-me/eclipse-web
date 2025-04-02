@@ -1,10 +1,9 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 
 type DeleteCustomerActionPayload = {
   id: string;
@@ -12,26 +11,24 @@ type DeleteCustomerActionPayload = {
 
 export const deleteCustomer: ServerAction<
   DeleteCustomerActionPayload,
-  unknown
+  void
 > = async ({ id }) => {
   try {
     const customer = await prisma.customer.findUnique({
       where: { id },
     });
 
-    if (!customer) throw new NotFoundError({ message: "customer not found" });
+    if (!customer) {
+      return failure(new NotFoundError("Customer not found"));
+    }
 
     await prisma.customer.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
-    return { data: {} };
-  } catch (error: any) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes(error?.name)
-      ? propagateError(error)
-      : reportError(error);
+    return success(undefined);
+  } catch (error: unknown) {
+    console.error("Failed to delete customer:", error);
+    return reportError(error);
   }
 };

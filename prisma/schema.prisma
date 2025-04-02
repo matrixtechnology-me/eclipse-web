@@ -71,6 +71,7 @@ model User {
   email     String   @unique
   password  String
   role      String
+  active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @updatedAt @map(name: "updated_at")
 
@@ -217,6 +218,7 @@ model Sale {
   tenantId        String           @map("tenant_id") @db.Uuid
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
   discountValue   Decimal          @default(0) @map("discount_value")
+  total           Decimal
   createdAt       DateTime         @default(now()) @map(name: "created_at")
   updatedAt       DateTime         @updatedAt @map(name: "updated_at")
 

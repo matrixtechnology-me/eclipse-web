@@ -1,10 +1,10 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { EStockStrategy, SaleProduct } from "@prisma/client";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { EStockStrategy } from "@prisma/client";
 
 type CreateSaleActionPayload = {
   customerId: string;
@@ -15,64 +15,46 @@ type CreateSaleActionPayload = {
   }[];
 };
 
-type CreateSaleActionResult = {};
-
-export const createSale: ServerAction<
-  CreateSaleActionPayload,
-  CreateSaleActionResult
-> = async ({ customerId, products, tenantId }) => {
+export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
+  customerId,
+  products,
+  tenantId,
+}) => {
   try {
     const saleProducts = await Promise.all(
-      products.map(
-        async (
-          saleProduct
-        ): Promise<
-          Omit<SaleProduct, "saleId"> & { stockId: string; stockLotId: string }
-        > => {
-          const product = await prisma.product.findUnique({
-            where: {
-              id: saleProduct.id,
-            },
-            include: {
-              stock: {
-                select: {
-                  id: true,
-                  strategy: true,
-                },
-              },
-            },
-          });
+      products.map(async (saleProduct) => {
+        const product = await prisma.product.findUnique({
+          where: { id: saleProduct.id },
+          include: { stock: { select: { id: true, strategy: true } } },
+        });
 
-          if (!product?.stock)
-            throw new NotFoundError({ message: "product stock not found" });
-
-          const lots = await prisma.stockLot.findMany({
-            where: {
-              stockId: product.stock.id,
-            },
-            orderBy: {
-              expiresAt:
-                product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc",
-            },
-          });
-
-          if (!lots?.length)
-            throw new NotFoundError({ message: "no lots in product stock" });
-
-          const targetLot = lots[0];
-
-          return {
-            costPrice: targetLot.costPrice.toNumber(),
-            description: product.description,
-            name: product.name,
-            productId: product.id,
-            salePrice: product.salePrice.toNumber(),
-            totalQty: saleProduct.totalQty,
-            stockId: product.stock.id,
-            stockLotId: targetLot.id,
-          };
+        if (!product?.stock) {
+          throw new NotFoundError("Product stock not found");
         }
-      )
+
+        const orderDirection =
+          product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
+        const [targetLot] = await prisma.stockLot.findMany({
+          where: { stockId: product.stock.id },
+          orderBy: { expiresAt: orderDirection },
+          take: 1,
+        });
+
+        if (!targetLot) {
+          throw new NotFoundError("No lots in product stock");
+        }
+
+        return {
+          costPrice: targetLot.costPrice.toNumber(),
+          description: product.description,
+          name: product.name,
+          productId: product.id,
+          salePrice: product.salePrice.toNumber(),
+          totalQty: saleProduct.totalQty,
+          stockId: product.stock.id,
+          stockLotId: targetLot.id,
+        };
+      })
     );
 
     await prisma.sale.create({
@@ -81,42 +63,24 @@ export const createSale: ServerAction<
         tenantId,
         products: {
           createMany: {
-            data: saleProducts.map(
-              (saleProduct): Omit<SaleProduct, "saleId"> => ({
-                costPrice: saleProduct.costPrice,
-                name: saleProduct.name,
-                productId: saleProduct.productId,
-                salePrice: saleProduct.salePrice,
-                description: saleProduct.description,
-                totalQty: saleProduct.totalQty,
-              })
-            ),
+            data: saleProducts.map(({ stockId, stockLotId, ...rest }) => rest),
           },
         },
       },
     });
 
     await Promise.all(
-      saleProducts.map(async (saleProduct) => {
-        const decrementInput = {
-          decrement: saleProduct.totalQty,
-        };
-
+      saleProducts.map(async ({ stockId, stockLotId, totalQty }) => {
+        const decrement = { decrement: totalQty };
         await prisma.stock.update({
-          where: {
-            id: saleProduct.stockId,
-          },
+          where: { id: stockId },
           data: {
-            availableQty: decrementInput,
-            totalQty: decrementInput,
+            availableQty: decrement,
+            totalQty: decrement,
             lots: {
               update: {
-                where: {
-                  id: saleProduct.stockLotId,
-                },
-                data: {
-                  totalQty: decrementInput,
-                },
+                where: { id: stockLotId },
+                data: { totalQty: decrement },
               },
             },
           },
@@ -124,8 +88,9 @@ export const createSale: ServerAction<
       })
     );
 
-    return { data: {} };
-  } catch (error) {
-    return propagateError(error as Error);
+    return success(undefined);
+  } catch (error: unknown) {
+    console.error("Failed to create sale:", error);
+    return error instanceof NotFoundError ? failure(error) : reportError(error);
   }
 };
