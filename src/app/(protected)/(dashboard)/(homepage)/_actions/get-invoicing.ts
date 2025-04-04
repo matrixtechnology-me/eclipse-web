@@ -1,13 +1,24 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 
-export const getInvoicing: ServerAction<{ tenantId: string }, number> = async ({
-  tenantId,
-}) => {
+type GetInvoicingActionPayload = { tenantId: string };
+
+export type GetInvoicingActionResult = {
+  invoicing: number;
+};
+
+export const getInvoicing: ServerAction<
+  GetInvoicingActionPayload,
+  GetInvoicingActionResult
+> = async ({ tenantId }) => {
   try {
     if (!tenantId) {
       throw new BadRequestError("Tenant ID is required");
@@ -18,11 +29,19 @@ export const getInvoicing: ServerAction<{ tenantId: string }, number> = async ({
       _sum: { total: true },
     });
 
-    return success(aggregation._sum.total?.toNumber() || 0);
+    const invoicing = aggregation._sum.total?.toNumber() ?? 0;
+
+    return success({ invoicing });
   } catch (error: unknown) {
-    if (error instanceof BadRequestError) {
-      return failure(error);
-    }
-    return reportError(error);
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

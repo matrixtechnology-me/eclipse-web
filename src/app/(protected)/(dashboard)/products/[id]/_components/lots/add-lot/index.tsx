@@ -60,7 +60,11 @@ export const AddLot = ({ stockId }: AddLotProps) => {
   const onSubmit = async (formData: CreateLotSchema) => {
     try {
       setIsSubmitting(true);
-      const session = await getServerSession();
+
+      const session = await getServerSession({
+        requirements: { tenant: true },
+      });
+
       if (!session) throw new Error("Sessão não encontrada");
 
       await createLot({

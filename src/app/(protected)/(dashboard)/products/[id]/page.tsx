@@ -30,11 +30,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
     id,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return <div>Nenhum produto encontrado</div>;
   }
 
-  const { product } = result.data;
+  const { product } = result.value;
 
   const properties = [
     { label: "Nome", value: product.name, copyable: true },

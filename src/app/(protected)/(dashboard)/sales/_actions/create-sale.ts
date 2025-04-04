@@ -3,8 +3,8 @@
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { EStockStrategy } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
 type CreateSaleActionPayload = {
   customerId: string;
@@ -66,6 +66,11 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
             data: saleProducts.map(({ stockId, stockLotId, ...rest }) => rest),
           },
         },
+        total: saleProducts.reduce(
+          (acc, saleProduct) =>
+            acc + saleProduct.salePrice * saleProduct.totalQty,
+          0
+        ),
       },
     });
 
@@ -91,6 +96,6 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to create sale:", error);
-    return error instanceof NotFoundError ? failure(error) : reportError(error);
+    return failure(new InternalServerError());
   }
 };

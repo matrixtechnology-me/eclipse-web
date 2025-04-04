@@ -1,8 +1,7 @@
 "use server";
 
-import prisma from "@/lib/prisma";
-import { ServerAction } from "@/core/either";
-import { propagateError } from "@/utils/propagate-error.util";
+import { failure, ServerAction, success } from "@/core/server-actions";
+import { InternalServerError } from "@/errors";
 
 type CreateBillActionPayload = {
   firstName: string;
@@ -26,8 +25,8 @@ export const createBill: ServerAction<
       },
     }); */
 
-    return { data: {} };
+    return success({});
   } catch (error) {
-    return propagateError(error as Error);
+    return failure(new InternalServerError());
   }
 };

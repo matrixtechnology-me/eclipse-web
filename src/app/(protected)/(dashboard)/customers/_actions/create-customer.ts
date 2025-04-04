@@ -5,6 +5,7 @@ import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
 import { ConflictError } from "@/errors/http/conflict.error";
 import { BadRequestError } from "@/errors/http/bad-request.error";
+import { InternalServerError } from "@/errors";
 
 type CreateCustomerActionPayload = {
   name: string;
@@ -47,13 +48,10 @@ export const createCustomer: ServerAction<
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to create customer:", error);
-
-    // Handle known error types
-    if (error instanceof BadRequestError || error instanceof ConflictError) {
-      return failure(error);
-    }
-
-    // Report unexpected errors
-    return reportError(error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

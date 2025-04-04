@@ -2,8 +2,9 @@
 
 import prisma from "@/lib/prisma";
 import { Prisma, Customer } from "@prisma/client";
-import { ServerAction, success } from "@/core/server-actions";
+import { failure, ServerAction, success } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
+import { InternalServerError } from "@/errors";
 
 type GetCustomersActionPayload = {
   searchValue: string;
@@ -61,6 +62,6 @@ export const getCustomers: ServerAction<
     });
   } catch (error: unknown) {
     console.error("Failed to fetch customers:", error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };

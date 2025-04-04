@@ -1,9 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success } from "@/core/server-actions";
+import { failure, ServerAction, success } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
-import { BadRequestError, ConflictError } from "@/errors";
+import { BadRequestError, ConflictError, InternalServerError } from "@/errors";
 import { EStockStrategy } from "@prisma/client";
 
 export const createProduct: ServerAction<
@@ -63,7 +63,7 @@ export const createProduct: ServerAction<
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to create product:", error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };
 

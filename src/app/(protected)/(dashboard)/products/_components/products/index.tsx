@@ -4,9 +4,16 @@ import { PATHS } from "@/config/paths";
 import { Product } from "./product";
 import { PackageIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getServerSession } from "@/lib/session";
 
 export const Products = async () => {
-  const result = await getProducts({});
+  const session = await getServerSession({ requirements: { tenant: true } });
+
+  if (!session) throw new Error("Session not found");
+
+  const result = await getProducts({
+    tenantId: session.tenantId,
+  });
 
   if ("error" in result) {
     return (
@@ -31,7 +38,7 @@ export const Products = async () => {
     );
   }
 
-  const { products } = result.data;
+  const { products } = result.value;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">

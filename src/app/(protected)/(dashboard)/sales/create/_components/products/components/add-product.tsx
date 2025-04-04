@@ -84,19 +84,19 @@ export const AddProduct = ({ appendProduct }: IProps) => {
     const curPage = additional!.page;
     const pageSize = additional!.itemsPerPage;
 
-    const response = await getProducts({
+    const result = await getProducts({
       searchValue: input.trim(),
       active: true,
       limit: pageSize,
       page: curPage,
     });
 
-    if (!response.data) {
+    if (result.isFailure) {
       console.log("error fetching products");
       return { options: [], additional, hasMore: true };
     }
 
-    const products = response.data.results;
+    const products = result.value.results;
 
     return {
       options: products.map((product) => ({
@@ -104,7 +104,7 @@ export const AddProduct = ({ appendProduct }: IProps) => {
         label: product.name,
       })),
       additional: { itemsPerPage: pageSize, page: curPage + 1 },
-      hasMore: curPage * pageSize < response.data.pagination.totalItems,
+      hasMore: curPage * pageSize < result.value.pagination.totalItems,
     };
   };
 

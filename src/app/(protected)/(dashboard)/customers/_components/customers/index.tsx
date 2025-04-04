@@ -17,7 +17,7 @@ export const Customers = async ({
   pageSize = 5,
   query,
 }: CustomersProps) => {
-  const session = await getServerSession();
+  const session = await getServerSession({ requirements: { tenant: true } });
 
   if (!session) throw new Error("session not found");
 
@@ -28,7 +28,7 @@ export const Customers = async ({
     query,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
         <UsersIcon className="size-8 text-muted-foreground" />
@@ -51,7 +51,7 @@ export const Customers = async ({
     );
   }
 
-  const { customers } = result.data;
+  const { customers } = result.value;
 
   return (
     <div className="grid lg:grid-cols-4 gap-5 grid-cols-1 overflow-y-auto">

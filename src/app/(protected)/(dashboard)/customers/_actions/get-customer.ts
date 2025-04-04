@@ -4,6 +4,7 @@ import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
+import { InternalServerError } from "@/errors";
 
 export type Customer = {
   id: string;
@@ -20,7 +21,7 @@ type GetCustomerActionPayload = {
 
 export const getCustomer: ServerAction<
   GetCustomerActionPayload,
-  Customer
+  { customer: Customer }
 > = async ({ id }) => {
   try {
     const customer = await prisma.customer.findUnique({
@@ -32,16 +33,17 @@ export const getCustomer: ServerAction<
     }
 
     return success({
-      ...customer,
-      active: Boolean(customer.active),
+      customer: {
+        ...customer,
+        active: Boolean(customer.active),
+      },
     });
   } catch (error: unknown) {
     console.error(`Failed to fetch customer ${id}:`, error);
-
-    if (error instanceof NotFoundError) {
-      return failure(error);
-    }
-
-    return reportError(error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

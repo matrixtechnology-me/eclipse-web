@@ -35,7 +35,6 @@ import {
 import { createSale } from "../_actions/create-sale";
 import { getServerSession } from "@/lib/session";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
 import { LoadOptions } from "react-select-async-paginate";
 import { GroupBase } from "react-select";
@@ -55,7 +54,11 @@ const Page = () => {
   const onSubmit = async (values: CreateSaleSchema) => {
     try {
       setIsSubmitting(true);
-      const session = await getServerSession();
+
+      const session = await getServerSession({
+        requirements: { tenant: true },
+      });
+
       if (!session) throw new Error("Sessão não encontrada");
 
       const result = await createSale({
@@ -67,8 +70,8 @@ const Page = () => {
         })),
       });
 
-      if ("error" in result) {
-        throw new Error(result.error);
+      if (result.isFailure) {
+        return;
       }
 
       toast.success("Venda registrada com sucesso");
@@ -102,18 +105,18 @@ const Page = () => {
       active: true,
     });
 
-    if (!response.data) {
+    if (response.isFailure) {
       console.log("error fetching customers");
       return { options: [], additional, hasMore: true };
     }
 
     return {
-      options: response.data.results.map((customer) => ({
+      options: response.value.results.map((customer) => ({
         value: customer.id,
         label: customer.name,
       })),
       additional: { itemsPerPage: pageSize, page: curPage + 1 },
-      hasMore: curPage * pageSize < response.data.pagination.totalItems,
+      hasMore: curPage * pageSize < response.value.pagination.totalItems,
     };
   }, []);
 

@@ -27,11 +27,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
     id,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return <div>Nenhum cliente encontrado</div>;
   }
 
-  const { customer } = result.data;
+  const { customer } = result.value;
 
   const properties = [
     { label: "Nome", value: customer.name, copyable: true },

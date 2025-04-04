@@ -51,7 +51,10 @@ const Page = () => {
 
   const onSubmit = async (values: CreateProductSchema) => {
     try {
-      const session = await getServerSession();
+      const session = await getServerSession({
+        requirements: { tenant: true },
+      });
+
       if (!session) throw new Error("Sessão não encontrada");
 
       const result = await createProduct({
@@ -59,8 +62,8 @@ const Page = () => {
         tenantId: session.tenantId,
       });
 
-      if ("error" in result) {
-        throw new Error(result.error);
+      if (result.isFailure) {
+        return;
       }
 
       toast.success("Produto criado com sucesso");

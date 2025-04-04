@@ -2,8 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { BadRequestError } from "@/errors/http/bad-request.error";
+import { InternalServerError } from "@/errors";
 
 export type SaleItem = {
   id: string;
@@ -27,7 +27,7 @@ export const getSales: ServerAction<
     endDate?: Date;
     status?: "completed" | "pending" | "canceled";
   },
-  SaleItem[]
+  { sales: SaleItem[] }
 > = async ({ tenantId, startDate, endDate, status }) => {
   try {
     if (!tenantId) {
@@ -58,7 +58,7 @@ export const getSales: ServerAction<
       orderBy: { createdAt: "desc" },
     });
 
-    const result = sales.map((sale) => ({
+    const mappedSales = sales.map((sale) => ({
       id: sale.id,
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
@@ -69,10 +69,9 @@ export const getSales: ServerAction<
       totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
     }));
 
-    return success(result);
+    return success({ sales: mappedSales });
   } catch (error: unknown) {
     console.error("Failed to fetch sales:", error);
-    if (error instanceof BadRequestError) return failure(error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };

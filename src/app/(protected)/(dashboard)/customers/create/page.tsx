@@ -51,7 +51,7 @@ const Page = () => {
   });
 
   const handleSubmit = async ({ name, phoneNumber }: FormSchema) => {
-    const session = await getServerSession();
+    const session = await getServerSession({ requirements: { tenant: true } });
 
     if (!session) throw new Error("session not found");
 

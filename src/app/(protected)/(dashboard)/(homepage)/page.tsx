@@ -10,7 +10,7 @@ import { AverageTicket } from "./_components/average-ticket";
 import { Invoicing } from "./_components/invoicing";
 
 const Page: NextPage = async () => {
-  const session = await getServerSession();
+  const session = await getServerSession({ requirements: { tenant: true } });
 
   if (!session) return;
 
@@ -30,12 +30,12 @@ const Page: NextPage = async () => {
   };
 
   return (
-    <div className="p-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 ">
-        <CustomersCounter either={results.customersCount} />
-        <ProductsCounter either={results.productsCount} />
-        <AverageTicket either={results.averageTicket} />
-        <Invoicing either={results.invoicing} />
+    <div className="p-5 flex flex-col gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 ">
+        <CustomersCounter result={results.customersCount} />
+        <ProductsCounter result={results.productsCount} />
+        <AverageTicket result={results.averageTicket} />
+        <Invoicing result={results.invoicing} />
       </div>
     </div>
   );

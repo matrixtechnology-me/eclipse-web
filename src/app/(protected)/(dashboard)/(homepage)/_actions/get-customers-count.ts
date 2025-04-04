@@ -1,13 +1,21 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 
+type GetCustomersCountActionPayload = { tenantId: string };
+
+export type GetCustomersCountActionResult = { count: number };
+
 export const getCustomersCount: ServerAction<
-  { tenantId: string },
-  number
+  GetCustomersCountActionPayload,
+  GetCustomersCountActionResult
 > = async ({ tenantId }) => {
   try {
     if (!tenantId) {
@@ -18,18 +26,22 @@ export const getCustomersCount: ServerAction<
       where: { tenantId },
     });
 
-    return success(count);
+    return success({ count });
   } catch (error: unknown) {
     console.error(
       `Failed to get customer count for tenant ${tenantId}:`,
       error
     );
 
-    if (error instanceof BadRequestError) {
-      return failure(error);
-    }
-
-    // Report unexpected errors
-    return reportError(error);
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

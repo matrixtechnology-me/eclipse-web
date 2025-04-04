@@ -5,8 +5,9 @@ import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
 import { EStockStrategy } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
-export type ProductDetails = {
+export type Product = {
   id: string;
   name: string;
   description: string;
@@ -37,9 +38,10 @@ export type ProductDetails = {
   };
 };
 
-export const getProduct: ServerAction<{ id: string }, ProductDetails> = async ({
-  id,
-}) => {
+export const getProduct: ServerAction<
+  { id: string },
+  { product: Product }
+> = async ({ id }) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id },
@@ -80,7 +82,7 @@ export const getProduct: ServerAction<{ id: string }, ProductDetails> = async ({
       return failure(new NotFoundError("Product stock not found"));
     }
 
-    const result: ProductDetails = {
+    const productDetails: Product = {
       id: product.id,
       name: product.name,
       description: product.description,
@@ -107,9 +109,13 @@ export const getProduct: ServerAction<{ id: string }, ProductDetails> = async ({
       },
     };
 
-    return success(result);
+    return success({ product: productDetails });
   } catch (error: unknown) {
     console.error(`Failed to fetch product ${id}:`, error);
-    return reportError(error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

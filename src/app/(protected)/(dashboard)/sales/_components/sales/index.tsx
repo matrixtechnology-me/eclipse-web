@@ -3,15 +3,17 @@ import { getServerSession } from "@/lib/session";
 import { Sale } from "./sale";
 
 export const Sales = async () => {
-  const session = await getServerSession();
+  const session = await getServerSession({
+    requirements: { tenant: true },
+  });
 
   if (!session) return null;
 
   const result = await getSales({ tenantId: session.tenantId });
 
-  if ("error" in result) return null;
+  if (result.isFailure) return null;
 
-  const { sales } = result.data;
+  const { sales } = result.value;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

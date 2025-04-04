@@ -2,8 +2,9 @@
 
 import prisma from "@/lib/prisma";
 import { EStockStrategy, Prisma } from "@prisma/client";
-import { ServerAction, success } from "@/core/server-actions";
+import { failure, ServerAction, success } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
+import { InternalServerError } from "@/errors";
 
 type GetProductsActionPayload = {
   searchValue: string;
@@ -66,7 +67,7 @@ export const getProducts: ServerAction<
                   expiresAt: true,
                 },
                 orderBy: {
-                  expiresAt: "asc", // Let Prisma handle the initial sorting
+                  expiresAt: "asc",
                 },
               },
             },
@@ -81,11 +82,8 @@ export const getProducts: ServerAction<
       const strategy = product.stock?.strategy;
       const lots = product.stock?.lots || [];
 
-      // Optimized lot sorting based on strategy
       const sortedLots =
-        strategy === EStockStrategy.Lifo
-          ? [...lots].reverse() // Reverse the array for LIFO
-          : lots; // Already sorted by Prisma for FIFO
+        strategy === EStockStrategy.Lifo ? [...lots].reverse() : lots;
 
       return {
         id: product.id,
@@ -106,6 +104,6 @@ export const getProducts: ServerAction<
     });
   } catch (error: unknown) {
     console.error("Failed to fetch products:", error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };

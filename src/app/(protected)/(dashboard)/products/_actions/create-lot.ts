@@ -1,9 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success } from "@/core/server-actions";
+import { failure, ServerAction, success } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
-import { BadRequestError, NotFoundError } from "@/errors";
+import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
 
 export const createLot: ServerAction<
   {
@@ -49,7 +49,7 @@ export const createLot: ServerAction<
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to create lot:", error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };
 

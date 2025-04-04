@@ -1,13 +1,23 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 
+type GetProductsCountActionPayload = { tenantId: string };
+
+export type GetProductsCountActionResult = {
+  count: number;
+};
+
 export const getProductsCount: ServerAction<
-  { tenantId: string },
-  number
+  GetProductsCountActionPayload,
+  GetProductsCountActionResult
 > = async ({ tenantId }) => {
   try {
     if (!tenantId) throw new BadRequestError("Tenant ID is required");
@@ -16,9 +26,17 @@ export const getProductsCount: ServerAction<
       where: { tenantId },
     });
 
-    return success(count);
+    return success({ count });
   } catch (error: unknown) {
-    if (error instanceof BadRequestError) return failure(error);
-    return reportError(error);
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

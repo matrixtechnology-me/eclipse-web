@@ -65,7 +65,10 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
   const onSubmit = async (formData: AddStockEntrySchema) => {
     try {
       setIsSubmitting(true);
-      const session = await getServerSession();
+      const session = await getServerSession({
+        requirements: { tenant: true },
+      });
+
       if (!session) throw new Error("Sessão não encontrada");
 
       await addStockEntry({

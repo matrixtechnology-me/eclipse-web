@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
 import { Prisma } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
 export type Customer = {
   id: string;
@@ -74,6 +75,10 @@ export const getCustomers: ServerAction<
     });
   } catch (error: unknown) {
     console.error("Failed to fetch customers:", error);
-    return reportError(error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

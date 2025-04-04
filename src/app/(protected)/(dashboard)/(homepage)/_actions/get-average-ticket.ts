@@ -1,19 +1,25 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 
-export type AverageTicketResult = {
+type GetAverageTicketActionPayload = { tenantId: string };
+
+export type GetAverageTicketActionResult = {
   averageTicket: number;
   totalSales: number;
   salesCount: number;
 };
 
 export const getAverageTicket: ServerAction<
-  { tenantId: string },
-  AverageTicketResult
+  GetAverageTicketActionPayload,
+  GetAverageTicketActionResult
 > = async ({ tenantId }) => {
   try {
     if (!tenantId) {
@@ -29,7 +35,7 @@ export const getAverageTicket: ServerAction<
     });
 
     const salesCount = aggregation._count;
-    const totalSales = aggregation._sum.total?.toNumber() || 0;
+    const totalSales = aggregation._sum.total?.toNumber() ?? 0;
     const averageTicket = salesCount > 0 ? totalSales / salesCount : 0;
 
     return success({
@@ -43,10 +49,15 @@ export const getAverageTicket: ServerAction<
       error
     );
 
-    if (error instanceof BadRequestError) {
-      return failure(error);
-    }
-
-    return reportError(error);
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

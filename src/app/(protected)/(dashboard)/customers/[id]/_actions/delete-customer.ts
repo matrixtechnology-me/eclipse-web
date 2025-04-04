@@ -4,6 +4,7 @@ import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
+import { InternalServerError } from "@/errors";
 
 type DeleteCustomerActionPayload = {
   id: string;
@@ -29,6 +30,10 @@ export const deleteCustomer: ServerAction<
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to delete customer:", error);
-    return reportError(error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };
