@@ -1,7 +1,7 @@
-import { HttpError } from '../http.error';
+import { HttpError } from "../http.error";
 
 export class NotFoundError extends HttpError {
-  constructor(message = 'Not Found', metadata?: Record<string, unknown>) {
+  constructor(message = "Not Found", metadata?: Record<string, unknown>) {
     super(404, message, metadata);
   }
 }

@@ -27,7 +27,7 @@ export const Pagination: FC<PaginationProps> = ({
   const mountUrl = (page: number, limit: number) => {
     return () =>
       router.push(
-        PATHS.PROTECTED.CUSTOMERS.INDEX({
+        PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX({
           page: String(page),
           limit: String(limit),
         })

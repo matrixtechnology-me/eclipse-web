@@ -39,7 +39,7 @@ export const Customers = async ({
           </p>
         </div>
         <Link
-          href={PATHS.PROTECTED.CUSTOMERS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
           className="w-full lg:w-fit"
         >
           <Button variant="outline" className="mt-2">

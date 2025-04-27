@@ -3,8 +3,9 @@ import { PATHS } from "@/config/paths";
 import { cn } from "@/lib/shadcn";
 import {
   BoxIcon,
-  CircleDollarSignIcon,
   CircleGaugeIcon,
+  FileChartColumnIncreasingIcon,
+  ShoppingBasketIcon,
   UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,42 +26,36 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
       )}
       {...rest}
     >
-      <Link href={PATHS.PROTECTED.HOMEPAGE}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
         <Button variant="ghost">
           <CircleGaugeIcon className="size-4" />
           Painel de Controle
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.CUSTOMERS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX()}>
         <Button variant="ghost">
           <UsersIcon className="size-4" />
           Clientes
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}>
         <Button variant="ghost">
           <BoxIcon className="size-4" />
           Produtos
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.SALES.INDEX}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.POS.INDEX}>
         <Button variant="ghost">
-          <CircleDollarSignIcon className="size-4" />
-          Vendas
+          <ShoppingBasketIcon className="size-4" />
+          PDV
         </Button>
       </Link>
-      {/* <Link href={PATHS.PROTECTED.PAYABLES.INDEX}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.SALES.INDEX}>
         <Button variant="ghost">
-          <ArrowUpIcon className="size-4" />
-          Contas à pagar
+          <FileChartColumnIncreasingIcon className="size-4" />
+          Relatórios
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.RECEIVABLES.INDEX}>
-        <Button variant="ghost">
-          <ArrowDownIcon className="size-4" />
-          Contas à receber
-        </Button>
-      </Link> */}
     </div>
   );
 };

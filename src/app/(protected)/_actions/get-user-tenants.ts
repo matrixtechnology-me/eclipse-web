@@ -4,6 +4,7 @@ import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { reportError } from "@/utils/report-error.util";
+import { InternalServerError } from "@/errors";
 
 export type Tenant = {
   id: string;
@@ -16,7 +17,7 @@ export type Tenant = {
 
 export const getUserTenants: ServerAction<
   { userId: string },
-  Tenant[]
+  { tenants: Tenant[] }
 > = async ({ userId }) => {
   try {
     const tenants = await prisma.tenant.findMany({
@@ -39,15 +40,15 @@ export const getUserTenants: ServerAction<
       return failure(new NotFoundError("No tenants found for this user"));
     }
 
-    return success(
-      tenants.map((tenant) => ({
+    return success({
+      tenants: tenants.map((tenant) => ({
         ...tenant,
         description: tenant.description ?? "",
         active: Boolean(tenant.active),
-      }))
-    );
+      })),
+    });
   } catch (error: unknown) {
     console.error(`Failed to get tenants for user ${userId}:`, error);
-    return reportError(error);
+    return failure(new InternalServerError());
   }
 };

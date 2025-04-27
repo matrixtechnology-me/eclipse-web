@@ -40,7 +40,7 @@ export const DeleteCustomer: FC<DeleteCustomerProps> = ({ id }) => {
       description: "O cliente foi removido da sua lista com sucesso.",
     });
 
-    router.push(PATHS.PROTECTED.CUSTOMERS.INDEX());
+    router.push(PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX());
   };
 
   return (

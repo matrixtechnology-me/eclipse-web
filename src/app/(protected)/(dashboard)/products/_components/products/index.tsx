@@ -26,7 +26,7 @@ export const Products = async () => {
           </p>
         </div>
         <Link
-          href={PATHS.PROTECTED.PRODUCTS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
           className="w-full lg:w-fit"
         >
           <Button variant="outline" className="mt-2">
@@ -44,7 +44,7 @@ export const Products = async () => {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
       {products.map((product) => (
         <Link
-          href={PATHS.PROTECTED.PRODUCTS.PRODUCT(product.id).INDEX}
+          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.PRODUCT(product.id).INDEX}
           key={product.id}
           className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg transition-all"
           aria-label={`Ver detalhes do produto ${product.name}`}

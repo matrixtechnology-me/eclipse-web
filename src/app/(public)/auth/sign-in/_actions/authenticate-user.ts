@@ -3,8 +3,12 @@
 import { InvalidCredentialsError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { HashingService } from "@/services/hashing.service";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
 
 type AuthenticateUserActionPayload = {
   email: string;
@@ -52,7 +56,16 @@ export const authenticateUserAction: ServerAction<
 
     return success({ sessionId: user.id });
   } catch (error: unknown) {
-    console.error(`Authentication failed for ${email}:`, error);
-    return reportError(error);
+    console.error("Authentication error:", error);
+    return failure(
+      createActionError(
+        500,
+        "AuthenticationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

@@ -6,10 +6,16 @@ export type ServerActionError = HttpError & {
 
 export type ServerActionPayload<T> = T;
 
-export type ServerActionResult<T, E extends HttpError = ServerActionError> = {
-  isSuccess: boolean;
-  value?: T;
-  error?: {
+export type ServerActionResultSuccess<T> = {
+  isSuccess: true;
+  isFailure: false;
+  value: T;
+};
+
+export type ServerActionResultFailure<E extends ServerActionError> = {
+  isSuccess: false;
+  isFailure: true;
+  error: {
     name: string;
     message: string;
     statusCode?: number;
@@ -17,12 +23,18 @@ export type ServerActionResult<T, E extends HttpError = ServerActionError> = {
   };
 };
 
+export type ServerActionResult<
+  T,
+  E extends ServerActionError = ServerActionError
+> = ServerActionResultSuccess<T> | ServerActionResultFailure<E>;
+
 export type ServerAction<P = unknown, R = unknown> = (
   payload: ServerActionPayload<P>
 ) => Promise<ServerActionResult<R>>;
 
 export const success = <T>(data: T): ServerActionResult<T> => ({
   isSuccess: true,
+  isFailure: false,
   value: data,
 });
 
@@ -30,6 +42,7 @@ export const failure = <E extends ServerActionError>(
   error: E
 ): ServerActionResult<never, E> => ({
   isSuccess: false,
+  isFailure: true,
   error: {
     name: error.name,
     message: error.message,

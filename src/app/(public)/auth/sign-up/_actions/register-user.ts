@@ -9,16 +9,19 @@ import {
   success,
 } from "@/core/server-actions";
 
+type RegisterUserActionPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+type RegisterUserActionResult = { sessionId: string };
+
 export const registerUserAction: ServerAction<
-  {
-    name: string;
-    email: string;
-    password: string;
-  },
-  { sessionId: string }
+  RegisterUserActionPayload,
+  RegisterUserActionResult
 > = async ({ email, name, password }) => {
   try {
-    // Validate inputs
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return failure(
         createActionError(
@@ -39,8 +42,8 @@ export const registerUserAction: ServerAction<
       );
     }
 
-    // Check for existing user
     const existingUser = await prisma.user.findUnique({ where: { email } });
+
     if (existingUser) {
       return failure(
         createActionError(409, "ConflictError", "Email já está em uso")

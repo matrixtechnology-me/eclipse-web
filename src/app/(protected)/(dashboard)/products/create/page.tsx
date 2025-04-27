@@ -67,7 +67,7 @@ const Page = () => {
       }
 
       toast.success("Produto criado com sucesso");
-      router.push(PATHS.PROTECTED.PRODUCTS.INDEX());
+      router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX());
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -86,13 +86,15 @@ const Page = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Dashboard
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
+                <BreadcrumbLink
+                  href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}
+                >
                   Produtos
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -199,7 +201,9 @@ const Page = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(PATHS.PROTECTED.PRODUCTS.INDEX())}
+              onClick={() =>
+                router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX())
+              }
             >
               Cancelar
             </Button>

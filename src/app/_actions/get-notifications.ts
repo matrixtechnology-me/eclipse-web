@@ -1,5 +1,5 @@
+import { ServerAction, success } from "@/core/server-actions";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/core/either";
 
 type GetNotificationsPayload = {
   userId: string;
@@ -22,5 +22,5 @@ export const getNotifications: ServerAction<
   GetNotificationsResult
 > = async () => {
   const notifications = await prisma.notification.findMany();
-  return { data: { notifications } };
+  return success({ notifications });
 };

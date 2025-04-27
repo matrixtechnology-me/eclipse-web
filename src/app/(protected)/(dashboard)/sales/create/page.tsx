@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { ShoppingCart } from "lucide-react";
 import { LoadOptions } from "react-select-async-paginate";
 import { GroupBase } from "react-select";
+import { ReceivingMethods } from "./_components/receiving-methods";
 
 const Page = () => {
   const router = useRouter();
@@ -75,7 +76,7 @@ const Page = () => {
       }
 
       toast.success("Venda registrada com sucesso");
-      router.push(PATHS.PROTECTED.SALES.INDEX);
+      router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erro ao registrar venda"
@@ -129,13 +130,13 @@ const Page = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Dashboard
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.SALES.INDEX}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.SALES.INDEX}>
                   Vendas
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -179,11 +180,13 @@ const Page = () => {
 
           <Products form={form} />
 
+          <ReceivingMethods form={form} />
+
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(PATHS.PROTECTED.SALES.INDEX)}
+              onClick={() => router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX)}
             >
               Cancelar
             </Button>

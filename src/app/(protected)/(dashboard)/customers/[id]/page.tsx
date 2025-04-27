@@ -55,13 +55,15 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Painel de controle
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.CUSTOMERS.INDEX()}>
+                <BreadcrumbLink
+                  href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX()}
+                >
                   Clientes
                 </BreadcrumbLink>
               </BreadcrumbItem>

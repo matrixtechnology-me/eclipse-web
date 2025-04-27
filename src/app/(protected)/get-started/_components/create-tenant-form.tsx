@@ -58,12 +58,12 @@ export const CreateTenantForm = () => {
       userId: session.id,
     });
 
-    if ("error" in result) {
+    if (result.isFailure) {
       throw new Error("Erro ao criar tenant");
     }
 
-    setCookie(null, "X-Tenant", result.data.tenantId, { path: "/" });
-    router.push(PATHS.PROTECTED.HOMEPAGE);
+    setCookie(null, "X-Tenant", result.value.tenantId, { path: "/" });
+    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
   };
 
   return (
