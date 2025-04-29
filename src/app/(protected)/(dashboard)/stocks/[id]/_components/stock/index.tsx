@@ -58,13 +58,7 @@ export const Stock: FC<StockProps> = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <h1 className="font-bold">Estoque</h1>
-          <p className="text-sm text-muted-foreground max-w-md">
-            Visão geral da quantidade disponível do produto, garantindo controle
-            e reposição eficiente.
-          </p>
-        </div>
+        <div />
         <div className="grid grid-cols-2 gap-2">
           <AddStockEntry stockId={id} stockLots={lots} />
           <AddStockOutput stockId={id} stockLots={lots} />

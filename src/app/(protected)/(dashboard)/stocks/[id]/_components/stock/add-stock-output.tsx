@@ -18,13 +18,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { PlusIcon } from "lucide-react";
+import { ArrowDownIcon } from "lucide-react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { getServerSession } from "@/lib/session";
-import { addStockOutput } from "../../../_actions/add-stock-output";
+import { addStockOutput } from "../../../../products/_actions/add-stock-output";
 import {
   Select,
   SelectContent,
@@ -75,7 +75,6 @@ export const AddStockOutput = ({ stockId, stockLots }: AddStockOutputProps) => {
 
       if (!session) throw new Error("Sessão não encontrada");
 
-      // Validate available quantity
       const selectedLot = stockLots.find(
         (lot) => lot.id === formData.stockLotId
       );
@@ -104,25 +103,29 @@ export const AddStockOutput = ({ stockId, stockLots }: AddStockOutputProps) => {
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Remove leading zeros and convert to number
     const numericValue =
       value === "" ? 0 : parseInt(value.replace(/^0+/, "")) || 0;
     form.setValue("totalQty", numericValue);
+  };
+
+  const handleCancel = () => {
+    form.reset();
+    setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
-          <PlusIcon className="size-4" />
-          Registrar saída
+          <ArrowDownIcon className="size-4" />
+          Nova saída
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar saída de estoque</DialogTitle>
+          <DialogTitle>Novo lote</DialogTitle>
           <DialogDescription>
-            Registre a saída de produtos do estoque
+            Informe os dados da entrada de estoque
           </DialogDescription>
         </DialogHeader>
 
@@ -186,12 +189,20 @@ export const AddStockOutput = ({ stockId, stockLots }: AddStockOutputProps) => {
               )}
             />
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || !selectedLot?.totalQty}
               >
-                {isSubmitting ? "Registrando..." : "Registrar saída"}
+                {isSubmitting ? "Salvando alterações..." : "Salvar alterações"}
               </Button>
             </div>
           </form>

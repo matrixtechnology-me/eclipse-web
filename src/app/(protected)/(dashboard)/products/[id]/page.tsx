@@ -10,10 +10,8 @@ import {
 import { PATHS } from "@/config/paths";
 import { getProduct } from "../_actions/get-product";
 import { Property } from "@/components/property";
-import { DeleteCustomer } from "./_components/delete-customer";
 import { SpecificationsTable } from "./_components/specifications-table";
-import { Stock } from "./_components/stock";
-import { Lots } from "./_components/lots";
+import { Stock } from "../../stocks/[id]/_components/stock";
 
 type PageParams = {
   id: string;
@@ -107,7 +105,6 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           strategy={product.stock.strategy}
           totalQty={product.stock.totalQty}
         />
-        <Lots data={product.stock.lots} stockId={product.stock.id} />
       </div>
     </div>
   );

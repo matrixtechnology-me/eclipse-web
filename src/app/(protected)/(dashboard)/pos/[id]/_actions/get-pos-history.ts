@@ -10,9 +10,12 @@ type GetPosHistoryActionPayload = {
 };
 
 type Event = {
+  id: string;
   type: EPosEventType;
   amount: number;
   description: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 type GetPosHistoryActionResult = {
@@ -31,20 +34,28 @@ export const getPosHistoryAction: ServerAction<
       include: {
         entry: true,
         output: true,
+        sale: true,
       },
     });
 
-    const mappedEvents = [];
+    const mappedEvents: Event[] = [];
 
     for (const event of events) {
+      const defaultProps = {
+        id: event.id,
+        type: event.type,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+      };
+
       switch (event.type) {
         case EPosEventType.Entry:
           if (!event.entry) continue;
 
           mappedEvents.push({
+            ...defaultProps,
             amount: event.entry.amount,
             description: event.entry.description,
-            type: event.type,
           });
 
           break;
@@ -52,9 +63,19 @@ export const getPosHistoryAction: ServerAction<
           if (!event.output) continue;
 
           mappedEvents.push({
+            ...defaultProps,
             amount: event.output.amount,
             description: event.output.description,
-            type: event.type,
+          });
+
+          break;
+        case EPosEventType.Sale:
+          if (!event.sale) continue;
+
+          mappedEvents.push({
+            ...defaultProps,
+            amount: event.sale.amount,
+            description: event.sale.description,
           });
 
           break;
@@ -70,7 +91,7 @@ export const getPosHistoryAction: ServerAction<
     console.log(error);
     return failure(
       new InternalServerError(
-        "cannot create a new pos entry because error: " + error
+        "cannot retrieve POS history due to error: " + error
       )
     );
   }

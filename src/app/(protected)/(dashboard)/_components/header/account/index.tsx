@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserIcon } from "lucide-react";
 import { LogOut } from "./log-out";
-import { TenantSwicther } from "./tenant-swicther";
+import { ThemeSwitcher } from "./theme-switcher";
 
 export function Account() {
   return (
@@ -19,9 +19,10 @@ export function Account() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 mr-5">
-        <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <TenantSwicther />
+        <div className="flex items-center justify-between">
+          <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+          <ThemeSwitcher />
+        </div>
         <DropdownMenuSeparator />
         <LogOut />
       </DropdownMenuContent>

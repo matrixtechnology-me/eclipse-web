@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,45 +25,39 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { getServerSession } from "@/lib/session";
-import { addStockEntry } from "../../../_actions/add-stock-entry";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { DatePicker } from "./date-picker";
 import { toast } from "sonner";
-import { NumericFormat } from "react-number-format";
+import { CurrencyInput } from "./currency-input";
+import { createLotAction } from "../../../_actions/create-lot";
 
-const addStockEntrySchema = z.object({
-  stockLotId: z.string().min(1, "Selecione um lote"),
+const createLotSchema = z.object({
+  costPrice: z.number().min(0.01, "Preço deve ser maior que zero"),
   totalQty: z.number().min(1, "Quantidade mínima é 1"),
+  expiresAt: z.date().optional(),
 });
 
-type AddStockEntrySchema = z.infer<typeof addStockEntrySchema>;
+export type CreateLotSchema = z.infer<typeof createLotSchema>;
 
-type AddStockEntryProps = {
-  stockLots: {
-    id: string;
-    lotNumber: string;
-  }[];
+const formDefaultValues: CreateLotSchema = {
+  costPrice: 0,
+  totalQty: 0,
+  expiresAt: undefined,
+};
+
+type AddLotProps = {
   stockId: string;
 };
 
-export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
+export const AddLot = ({ stockId }: AddLotProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<AddStockEntrySchema>({
-    defaultValues: {
-      stockLotId: stockLots[0]?.id || "",
-      totalQty: 0,
-    },
-    resolver: zodResolver(addStockEntrySchema),
+  const form = useForm<CreateLotSchema>({
+    defaultValues: formDefaultValues,
+    resolver: zodResolver(createLotSchema),
   });
 
-  const onSubmit = async (formData: AddStockEntrySchema) => {
+  const onSubmit = async (formData: CreateLotSchema) => {
     try {
       setIsSubmitting(true);
       const session = await getServerSession({
@@ -71,19 +66,18 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
 
       if (!session) throw new Error("Sessão não encontrada");
 
-      await addStockEntry({
+      await createLotAction({
+        ...formData,
         stockId,
-        stockLotId: formData.stockLotId,
         tenantId: session.tenantId,
-        totalQty: formData.totalQty,
       });
 
-      toast.success("Entrada de estoque registrada com sucesso");
-      form.reset();
+      toast.success("Lote criado com sucesso");
+      form.reset(formDefaultValues);
       setOpen(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Erro ao registrar entrada"
+        error instanceof Error ? error.message : "Erro ao criar lote"
       );
     } finally {
       setIsSubmitting(false);
@@ -92,29 +86,31 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-
-    // Remove leading zeros
     if (value.length > 1 && value.startsWith("0")) {
       value = value.replace(/^0+/, "");
       if (value === "") value = "0";
     }
-
     form.setValue("totalQty", Number(value));
+  };
+
+  const handleCancel = () => {
+    form.reset(formDefaultValues);
+    setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="h-9 gap-2">
+        <Button variant="outline" className="w-full md:w-fit h-9 gap-2">
           <PlusIcon className="size-4" />
-          Adicionar entrada
+          Novo lote
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Adicionar entrada</DialogTitle>
+          <DialogTitle>Novo lote</DialogTitle>
           <DialogDescription>
-            Registre uma nova entrada no estoque
+            Cadastre um novo lote de produto
           </DialogDescription>
         </DialogHeader>
 
@@ -122,23 +118,16 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="stockLotId"
+              name="costPrice"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lote*</FormLabel>
+                  <FormLabel>Preço de custo*</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione um lote" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stockLots.map((lot) => (
-                          <SelectItem key={lot.id} value={lot.id}>
-                            {lot.lotNumber.toUpperCase()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CurrencyInput
+                      placeholder="R$ 0,00"
+                      onChange={field.onChange}
+                      value={field.value}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +144,7 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
                     <Input
                       type="number"
                       min="1"
-                      placeholder="Quantidade"
+                      placeholder="Quantidade em estoque"
                       value={field.value}
                       onChange={handleQuantityChange}
                     />
@@ -165,11 +154,32 @@ export const AddStockEntry = ({ stockId, stockLots }: AddStockEntryProps) => {
               )}
             />
 
-            <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Registrando..." : "Registrar entrada"}
-              </Button>
-            </div>
+            <FormField
+              control={form.control}
+              name="expiresAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de validade (opcional)</FormLabel>
+                  <FormControl>
+                    <DatePicker onChange={field.onChange} value={field.value} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={handleCancel}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? "Salvando alterações..."
+                    : "Salvar alterações"}
+                </Button>
+              </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

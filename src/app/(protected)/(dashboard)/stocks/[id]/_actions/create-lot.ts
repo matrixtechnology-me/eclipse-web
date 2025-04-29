@@ -2,10 +2,9 @@
 
 import prisma from "@/lib/prisma";
 import { failure, ServerAction, success } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
 
-export const createLot: ServerAction<
+export const createLotAction: ServerAction<
   {
     costPrice: number;
     totalQty: number;

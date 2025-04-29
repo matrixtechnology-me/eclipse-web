@@ -1,5 +1,6 @@
 import { FC } from "react";
-import { getPosHistoryAction } from "../_actions/get-pos-history";
+import { getPosHistoryAction } from "../../_actions/get-pos-history";
+import { HistoryTable } from "./history-table";
 
 type HistoryProps = {
   posId: string;
@@ -19,7 +20,11 @@ export const History: FC<HistoryProps> = async ({ posId }) => {
   return (
     <div>
       <h1>Histórico de transações</h1>
-      <div>{JSON.stringify(events)}</div>
+      {events.length === 0 ? (
+        <div>Não há nenhum evento</div>
+      ) : (
+        <HistoryTable data={events} />
+      )}
     </div>
   );
 };

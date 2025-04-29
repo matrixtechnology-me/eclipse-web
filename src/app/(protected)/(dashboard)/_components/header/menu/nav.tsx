@@ -44,6 +44,12 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
           Produtos
         </Button>
       </Link>
+      <Link href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX}>
+        <Button variant="ghost">
+          <BoxIcon className="size-4" />
+          Estoques
+        </Button>
+      </Link>
       <Link href={PATHS.PROTECTED.DASHBOARD.POS.INDEX}>
         <Button variant="ghost">
           <ShoppingBasketIcon className="size-4" />

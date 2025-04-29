@@ -107,7 +107,7 @@ export const createPosSaleAction: ServerAction<
         },
         posEvent: {
           create: {
-            type: EPosEventType.Entry,
+            type: EPosEventType.Sale,
             posId,
           },
         },

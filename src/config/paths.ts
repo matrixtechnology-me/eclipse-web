@@ -37,26 +37,14 @@ export const PATHS = {
           INDEX: `/pos/${id}`,
         }),
       },
-      TABLES: {
-        INDEX: "/tables",
-      },
-      DELIVERIES: {
-        INDEX: "/deliveries",
-      },
-      BILLS: {
-        INDEX: "/bills",
-      },
-      REPORTS: {
-        INDEX: "/reports",
-      },
       STOCKS: {
         INDEX: "/stocks",
         STOCK: (id: string) => ({
           INDEX: `/stocks/${id}`,
         }),
       },
-      ADJUSTMENTS: {
-        INDEX: "/adjustments",
+      REPORTS: {
+        INDEX: "/reports",
       },
       SALES: {
         INDEX: "/sales",
