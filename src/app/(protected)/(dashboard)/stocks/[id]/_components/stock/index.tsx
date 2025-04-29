@@ -1,8 +1,8 @@
 import { Property } from "@/components/property";
 import { EStockStrategy } from "@prisma/client";
 import { FC } from "react";
-import { AddStockEntry } from "./add-stock-entry";
-import { AddStockOutput } from "./add-stock-output";
+import { AddStockEntry } from "../history/add-stock-entry";
+import { AddStockOutput } from "../history/add-stock-output";
 
 const getStockStrategyLabel = (strategy: EStockStrategy) => {
   switch (strategy) {
@@ -56,24 +56,15 @@ export const Stock: FC<StockProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-        <div />
-        <div className="grid grid-cols-2 gap-2">
-          <AddStockEntry stockId={id} stockLots={lots} />
-          <AddStockOutput stockId={id} stockLots={lots} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {properties.map((property) => (
-          <Property
-            key={property.label}
-            label={property.label}
-            value={property.value}
-            copyable={property.copyable}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {properties.map((property) => (
+        <Property
+          key={property.label}
+          label={property.label}
+          value={property.value}
+          copyable={property.copyable}
+        />
+      ))}
     </div>
   );
 };

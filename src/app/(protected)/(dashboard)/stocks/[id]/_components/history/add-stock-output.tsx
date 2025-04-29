@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { getServerSession } from "@/lib/session";
-import { addStockOutput } from "../../../../products/_actions/add-stock-output";
+import { addStockOutput } from "../../_actions/add-stock-output";
 import {
   Select,
   SelectContent,

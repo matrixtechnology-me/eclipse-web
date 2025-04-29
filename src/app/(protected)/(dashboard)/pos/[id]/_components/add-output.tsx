@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,9 +25,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { createPosOutputAction } from "../_actions/create-pos-output";
 import { toast } from "sonner";
 import { FC, useState } from "react";
+import { NumericFormat } from "react-number-format";
 
 const formSchema = z.object({
-  amount: z.number().min(2, {
+  amount: z.number().min(0.01, {
     message: "A quantia precisa ser maior que zero.",
   }),
   description: z.string().default(""),
@@ -49,6 +49,8 @@ export const AddOutput: FC<AddOutputProps> = ({ posId }) => {
     },
   });
 
+  const isSubmitting = form.formState.isSubmitting;
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const result = await createPosOutputAction({
       amount: values.amount,
@@ -58,9 +60,18 @@ export const AddOutput: FC<AddOutputProps> = ({ posId }) => {
 
     if (result.isFailure) {
       return toast("Erro", {
-        description: "Não foi possível criar um novo ponto de venda",
+        description: "Não foi possível criar uma nova saída",
       });
     }
+
+    setOpen(false);
+    form.reset();
+    toast("Saída registrada com sucesso");
+  };
+
+  const handleCancel = () => {
+    form.reset();
+    setOpen(false);
   };
 
   return (
@@ -75,10 +86,9 @@ export const AddOutput: FC<AddOutputProps> = ({ posId }) => {
             Faça alterações e clique em "Salvar" quando terminar.
           </DialogDescription>
         </DialogHeader>
-        {/* Content */}
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => console.log(err))}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="grid grid-cols-1 gap-3"
           >
             <FormField
@@ -88,18 +98,35 @@ export const AddOutput: FC<AddOutputProps> = ({ posId }) => {
                 <FormItem>
                   <FormLabel>Quantia</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target: { value } }) => {
-                        const mappedValue = Number(value);
-                        field.onChange(mappedValue);
+                    <NumericFormat
+                      value={field.value === 0 ? "" : field.value}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      allowNegative={false}
+                      decimalScale={2}
+                      fixedDecimalScale
+                      customInput={Input}
+                      onValueChange={({ floatValue }) =>
+                        field.onChange(floatValue ?? 0)
+                      }
+                      onFocus={(e) => {
+                        if (field.value === 0) {
+                          e.currentTarget.setSelectionRange(
+                            e.currentTarget.value.length,
+                            e.currentTarget.value.length
+                          );
+                        }
                       }}
+                      placeholder="R$ 0,00"
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="description"
@@ -107,13 +134,30 @@ export const AddOutput: FC<AddOutputProps> = ({ posId }) => {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea
+                      {...field}
+                      className="h-24"
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit">Salvar</Button>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando alterações..." : "Salvar alterações"}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,9 +25,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { createPosEntryAction } from "../_actions/create-pos-entry";
 import { toast } from "sonner";
 import { FC, useState } from "react";
+import { NumericFormat } from "react-number-format";
 
 const formSchema = z.object({
-  amount: z.number().min(2, {
+  amount: z.number().min(0.01, {
     message: "A quantia precisa ser maior que zero.",
   }),
   description: z.string().default(""),
@@ -61,6 +61,15 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
         description: "Não foi possível criar um novo ponto de venda",
       });
     }
+
+    setOpen(false);
+    form.reset();
+    toast("Entrada criada com sucesso");
+  };
+
+  const handleCancel = () => {
+    form.reset();
+    setOpen(false);
   };
 
   return (
@@ -71,14 +80,12 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Adicionar entrada</DialogTitle>
-          <DialogDescription>
-            Faça alterações e clique em "Salvar" quando terminar.
-          </DialogDescription>
+          <DialogDescription />
         </DialogHeader>
-        {/* Content */}
+
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (err) => console.log(err))}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="grid grid-cols-1 gap-3"
           >
             <FormField
@@ -88,18 +95,34 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
                 <FormItem>
                   <FormLabel>Quantia</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      onChange={({ target: { value } }) => {
-                        const mappedValue = Number(value);
-                        field.onChange(mappedValue);
+                    <NumericFormat
+                      value={field.value === 0 ? "" : field.value}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      allowNegative={false}
+                      decimalScale={2}
+                      fixedDecimalScale
+                      customInput={Input}
+                      onValueChange={({ floatValue }) => {
+                        field.onChange(floatValue ?? 0);
                       }}
+                      onFocus={(e) => {
+                        if (field.value === 0) {
+                          e.currentTarget.setSelectionRange(
+                            e.currentTarget.value.length,
+                            e.currentTarget.value.length
+                          );
+                        }
+                      }}
+                      placeholder="R$ 0,00"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="description"
@@ -107,13 +130,23 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} className="h-24" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit">Salvar</Button>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting
+                  ? "Salvando alterações..."
+                  : "Salvar alterações"}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

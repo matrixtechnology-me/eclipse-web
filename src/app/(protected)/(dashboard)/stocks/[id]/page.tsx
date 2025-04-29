@@ -12,6 +12,9 @@ import { Stock } from "../../stocks/[id]/_components/stock";
 import { getStockAction } from "./_actions/get-stock";
 import { getServerSession } from "@/lib/session";
 import { Lots } from "./_components/lots";
+import { History } from "./_components/history";
+import { Summary } from "../../pos/[id]/_components/summary";
+import { StockSummary } from "./_components/summary";
 
 type PageParams = {
   id: string;
@@ -78,6 +81,12 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           totalQty={stock.totalQty}
         />
         <Lots data={stock.lots} stockId={stock.id} />
+        <StockSummary stockId={stock.id} />
+        <History
+          stockId={stock.id}
+          tenantId={session.tenantId}
+          stockLots={stock.lots}
+        />
       </div>
     </div>
   );

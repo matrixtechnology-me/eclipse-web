@@ -70,6 +70,11 @@ enum EDiscountVariant {
   Amount     @map("amount")
 }
 
+enum EStockEventType {
+  Entry  @map("entry")
+  Output @map("output")
+}
+
 model Address {
   id           String   @id @default(uuid()) @db.Uuid
   street       String
@@ -113,7 +118,7 @@ model Tenant {
   notifications Notification[]
   stocks        Stock[]
   stockLots     StockLot[]
-  Bill          Bill[]
+  StockEvent    StockEvent[]
 
   @@map("tenants")
 }
@@ -154,9 +159,8 @@ model Customer {
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  sales        Sale[]
-  bills        Bill[]
-  PosEventSale PosEventSale[]
+  sales         Sale[]
+  posEventSales PosEventSale[]
 
   @@map("customers")
 }
@@ -209,7 +213,8 @@ model Stock {
   tenant  Tenant  @relation(fields: [tenantId], references: [id])
   product Product @relation(fields: [productId], references: [id])
 
-  lots StockLot[]
+  lots       StockLot[]
+  StockEvent StockEvent[]
 
   @@map("stocks")
 }
@@ -225,10 +230,51 @@ model StockLot {
   createdAt DateTime  @default(now()) @map(name: "created_at")
   updatedAt DateTime  @updatedAt @map(name: "updated_at")
 
+  stock      Stock        @relation(fields: [stockId], references: [id])
+  tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  StockEvent StockEvent[]
+
+  @@map("stock_lots")
+}
+
+model StockEvent {
+  id          String          @id @default(uuid()) @db.Uuid
+  type        EStockEventType
+  stockId     String          @map("stock_id") @db.Uuid
+  tenantId    String          @map("tenant_id") @db.Uuid
+  description String          @default("")
+  createdAt   DateTime        @default(now()) @map(name: "created_at")
+  updatedAt   DateTime        @updatedAt @map(name: "updated_at")
+
   stock  Stock  @relation(fields: [stockId], references: [id])
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  @@map("stock_lots")
+  entry      StockEventEntry?
+  output     StockEventOutput?
+  StockLot   StockLot?         @relation(fields: [stockLotId], references: [id])
+  stockLotId String?           @db.Uuid
+
+  @@map("stock_events")
+}
+
+model StockEventEntry {
+  id          String @id @default(uuid()) @db.Uuid
+  quantity    Int
+  description String @default("")
+
+  stockEvent StockEvent @relation(fields: [id], references: [id])
+
+  @@map("stock_event_entries")
+}
+
+model StockEventOutput {
+  id          String @id @default(uuid()) @db.Uuid
+  quantity    Int
+  description String @default("")
+
+  stockEvent StockEvent @relation(fields: [id], references: [id])
+
+  @@map("stock_event_outputs")
 }
 
 model Pos {
@@ -370,22 +416,6 @@ model SaleMovementPayment {
   updatedAt DateTime                   @updatedAt @map(name: "updated_at")
 
   @@map("sale_movement_payments")
-}
-
-model Bill {
-  id         String   @id @default(uuid()) @db.Uuid
-  type       String   @default("receivable") // or "payable"
-  status     String   @default("pending")
-  startAt    DateTime @map("start_at")
-  customerId String   @map("customer_id") @db.Uuid
-  tenantId   String   @map("tenant_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @updatedAt @map(name: "updated_at")
-
-  customer Customer @relation(fields: [customerId], references: [id])
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
-
-  @@map("bills")
 }
 
 model Notification {

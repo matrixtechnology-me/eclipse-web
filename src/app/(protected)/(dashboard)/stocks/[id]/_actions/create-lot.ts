@@ -3,6 +3,8 @@
 import prisma from "@/lib/prisma";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
+import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export const createLotAction: ServerAction<
   {
@@ -44,6 +46,8 @@ export const createLotAction: ServerAction<
         },
       });
     });
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
 
     return success(undefined);
   } catch (error: unknown) {

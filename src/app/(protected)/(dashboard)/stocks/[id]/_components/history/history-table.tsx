@@ -7,19 +7,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
+import { EStockEventType } from "@prisma/client";
 import moment from "moment";
 import { FC } from "react";
 
 type HistoryTableProps = {
   data: {
     id: string;
-    totalQty: number;
-    costPrice: number;
-    lotNumber: string;
-    expiresAt?: Date;
+    type: EStockEventType;
+    quantity: number;
+    description: string;
     createdAt: Date;
     updatedAt: Date;
   }[];
+};
+
+const getStockEventTypeLabel = (type: EStockEventType): string => {
+  switch (type) {
+    case "Entry":
+      return "Entrada";
+    case "Output":
+      return "Saída";
+    default:
+      return "Tipo desconhecido";
+  }
 };
 
 export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
@@ -28,10 +39,9 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
-            <TableHead className="text-left">Número</TableHead>
-            <TableHead className="text-left">Preço de custo</TableHead>
-            <TableHead className="text-left">Quantidade total</TableHead>
-            <TableHead className="text-left">Data de validade</TableHead>
+            <TableHead className="text-left">Tipo de evento</TableHead>
+            <TableHead className="text-left">Descrição</TableHead>
+            <TableHead className="text-left">Quantidade</TableHead>
             <TableHead className="text-left">Data de criação</TableHead>
             <TableHead className="text-left">Data de atualização</TableHead>
           </TableRow>
@@ -39,14 +49,9 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
         <TableBody>
           {data.map((item) => (
             <TableRow key={item.id}>
-              <TableCell>{item.lotNumber.toUpperCase()}</TableCell>
-              <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
-              <TableCell>{item.totalQty}</TableCell>
-              <TableCell>
-                {item.expiresAt
-                  ? moment(item.expiresAt).format("DD/MM/YYYY")
-                  : "-"}
-              </TableCell>
+              <TableCell>{getStockEventTypeLabel(item.type)}</TableCell>
+              <TableCell>{item.description}</TableCell>
+              <TableCell>{item.quantity}</TableCell>
               <TableCell>
                 {moment(item.createdAt).format("DD/MM/YYYY")}
               </TableCell>

@@ -1,5 +1,6 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import {
   createActionError,
   failure,
@@ -8,6 +9,7 @@ import {
 } from "@/core/server-actions";
 import prisma from "@/lib/prisma";
 import { EStockStrategy } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetStockActionPayload = {
   tenantId: string;
@@ -40,6 +42,13 @@ export const getStockAction: ServerAction<
   GetStockActionPayload,
   GetStockActionResult
 > = async ({ tenantId, stockId }) => {
+  "use cache";
+
+  cacheTag(
+    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS,
+    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
+  );
+
   try {
     const stock = await prisma.stock.findFirst({
       where: {

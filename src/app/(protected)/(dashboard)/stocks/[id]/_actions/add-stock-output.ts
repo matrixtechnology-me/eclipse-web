@@ -2,8 +2,10 @@
 
 import prisma from "@/lib/prisma";
 import { failure, ServerAction, success } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
+import { EStockEventType } from "@prisma/client";
+import { CACHE_TAGS } from "@/config/cache-tags";
+import { revalidateTag } from "next/cache";
 
 export const addStockOutput: ServerAction<
   {
@@ -11,9 +13,10 @@ export const addStockOutput: ServerAction<
     stockLotId: string;
     totalQty: number;
     tenantId: string;
+    description?: string;
   },
   void
-> = async ({ stockId, stockLotId, totalQty, tenantId }) => {
+> = async ({ stockId, stockLotId, totalQty, tenantId, description = "" }) => {
   try {
     if (!stockId || !stockLotId || !tenantId || totalQty <= 0) {
       throw new BadRequestError("Invalid input parameters");
@@ -34,6 +37,23 @@ export const addStockOutput: ServerAction<
       if (lot.totalQty < totalQty)
         throw new BadRequestError("Insufficient stock");
 
+      const stockEvent = await tx.stockEvent.create({
+        data: {
+          type: EStockEventType.Output,
+          stockId,
+          tenantId,
+          description,
+        },
+      });
+
+      await tx.stockEventOutput.create({
+        data: {
+          id: stockEvent.id,
+          quantity: totalQty,
+          description,
+        },
+      });
+
       await tx.stock.update({
         where: { id: stockId, tenantId },
         data: {
@@ -48,6 +68,8 @@ export const addStockOutput: ServerAction<
         },
       });
     });
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
 
     return success(undefined);
   } catch (error: unknown) {
