@@ -3,7 +3,6 @@
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { Prisma } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 

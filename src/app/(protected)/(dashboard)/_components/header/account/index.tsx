@@ -14,7 +14,7 @@ export function Account() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="outline">
+        <Button size="icon" variant="outline" className="rounded-full">
           <UserIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>

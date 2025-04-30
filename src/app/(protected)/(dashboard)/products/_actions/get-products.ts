@@ -32,7 +32,7 @@ export const getProducts: ServerAction<
         name: product.name,
         barCode: product.barCode,
         active: product.active,
-        salePrice: product.salePrice.toNumber(),
+        salePrice: product.salePrice,
       })),
     });
   } catch (error: unknown) {

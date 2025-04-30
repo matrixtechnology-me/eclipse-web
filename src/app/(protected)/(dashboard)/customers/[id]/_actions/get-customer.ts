@@ -3,8 +3,9 @@
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { InternalServerError } from "@/errors";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type Customer = {
   id: string;
@@ -16,16 +17,20 @@ export type Customer = {
 };
 
 type GetCustomerActionPayload = {
-  id: string;
+  customerId: string;
+  tenantId: string;
 };
 
 export const getCustomer: ServerAction<
   GetCustomerActionPayload,
   { customer: Customer }
-> = async ({ id }) => {
+> = async ({ customerId, tenantId }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.TENANT(tenantId).CUSTOMERS.CUSTOMER(customerId).INDEX);
+
   try {
     const customer = await prisma.customer.findUnique({
-      where: { id },
+      where: { id: customerId, tenantId },
     });
 
     if (!customer) {
@@ -39,7 +44,7 @@ export const getCustomer: ServerAction<
       },
     });
   } catch (error: unknown) {
-    console.error(`Failed to fetch customer ${id}:`, error);
+    console.error(`Failed to fetch customer ${customerId}:`, error);
     return failure(
       new InternalServerError("Ocorreu um erro durante o registro", {
         originalError: error instanceof Error ? error.message : String(error),

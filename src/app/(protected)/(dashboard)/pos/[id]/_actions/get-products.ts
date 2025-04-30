@@ -87,8 +87,8 @@ export const getProducts: ServerAction<
       return {
         id: product.id,
         name: product.name,
-        costPrice: sortedLots[0]?.costPrice.toNumber() ?? 0,
-        salePrice: product.salePrice.toNumber(),
+        costPrice: sortedLots[0]?.costPrice ?? 0,
+        salePrice: product.salePrice,
       };
     });
 

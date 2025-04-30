@@ -38,7 +38,7 @@ export const SelectTenant: FC<SelectTenantProps> = ({ tenants, tenantId }) => {
         handleSelectTenant(value);
       }}
     >
-      <SelectTrigger className="border-none w-full">
+      <SelectTrigger className="w-full rounded-full pl-5">
         <SelectValue placeholder="Selecione um negócio" />
       </SelectTrigger>
       <SelectContent>

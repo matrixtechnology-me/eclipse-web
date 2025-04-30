@@ -88,7 +88,7 @@ export const getProduct: ServerAction<
       description: product.description,
       active: product.active,
       skuCode: product.skuCode,
-      salePrice: product.salePrice.toNumber(),
+      salePrice: product.salePrice,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,
@@ -100,7 +100,7 @@ export const getProduct: ServerAction<
         lots: product.stock.lots.map((lot) => ({
           id: lot.id,
           totalQty: lot.totalQty,
-          costPrice: lot.costPrice.toNumber(),
+          costPrice: lot.costPrice,
           lotNumber: lot.lotNumber,
           expiresAt: lot.expiresAt ?? undefined,
           createdAt: lot.createdAt,

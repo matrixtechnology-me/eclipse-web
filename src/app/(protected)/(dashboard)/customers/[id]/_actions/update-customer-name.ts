@@ -4,27 +4,36 @@ import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
+import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
-type DeleteCustomerActionPayload = {
-  id: string;
+type UpdateCustomerNameActionPayload = {
+  customerId: string;
+  tenantId: string;
+  value: string;
 };
 
-export const deleteCustomer: ServerAction<
-  DeleteCustomerActionPayload,
+export const updateCustomerNameAction: ServerAction<
+  UpdateCustomerNameActionPayload,
   void
-> = async ({ id }) => {
+> = async ({ value, customerId, tenantId }) => {
   try {
     const customer = await prisma.customer.findUnique({
-      where: { id },
+      where: { id: customerId, tenantId },
     });
 
     if (!customer) {
-      return failure(new NotFoundError("Customer not found"));
+      return failure(new NotFoundError("customer not found"));
     }
 
-    await prisma.customer.delete({
-      where: { id },
+    await prisma.customer.update({
+      where: { id: customerId },
+      data: { name: value },
     });
+
+    revalidateTag(
+      CACHE_TAGS.TENANT(tenantId).CUSTOMERS.CUSTOMER(customerId).INDEX
+    );
 
     return success(undefined);
   } catch (error: unknown) {

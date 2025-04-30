@@ -45,11 +45,11 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
         }
 
         return {
-          costPrice: targetLot.costPrice.toNumber(),
+          costPrice: targetLot.costPrice,
           description: product.description,
           name: product.name,
           productId: product.id,
-          salePrice: product.salePrice.toNumber(),
+          salePrice: product.salePrice,
           totalQty: saleProduct.totalQty,
           stockId: product.stock.id,
           stockLotId: targetLot.id,
