@@ -1,14 +1,14 @@
 "use client";
 
 import { FC, useState } from "react";
-import { updateCustomerActiveAction } from "../../_actions/update-customer-active";
+import { updateProductActiveAction } from "../../_actions/update-product-active";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 type ActiveProps = {
-  customerId: string;
+  productId: string;
   tenantId: string;
   defaultValue: boolean;
   className?: string;
@@ -16,7 +16,7 @@ type ActiveProps = {
 
 export const Active: FC<ActiveProps> = ({
   defaultValue = false,
-  customerId,
+  productId,
   tenantId,
   className,
 }) => {
@@ -27,22 +27,22 @@ export const Active: FC<ActiveProps> = ({
     setIsLoading(true);
     try {
       const newValue = !isActive;
-      const result = await updateCustomerActiveAction({
+      const result = await updateProductActiveAction({
         value: newValue,
-        customerId,
+        productId,
         tenantId,
       });
 
       if ("error" in result) {
         toast.error("Falha na atualização", {
-          description: "Não foi possível atualizar o status do cliente.",
+          description: "Não foi possível atualizar o status do produto.",
         });
         return;
       }
 
       setIsActive(newValue);
       toast.success("Status atualizado", {
-        description: `Cliente ${
+        description: `Produto ${
           newValue ? "ativado" : "desativado"
         } com sucesso.`,
       });
@@ -63,13 +63,12 @@ export const Active: FC<ActiveProps> = ({
         <span>{isActive ? "Sim" : "Não"}</span>
         <div className="flex items-center gap-2">
           <Switch
-            id="active-status"
+            id="product-active-status"
             checked={isActive}
             onCheckedChange={toggleActive}
             disabled={isLoading}
             className={cn(isLoading && "opacity-50 cursor-not-allowed")}
           />
-
           {isLoading && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}

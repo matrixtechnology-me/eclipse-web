@@ -1,5 +1,5 @@
 import {
-  Table,
+  Table as TableCn,
   TableBody,
   TableCell,
   TableHead,
@@ -7,23 +7,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FC } from "react";
+import { DeleteSpecification } from "./delete-specification";
 
-type SpecificationsTableProps = {
+type TableProps = {
   data: {
     id: string;
     label: string;
     value: string;
   }[];
+  productId: string;
+  tenantId: string;
 };
 
-export const SpecificationsTable: FC<SpecificationsTableProps> = ({ data }) => {
+export const Table: FC<TableProps> = ({ data, productId, tenantId }) => {
   return (
     <div className="w-full border rounded-lg overflow-x-auto">
-      <Table className="min-w-max">
+      <TableCn className="min-w-max">
         <TableHeader>
           <TableRow>
             <TableHead className="text-left">Tipo</TableHead>
             <TableHead className="text-left">Valor</TableHead>
+            <TableHead className="text-left">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -31,10 +35,17 @@ export const SpecificationsTable: FC<SpecificationsTableProps> = ({ data }) => {
             <TableRow key={item.id}>
               <TableCell>{item.label}</TableCell>
               <TableCell>{item.value}</TableCell>
+              <TableCell>
+                <DeleteSpecification
+                  specificationId={item.id}
+                  productId={productId}
+                  tenantId={tenantId}
+                />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </TableCn>
     </div>
   );
 };
