@@ -1,23 +1,23 @@
 import { getServerSession } from "@/lib/session";
 import { Table } from "./table";
 import { List } from "./list";
+import { getPosAction } from "../../_actions/get-pos";
 import { FC } from "react";
-import { getSalesAction } from "../../_actions/get-sales";
 
-type SalesProps = {
+type PosProps = {
   page: number;
   pageSize: number;
   query: string;
 };
 
-export const Sales: FC<SalesProps> = async ({ page, pageSize, query }) => {
+export const Pos: FC<PosProps> = async ({ page, pageSize, query }) => {
   const session = await getServerSession({
     requirements: { tenant: true },
   });
 
   if (!session) throw new Error("session not found");
 
-  const result = await getSalesAction({
+  const result = await getPosAction({
     tenantId: session.tenantId,
     page,
     pageSize,
@@ -28,13 +28,13 @@ export const Sales: FC<SalesProps> = async ({ page, pageSize, query }) => {
     return <div>Erro ao buscar os PDVs</div>;
   }
 
-  const { sales } = result.value;
+  const { pos } = result.value;
 
   return (
     <>
-      <List data={sales} />
+      <List data={pos} />
       <Table
-        data={sales}
+        data={pos}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
       />
     </>

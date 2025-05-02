@@ -2,9 +2,7 @@
 
 import {
   BlocksIcon,
-  DollarSignIcon,
   FileChartColumnIncreasingIcon,
-  HandPlatterIcon,
   ShoppingBasketIcon,
   UsersIcon,
 } from "lucide-react";
@@ -17,7 +15,7 @@ const shortcuts = [
     id: "pos",
     label: "PDV",
     icon: ShoppingBasketIcon,
-    path: PATHS.PROTECTED.DASHBOARD.POS.INDEX,
+    path: PATHS.PROTECTED.DASHBOARD.POS.INDEX(),
   },
   /*   {
     id: "table",
