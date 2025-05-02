@@ -60,7 +60,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX()}>
                   Estoques
                 </BreadcrumbLink>
               </BreadcrumbItem>

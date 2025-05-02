@@ -32,13 +32,19 @@ export const PATHS = {
         }),
       },
       POS: {
-        INDEX: "/pos",
+        INDEX: (params?: Record<string, string | undefined>) => {
+          const queryParams = generateQueryParams({ ...params });
+          return `/pos${queryParams}`;
+        },
         POS: (id: string) => ({
           INDEX: `/pos/${id}`,
         }),
       },
       STOCKS: {
-        INDEX: "/stocks",
+        INDEX: (params?: Record<string, string | undefined>) => {
+          const queryParams = generateQueryParams({ ...params });
+          return `/stocks${queryParams}`;
+        },
         STOCK: (id: string) => ({
           INDEX: `/stocks/${id}`,
         }),
@@ -47,7 +53,10 @@ export const PATHS = {
         INDEX: "/reports",
       },
       SALES: {
-        INDEX: "/sales",
+        INDEX: (params?: Record<string, string | undefined>) => {
+          const queryParams = generateQueryParams({ ...params });
+          return `/sales${queryParams}`;
+        },
         CREATE: "/sales/create",
         SALE: (saleId: string) => ({
           INDEX: `/sales/${saleId}`,

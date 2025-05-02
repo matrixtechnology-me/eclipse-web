@@ -1,18 +1,9 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-
+  DefaultOptionType,
+  SelectPaginated,
+} from "@/components/select-paginated";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,26 +13,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { PATHS } from "@/config/paths";
+import { getServerSession } from "@/lib/session";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { FC, useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { GroupBase } from "react-select";
+import { LoadOptions } from "react-select-async-paginate";
+import { toast } from "sonner";
+import { createPosSaleAction } from "../../_actions/create-pos-sale";
+import { getCustomers } from "../../_actions/get-customers";
+import { Products } from "./_components/products";
+import { ReceivingMethods } from "./_components/receiving-methods";
 import {
   createSaleSchema,
   CreateSaleSchema,
 } from "./_utils/validations/create-sale";
-import { getServerSession } from "@/lib/session";
-import { toast } from "sonner";
-import { PATHS } from "@/config/paths";
-import { LoadOptions } from "react-select-async-paginate";
-import {
-  DefaultOptionType,
-  SelectPaginated,
-} from "@/components/select-paginated";
-import { GroupBase } from "react-select";
-import { getCustomers } from "../../_actions/get-customers";
-import { Products } from "./_components/products";
-import { ReceivingMethods } from "./_components/receiving-methods";
-import { createPosSaleAction } from "../../_actions/create-pos-sale";
 
 type AddSaleProps = {
   posId: string;
@@ -84,7 +80,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
       }
 
       toast.success("Venda registrada com sucesso");
-      router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX);
+      router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX());
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erro ao registrar venda"
@@ -180,7 +176,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
                 type="button"
                 variant="outline"
                 onClick={() =>
-                  router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX)
+                  router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX())
                 }
               >
                 Cancelar

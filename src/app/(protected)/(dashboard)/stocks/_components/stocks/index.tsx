@@ -1,65 +1,64 @@
 import Link from "next/link";
-import { getProductsAction } from "../../_actions/get-products";
-import { PATHS } from "@/config/paths";
-import { PackageIcon, PlusIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/session";
+import { PlusIcon, UsersIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PATHS } from "@/config/paths";
 import { List } from "./list";
-import { FC } from "react";
 import { Table } from "./table";
+import { getStocksAction } from "../../_actions/get-stocks";
 
-type ProductsProps = {
+type StocksProps = {
   page: number;
   pageSize: number;
   query: string;
 };
 
-export const Products: FC<ProductsProps> = async ({
-  page,
-  pageSize,
+export const Stocks = async ({
+  page = 1,
+  pageSize = 5,
   query,
-}) => {
+}: StocksProps) => {
   const session = await getServerSession({ requirements: { tenant: true } });
 
-  if (!session) throw new Error("Session not found");
+  if (!session) throw new Error("session not found");
 
-  const result = await getProductsAction({
-    tenantId: session.tenantId,
+  const result = await getStocksAction({
     page,
     pageSize,
+    tenantId: session.tenantId,
     query,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
-        <PackageIcon className="size-8 text-muted-foreground" />
+        <UsersIcon className="size-8 text-muted-foreground" />
         <div>
-          <p className="font-medium">Nenhum produto cadastrado</p>
+          <p className="font-medium">Nenhum cliente cadastrado</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre seu primeiro produto para começar
+            Cadastre seu primeiro cliente para começar
           </p>
         </div>
         <Link
-          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
           className="w-full lg:w-fit"
         >
           <Button variant="outline" className="mt-2">
             <PlusIcon className="size-4 mr-2" />
-            Adicionar produto
+            Adicionar cliente
           </Button>
         </Link>
       </div>
     );
   }
 
-  const { products } = result.value;
+  const { stocks } = result.value;
 
   return (
     <>
-      <List data={products} />
+      <List data={stocks} />
       <Table
-        data={products}
+        data={stocks}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
       />
     </>

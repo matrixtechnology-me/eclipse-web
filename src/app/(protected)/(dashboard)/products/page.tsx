@@ -13,10 +13,24 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, Package } from "lucide-react";
 import { PATHS } from "@/config/paths";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NextPage } from "next";
+import { Search } from "./_components/search";
 
-const Page = () => {
+type PageSearchParams = {
+  page?: string;
+  limit?: string;
+  query?: string;
+};
+
+type PageProps = {
+  searchParams: Promise<PageSearchParams>;
+};
+
+const Page: NextPage<PageProps> = async ({ searchParams }) => {
+  const { page = 1, limit = 5, query = "" } = await searchParams;
+
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-6">
+    <div className="flex flex-col gap-5 p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Package className="size-6 text-primary sm:hidden" />
@@ -35,19 +49,20 @@ const Page = () => {
             </Breadcrumb>
           </div>
         </div>
-
-        <Link
-          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
-          className="w-full sm:w-auto"
-        >
-          <Button className="w-full sm:w-auto gap-1">
-            <PlusIcon className="size-4" />
-            <span>Novo produto</span>
-          </Button>
-        </Link>
       </div>
-
-      <div className="rounded-lg border p-1 sm:p-3">
+      <div className="rounded-lg flex flex-col gap-5">
+        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
+          <Search query={query} />
+          <Link
+            href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
+            className="w-full lg:w-fit"
+          >
+            <Button variant="outline" className="w-full lg:w-fit">
+              <PlusIcon />
+              <span>Adicionar produto</span>
+            </Button>
+          </Link>
+        </div>
         <Suspense
           fallback={
             <div className="space-y-4">
@@ -56,7 +71,11 @@ const Page = () => {
             </div>
           }
         >
-          <Products />
+          <Products
+            page={Number(page)}
+            pageSize={Number(limit)}
+            query={query}
+          />
         </Suspense>
       </div>
     </div>

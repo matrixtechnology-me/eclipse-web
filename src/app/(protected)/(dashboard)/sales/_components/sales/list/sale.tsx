@@ -2,7 +2,7 @@ import { UserIcon, ShoppingCart, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { PATHS } from "@/config/paths";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { formatPhoneNumber } from "../../_utils/phone-number-format";
+import { formatPhoneNumber } from "../../../_utils/phone-number-format";
 
 type SaleProps = {
   data: {
@@ -31,10 +31,18 @@ export const Sale = ({ data }: SaleProps) => {
       color: "text-yellow-500",
       label: "Pendente",
     },
-    canceled: { icon: XCircle, color: "text-red-500", label: "Cancelada" },
+    canceled: {
+      icon: XCircle,
+      color: "text-red-500",
+      label: "Cancelada",
+    },
   };
 
   const StatusIcon = statusConfig[data.status].icon;
+
+  const totalSaleValue = data.salePrice;
+  const totalCost = data.costPrice;
+  const profit = totalSaleValue - totalCost;
 
   return (
     <Link
@@ -70,9 +78,9 @@ export const Sale = ({ data }: SaleProps) => {
           <p>{data.totalItems}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Valor</p>
+          <p className="text-muted-foreground">Total</p>
           <p className="font-medium">
-            {CurrencyFormatter.format(data.salePrice * data.totalItems)}
+            {CurrencyFormatter.format(totalSaleValue)}
           </p>
         </div>
       </div>
@@ -80,9 +88,9 @@ export const Sale = ({ data }: SaleProps) => {
       {data.status === "completed" && (
         <div className="mt-2 text-xs text-muted-foreground">
           Lucro:{" "}
-          {CurrencyFormatter.format(
-            (data.salePrice - data.costPrice) * data.totalItems
-          )}
+          <span className="font-medium">
+            {CurrencyFormatter.format(profit)}
+          </span>
         </div>
       )}
     </Link>

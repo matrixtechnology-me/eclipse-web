@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sales } from "./_components/sales";
 import { Suspense } from "react";
 import {
   Breadcrumb,
@@ -10,34 +9,44 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, ShoppingCart } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { PATHS } from "@/config/paths";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Sales } from "./_components/sales";
+import { NextPage } from "next";
+import { Search } from "./_components/search";
 
-const Page = () => {
+type PageSearchParams = {
+  page?: string;
+  limit?: string;
+  query?: string;
+};
+
+type PageProps = {
+  searchParams: Promise<PageSearchParams>;
+};
+
+const Page: NextPage<PageProps> = async ({ searchParams }) => {
+  const { page = 1, limit = 5, query = "" } = await searchParams;
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <ShoppingCart className="size-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Vendas</h1>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Vendas</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </div>
+      <div className="w-full">
+        <h1>Vendas</h1>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Painel de controle</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Vendas</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
+      <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
+        <Search query={query} />
         <Link
           href={PATHS.PROTECTED.DASHBOARD.SALES.CREATE}
           className="w-full md:w-auto"
@@ -48,16 +57,8 @@ const Page = () => {
           </Button>
         </Link>
       </div>
-
-      <Suspense
-        fallback={
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-[300px] w-full" />
-          </div>
-        }
-      >
-        <Sales />
+      <Suspense fallback={<div>Carregando...</div>}>
+        <Sales page={Number(page)} pageSize={Number(limit)} query={query} />
       </Suspense>
     </div>
   );

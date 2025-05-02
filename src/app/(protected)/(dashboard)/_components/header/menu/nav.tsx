@@ -4,6 +4,7 @@ import { cn } from "@/lib/shadcn";
 import {
   BoxIcon,
   CircleGaugeIcon,
+  DollarSignIcon,
   FileChartColumnIncreasingIcon,
   ShoppingBasketIcon,
   UsersIcon,
@@ -44,24 +45,30 @@ export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
           Produtos
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX()}>
         <Button variant="ghost">
           <BoxIcon className="size-4" />
           Estoques
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD.POS.INDEX}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.POS.INDEX()}>
         <Button variant="ghost">
           <ShoppingBasketIcon className="size-4" />
           PDV
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD.SALES.INDEX}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.SALES.INDEX()}>
+        <Button variant="ghost">
+          <DollarSignIcon className="size-4" />
+          Vendas
+        </Button>
+      </Link>
+      {/* <Link href={PATHS.PROTECTED.DASHBOARD.REPORTS.INDEX}>
         <Button variant="ghost">
           <FileChartColumnIncreasingIcon className="size-4" />
           Relatórios
         </Button>
-      </Link>
+      </Link> */}
     </div>
   );
 };

@@ -33,7 +33,7 @@ export const Search: React.FC<SearchProps> = ({ query = "" }) => {
 
   const onSubmit: SubmitHandler<SearchFormInputs> = (data) => {
     router.push(
-      PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX({
+      PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX({
         query: data.query,
       })
     );
