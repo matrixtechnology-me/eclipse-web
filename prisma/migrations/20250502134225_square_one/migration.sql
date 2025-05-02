@@ -25,6 +25,9 @@ CREATE TYPE "ESaleMovementPaymentMethod" AS ENUM ('cash', 'pix', 'credit-card', 
 -- CreateEnum
 CREATE TYPE "EDiscountVariant" AS ENUM ('percentage', 'amount');
 
+-- CreateEnum
+CREATE TYPE "EStockEventType" AS ENUM ('entry', 'output');
+
 -- CreateTable
 CREATE TABLE "documents" (
     "id" UUID NOT NULL,
@@ -108,6 +111,7 @@ CREATE TABLE "customers" (
     "tenant_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "customers_pkey" PRIMARY KEY ("id")
 );
@@ -133,7 +137,7 @@ CREATE TABLE "products" (
     "active" BOOLEAN NOT NULL DEFAULT true,
     "sku_code" TEXT NOT NULL,
     "tenantId" UUID NOT NULL,
-    "salePrice" DECIMAL(65,30) NOT NULL,
+    "salePrice" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -159,7 +163,7 @@ CREATE TABLE "stock_lots" (
     "id" UUID NOT NULL,
     "lot_number" TEXT NOT NULL,
     "total_qty" INTEGER NOT NULL DEFAULT 0,
-    "cost_price" DECIMAL(65,30) NOT NULL DEFAULT 0.00,
+    "cost_price" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
     "stock_id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "expires_at" TIMESTAMP(3),
@@ -167,6 +171,38 @@ CREATE TABLE "stock_lots" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "stock_lots_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "stock_events" (
+    "id" UUID NOT NULL,
+    "type" "EStockEventType" NOT NULL,
+    "stock_id" UUID NOT NULL,
+    "tenant_id" UUID NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "stockLotId" UUID,
+
+    CONSTRAINT "stock_events_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "stock_event_entries" (
+    "id" UUID NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+
+    CONSTRAINT "stock_event_entries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "stock_event_outputs" (
+    "id" UUID NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+
+    CONSTRAINT "stock_event_outputs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -193,10 +229,49 @@ CREATE TABLE "pos_events" (
 );
 
 -- CreateTable
-CREATE TABLE "pos_event_sales" (
-    "pos_event_id" UUID NOT NULL,
+CREATE TABLE "pos_event_entries" (
+    "id" UUID NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
 
-    CONSTRAINT "pos_event_sales_pkey" PRIMARY KEY ("pos_event_id")
+    CONSTRAINT "pos_event_entries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pos_event_outputs" (
+    "id" UUID NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+
+    CONSTRAINT "pos_event_outputs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pos_event_sales" (
+    "id" UUID NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "amount" DOUBLE PRECISION NOT NULL,
+    "discount_variant" "EDiscountVariant" NOT NULL DEFAULT 'percentage',
+    "discount_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "customer_id" UUID NOT NULL,
+    "sale_id" UUID NOT NULL,
+
+    CONSTRAINT "pos_event_sales_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "pos_event_sale_products" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL DEFAULT '',
+    "cost_price" DOUBLE PRECISION NOT NULL,
+    "sale_price" DOUBLE PRECISION NOT NULL,
+    "total_qty" INTEGER NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "product_id" UUID NOT NULL,
+
+    CONSTRAINT "pos_event_sale_products_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -206,8 +281,8 @@ CREATE TABLE "sales" (
     "customer_id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "discount_variant" "EDiscountVariant" NOT NULL DEFAULT 'percentage',
-    "discount_value" DECIMAL(65,30) NOT NULL DEFAULT 0,
-    "total" DECIMAL(65,30) NOT NULL,
+    "discount_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total" DOUBLE PRECISION NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -249,20 +324,6 @@ CREATE TABLE "sale_movement_payments" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "sale_movement_payments_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "bills" (
-    "id" UUID NOT NULL,
-    "type" TEXT NOT NULL DEFAULT 'receivable',
-    "status" TEXT NOT NULL DEFAULT 'pending',
-    "start_at" TIMESTAMP(3) NOT NULL,
-    "customer_id" UUID NOT NULL,
-    "tenant_id" UUID NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "bills_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -322,6 +383,42 @@ ALTER TABLE "stock_lots" ADD CONSTRAINT "stock_lots_stock_id_fkey" FOREIGN KEY (
 ALTER TABLE "stock_lots" ADD CONSTRAINT "stock_lots_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "stock_events" ADD CONSTRAINT "stock_events_stock_id_fkey" FOREIGN KEY ("stock_id") REFERENCES "stocks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_events" ADD CONSTRAINT "stock_events_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_events" ADD CONSTRAINT "stock_events_stockLotId_fkey" FOREIGN KEY ("stockLotId") REFERENCES "stock_lots"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_event_entries" ADD CONSTRAINT "stock_event_entries_id_fkey" FOREIGN KEY ("id") REFERENCES "stock_events"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "stock_event_outputs" ADD CONSTRAINT "stock_event_outputs_id_fkey" FOREIGN KEY ("id") REFERENCES "stock_events"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_entries" ADD CONSTRAINT "pos_event_entries_id_fkey" FOREIGN KEY ("id") REFERENCES "pos_events"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_outputs" ADD CONSTRAINT "pos_event_outputs_id_fkey" FOREIGN KEY ("id") REFERENCES "pos_events"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_sales" ADD CONSTRAINT "pos_event_sales_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_sales" ADD CONSTRAINT "pos_event_sales_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_sales" ADD CONSTRAINT "pos_event_sales_id_fkey" FOREIGN KEY ("id") REFERENCES "pos_events"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_sale_products" ADD CONSTRAINT "pos_event_sale_products_id_fkey" FOREIGN KEY ("id") REFERENCES "pos_event_sales"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "pos_event_sale_products" ADD CONSTRAINT "pos_event_sale_products_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "sales" ADD CONSTRAINT "sales_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -332,12 +429,6 @@ ALTER TABLE "sale_products" ADD CONSTRAINT "sale_products_sale_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "sale_products" ADD CONSTRAINT "sale_products_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "bills" ADD CONSTRAINT "bills_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "customers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "bills" ADD CONSTRAINT "bills_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

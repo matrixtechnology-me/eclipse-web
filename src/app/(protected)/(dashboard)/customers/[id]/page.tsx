@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { PATHS } from "@/config/paths";
 import { getCustomer } from "./_actions/get-customer";
-import { Property } from "@/components/property";
 import { DeleteCustomer } from "./_components/delete-customer";
 import { Name } from "./_components/name";
 import { getServerSession } from "@/lib/session";

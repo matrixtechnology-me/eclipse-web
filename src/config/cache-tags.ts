@@ -9,6 +9,13 @@ export const CACHE_TAGS = {
         LOTS: `tenant-[${tenantId}].customer-[${customerId}].lots`,
       }),
     },
+    PRODUCTS: {
+      INDEX: `tenant-[${tenantId}].products`,
+      PRODUCT: (productId: string) => ({
+        INDEX: `tenant-[${tenantId}].product-[${productId}]`,
+        SPECIFICATIONS: `tenant-[${tenantId}].product-[${productId}].specifications`,
+      }),
+    },
     STOCKS: {
       INDEX: `tenant-[${tenantId}].stocks`,
       STOCK: (stockId: string) => ({
