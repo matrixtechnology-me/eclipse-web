@@ -13,9 +13,9 @@ export const Customer = ({ id }: CustomerProps) => {
     queryFn: async () => {
       const result = await getProduct({ id });
 
-      if ("error" in result) return;
+      if (result.isFailure) return;
 
-      const { product } = result.data;
+      const { product } = result.value;
       return product;
     },
   });

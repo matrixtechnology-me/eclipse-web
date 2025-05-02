@@ -1,13 +1,20 @@
-import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
+"use server";
 
-export type GetAverageTicketActionPayload = {
-  tenantId: string;
-};
+import prisma from "@/lib/prisma";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
+import { BadRequestError } from "@/errors/http/bad-request.error";
+
+type GetAverageTicketActionPayload = { tenantId: string };
 
 export type GetAverageTicketActionResult = {
   averageTicket: number;
+  totalSales: number;
+  salesCount: number;
 };
 
 export const getAverageTicket: ServerAction<
@@ -15,26 +22,42 @@ export const getAverageTicket: ServerAction<
   GetAverageTicketActionResult
 > = async ({ tenantId }) => {
   try {
-    const sales = await prisma.sale.findMany({
-      where: {
-        tenantId,
+    if (!tenantId) {
+      throw new BadRequestError("Tenant ID is required");
+    }
+
+    const aggregation = await prisma.sale.aggregate({
+      where: { tenantId },
+      _sum: {
+        total: true,
       },
-      select: {
-        products: true,
-      },
+      _count: true,
     });
 
-    const total = sales.reduce((accumulator, sale) => {
-      const saleTotal = sale.products.reduce((productAccumulator, product) => {
-        return productAccumulator + product.salePrice;
-      }, 0);
-      return accumulator + saleTotal;
-    }, 0);
+    const salesCount = aggregation._count;
+    const totalSales = aggregation._sum.total ?? 0;
+    const averageTicket = salesCount > 0 ? totalSales / salesCount : 0;
 
-    const averageTicket = sales.length > 0 ? total / sales.length : 0;
+    return success({
+      averageTicket,
+      totalSales,
+      salesCount,
+    });
+  } catch (error: unknown) {
+    console.error(
+      `Failed to calculate average ticket for tenant ${tenantId}:`,
+      error
+    );
 
-    return { data: { averageTicket } };
-  } catch (error) {
-    return reportError(error as Error);
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

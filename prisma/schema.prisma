@@ -35,6 +35,26 @@ enum EStockStrategy {
   Lifo @map(name: "lifo")
 }
 
+enum ESaleMovementType {
+  Payment @map(name: "payment")
+}
+
+enum EPosEventType {
+  Sale     @map(name: "sale")
+  Entry    @map(name: "entry")
+  Output   @map(name: "output")
+  Payment  @map(name: "payment")
+  Return   @map(name: "return")
+  Exchange @map(name: "exchange")
+}
+
+enum ESaleMovementPaymentMethod {
+  Cash       @map(name: "cash")
+  Pix        @map(name: "pix")
+  CreditCard @map(name: "credit-card")
+  DebitCard  @map(name: "debit-card")
+}
+
 model Document {
   id        String       @id @default(uuid()) @db.Uuid
   type      DocumentType
@@ -48,6 +68,11 @@ model Document {
 enum EDiscountVariant {
   Percentage @map("percentage")
   Amount     @map("amount")
+}
+
+enum EStockEventType {
+  Entry  @map("entry")
+  Output @map("output")
 }
 
 model Address {
@@ -71,6 +96,7 @@ model User {
   email     String   @unique
   password  String
   role      String
+  active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @updatedAt @map(name: "updated_at")
 
@@ -89,11 +115,10 @@ model Tenant {
   customers     Customer[]
   products      Product[]
   sales         Sale[]
-  receivables   Receivable[]
   notifications Notification[]
   stocks        Stock[]
   stockLots     StockLot[]
-  payables      Payable[]
+  StockEvent    StockEvent[]
 
   @@map("tenants")
 }
@@ -124,19 +149,19 @@ model TenantMembership {
 }
 
 model Customer {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String   @default("")
-  phoneNumber String   @map("phone_number")
-  active      Boolean? @default(true)
-  tenantId    String   @map("tenant_id") @db.Uuid
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String    @default("")
+  phoneNumber String    @map("phone_number")
+  active      Boolean?  @default(true)
+  tenantId    String    @map("tenant_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map(name: "created_at")
+  updatedAt   DateTime  @updatedAt @map(name: "updated_at")
+  deletedAt   DateTime? @map(name: "deleted_at")
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  receivables Receivable[]
-  payables    Payable[]
-  sale        Sale[]
+  sales         Sale[]
+  posEventSales PosEventSale[]
 
   @@map("customers")
 }
@@ -162,15 +187,16 @@ model Product {
   active      Boolean  @default(true)
   skuCode     String   @unique @map("sku_code")
   tenantId    String   @db.Uuid
-  salePrice   Decimal
+  salePrice   Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   stock  Stock?
   Tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  saleProducts   SaleProduct[]
-  specifications ProductSpecification[]
+  saleProducts        SaleProduct[]
+  specifications      ProductSpecification[]
+  PosEventSaleProduct PosEventSaleProduct[]
 
   @@map("products")
 }
@@ -185,10 +211,11 @@ model Stock {
   createdAt    DateTime       @default(now()) @map(name: "created_at")
   updatedAt    DateTime       @updatedAt @map(name: "updated_at")
 
-  tenant           Tenant  @relation(fields: [tenantId], references: [id])
-  productVariation Product @relation(fields: [productId], references: [id])
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
-  lots StockLot[]
+  lots       StockLot[]
+  StockEvent StockEvent[]
 
   @@map("stocks")
 }
@@ -197,17 +224,138 @@ model StockLot {
   id        String    @id @default(uuid()) @db.Uuid
   lotNumber String    @unique @map("lot_number")
   totalQty  Int       @default(0) @map("total_qty")
-  costPrice Decimal   @default(0.00) @map("cost_price")
+  costPrice Float     @default(0.00) @map("cost_price")
   stockId   String    @map("stock_id") @db.Uuid
   tenantId  String    @map("tenant_id") @db.Uuid
   expiresAt DateTime? @map("expires_at")
   createdAt DateTime  @default(now()) @map(name: "created_at")
   updatedAt DateTime  @updatedAt @map(name: "updated_at")
 
+  stock      Stock        @relation(fields: [stockId], references: [id])
+  tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  StockEvent StockEvent[]
+
+  @@map("stock_lots")
+}
+
+model StockEvent {
+  id          String          @id @default(uuid()) @db.Uuid
+  type        EStockEventType
+  stockId     String          @map("stock_id") @db.Uuid
+  tenantId    String          @map("tenant_id") @db.Uuid
+  description String          @default("")
+  createdAt   DateTime        @default(now()) @map(name: "created_at")
+  updatedAt   DateTime        @updatedAt @map(name: "updated_at")
+
   stock  Stock  @relation(fields: [stockId], references: [id])
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  @@map("stock_lots")
+  entry      StockEventEntry?
+  output     StockEventOutput?
+  StockLot   StockLot?         @relation(fields: [stockLotId], references: [id])
+  stockLotId String?           @db.Uuid
+
+  @@map("stock_events")
+}
+
+model StockEventEntry {
+  id          String @id @default(uuid()) @db.Uuid
+  quantity    Int
+  description String @default("")
+
+  stockEvent StockEvent @relation(fields: [id], references: [id])
+
+  @@map("stock_event_entries")
+}
+
+model StockEventOutput {
+  id          String @id @default(uuid()) @db.Uuid
+  quantity    Int
+  description String @default("")
+
+  stockEvent StockEvent @relation(fields: [id], references: [id])
+
+  @@map("stock_event_outputs")
+}
+
+model Pos {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  tenantId    String   @map("tenant_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  @@map("pos")
+}
+
+model PosEvent {
+  id        String        @id @default(uuid()) @db.Uuid
+  type      EPosEventType
+  posId     String        @map("pos_id") @db.Uuid
+  createdAt DateTime      @default(now()) @map(name: "created_at")
+  updatedAt DateTime      @updatedAt @map(name: "updated_at")
+
+  entry  PosEventEntry?
+  output PosEventOutput?
+  sale   PosEventSale?
+
+  @@map("pos_events")
+}
+
+model PosEventEntry {
+  id          String @id @db.Uuid
+  amount      Float
+  description String @default("")
+
+  posEvent PosEvent @relation(fields: [id], references: [id])
+
+  @@map("pos_event_entries")
+}
+
+model PosEventOutput {
+  id          String @id @db.Uuid
+  amount      Float
+  description String @default("")
+
+  posEvent PosEvent @relation(fields: [id], references: [id])
+
+  @@map("pos_event_outputs")
+}
+
+model PosEventSale {
+  id              String           @id @db.Uuid
+  description     String           @default("")
+  amount          Float
+  discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
+  discountValue   Float            @default(0) @map("discount_value")
+  customerId      String           @map("customer_id") @db.Uuid
+  saleId          String           @map("sale_id") @db.Uuid
+
+  sale     Sale                  @relation(fields: [saleId], references: [id])
+  customer Customer              @relation(fields: [customerId], references: [id])
+  posEvent PosEvent              @relation(fields: [id], references: [id])
+  products PosEventSaleProduct[]
+
+  @@map("pos_event_sales")
+}
+
+model PosEventSaleProduct {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  costPrice   Float    @map("cost_price")
+  salePrice   Float    @map("sale_price")
+  totalQty    Int      @default(0) @map("total_qty")
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  productId String @map("product_id") @db.Uuid
+
+  posEventSale PosEventSale @relation(fields: [id], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@map("pos_event_sale_products")
 }
 
 model Sale {
@@ -216,24 +364,29 @@ model Sale {
   customerId      String           @map("customer_id") @db.Uuid
   tenantId        String           @map("tenant_id") @db.Uuid
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
-  discountValue   Decimal          @default(0) @map("discount_value")
+  discountValue   Float            @default(0) @map("discount_value")
+  total           Float
   createdAt       DateTime         @default(now()) @map(name: "created_at")
   updatedAt       DateTime         @updatedAt @map(name: "updated_at")
 
   products SaleProduct[]
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  customer     Customer       @relation(fields: [customerId], references: [id])
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  PosEventSale PosEventSale[]
 
   @@map("sales")
 }
 
 model SaleProduct {
+  id          String   @id @default(uuid()) @db.Uuid
   name        String
-  description String @default("")
-  costPrice   Float  @map("cost_price")
-  salePrice   Float  @map("sale_price")
-  totalQty    Int    @default(0) @map("total_qty")
+  description String   @default("")
+  costPrice   Float    @map("cost_price")
+  salePrice   Float    @map("sale_price")
+  totalQty    Int      @default(0) @map("total_qty")
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
   saleId    String @map("sale_id") @db.Uuid
   productId String @map("product_id") @db.Uuid
@@ -241,38 +394,29 @@ model SaleProduct {
   sale    Sale    @relation(fields: [saleId], references: [id])
   product Product @relation(fields: [productId], references: [id])
 
-  @@id([saleId, productId])
+  @@unique([saleId, productId])
   @@map("sale_products")
 }
 
-model Receivable {
-  id         String   @id @default(uuid()) @db.Uuid
-  status     String   @default("pending")
-  startAt    DateTime @map("start_at")
-  customerId String   @map("customer_id") @db.Uuid
-  tenantId   String   @map("tenant_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+model SaleMovement {
+  type      ESaleMovementType
+  createdAt DateTime          @default(now()) @map(name: "created_at")
+  updatedAt DateTime          @updatedAt @map(name: "updated_at")
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  saleId String @db.Uuid
 
-  @@map("receivables")
+  @@id([saleId])
+  @@map("sale_movements")
 }
 
-model Payable {
-  id         String   @id @default(uuid()) @db.Uuid
-  status     String   @default("pending")
-  startAt    DateTime @map("start_at")
-  customerId String   @map("customer_id") @db.Uuid
-  tenantId   String   @map("tenant_id") @db.Uuid
-  createdAt  DateTime @default(now()) @map(name: "created_at")
-  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+model SaleMovementPayment {
+  id        String                     @id @default(uuid()) @db.Uuid
+  method    ESaleMovementPaymentMethod
+  amount    Float
+  createdAt DateTime                   @default(now()) @map(name: "created_at")
+  updatedAt DateTime                   @updatedAt @map(name: "updated_at")
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
-
-  @@map("payables")
+  @@map("sale_movement_payments")
 }
 
 model Notification {

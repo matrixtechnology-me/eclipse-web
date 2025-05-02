@@ -1,43 +1,46 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
 
-type GetProductsActionPayload = {};
-
-type GetProductsActionResult = {
-  products: {
-    id: string;
-    name: string;
-    barCode: string;
-    active: boolean;
-    salePrice: number;
-  }[];
+export type ProductListItem = {
+  id: string;
+  name: string;
+  barCode: string;
+  active: boolean;
+  salePrice: number;
 };
 
 export const getProducts: ServerAction<
-  GetProductsActionPayload,
-  GetProductsActionResult
-> = async () => {
+  { tenantId: string },
+  { products: ProductListItem[] }
+> = async ({ tenantId }) => {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      orderBy: { name: "asc" },
+      where: { active: true, tenantId },
+    });
 
-    if (!products?.length) throw new NotFoundError();
+    if (!products.length) {
+      return failure(new NotFoundError("No active products found"));
+    }
 
-    return {
-      data: {
-        products: products.map((product) => ({
-          id: product.id,
-          active: product.active,
-          barCode: product.barCode,
-          name: product.name,
-          salePrice: product.salePrice.toNumber(),
-        })),
-      },
-    };
-  } catch (error) {
-    return reportError(error);
+    return success({
+      products: products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        barCode: product.barCode,
+        active: product.active,
+        salePrice: product.salePrice,
+      })),
+    });
+  } catch (error: unknown) {
+    console.error("Failed to fetch products:", error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

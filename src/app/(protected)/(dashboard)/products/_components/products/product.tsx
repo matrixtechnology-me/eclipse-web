@@ -24,7 +24,7 @@ export const Product = ({ data, ...rest }: ProductProps) => {
             <Package className="size-5 text-primary" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-medium">{data.name}</h3>
+            <h3 className="font-medium line-clamp-1">{data.name}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium">
                 {CurrencyFormatter.format(data.salePrice)}

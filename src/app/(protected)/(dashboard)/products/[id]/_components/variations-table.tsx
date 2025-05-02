@@ -47,9 +47,9 @@ export const VariationsTable: FC<VariationsTableProps> = ({
               className="cursor-pointer"
               onClick={() =>
                 router.push(
-                  PATHS.PROTECTED.PRODUCTS.PRODUCT(productId).VARIATION(
-                    item.skuCode
-                  )
+                  PATHS.PROTECTED.DASHBOARD.PRODUCTS.PRODUCT(
+                    productId
+                  ).VARIATION(item.skuCode)
                 )
               }
             >

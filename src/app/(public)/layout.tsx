@@ -8,9 +8,11 @@ type LayoutProps = {
 };
 
 const Layout: FC<LayoutProps> = async ({ children }) => {
-  const session = await getServerSession();
+  const session = await getServerSession({
+    requirements: { tenant: true },
+  });
 
-  if (session) redirect(PATHS.PROTECTED.HOMEPAGE);
+  if (session) redirect(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
 
   return <>{children}</>;
 };

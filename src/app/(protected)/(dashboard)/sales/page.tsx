@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, ShoppingCart } from "lucide-react";
 import { PATHS } from "@/config/paths";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 
 const Page = () => {
   return (
@@ -26,7 +25,7 @@ const Page = () => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                  <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                     Dashboard
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -39,7 +38,10 @@ const Page = () => {
           </div>
         </div>
 
-        <Link href={PATHS.PROTECTED.SALES.CREATE} className="w-full md:w-auto">
+        <Link
+          href={PATHS.PROTECTED.DASHBOARD.SALES.CREATE}
+          className="w-full md:w-auto"
+        >
           <Button variant="outline" className="w-full md:w-auto gap-2">
             <PlusIcon className="size-4" />
             <span>Nova Venda</span>

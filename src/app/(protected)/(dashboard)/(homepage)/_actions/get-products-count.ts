@@ -1,10 +1,15 @@
-import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { reportError } from "@/utils/report-error";
+"use server";
 
-export type GetProductsCountActionPayload = {
-  tenantId: string;
-};
+import prisma from "@/lib/prisma";
+import {
+  ServerAction,
+  success,
+  failure,
+  createActionError,
+} from "@/core/server-actions";
+import { BadRequestError } from "@/errors/http/bad-request.error";
+
+type GetProductsCountActionPayload = { tenantId: string };
 
 export type GetProductsCountActionResult = {
   count: number;
@@ -15,14 +20,23 @@ export const getProductsCount: ServerAction<
   GetProductsCountActionResult
 > = async ({ tenantId }) => {
   try {
-    const productsCount = await prisma.product.count({
-      where: {
-        tenantId,
-      },
+    if (!tenantId) throw new BadRequestError("Tenant ID is required");
+
+    const count = await prisma.product.count({
+      where: { tenantId },
     });
 
-    return { data: { count: productsCount } };
-  } catch (error) {
-    return reportError(error as Error);
+    return success({ count });
+  } catch (error: unknown) {
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

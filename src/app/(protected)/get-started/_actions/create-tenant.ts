@@ -1,10 +1,15 @@
 "use server";
 
-import { NotFoundError } from "@/errors/not-found";
+import {
+  createActionError,
+  failure,
+  ServerAction,
+  success,
+} from "@/core/server-actions";
+import { NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { propagateError } from "@/utils/propagate-error.util";
+import { reportError } from "@/utils/report-error.util";
 import { EMembershipRole } from "@prisma/client";
 
 type CreateTenantActionPayload = {
@@ -28,7 +33,7 @@ export const createTenant: ServerAction<
       },
     });
 
-    if (!user) throw new NotFoundError({ message: "user not found" });
+    if (!user) throw new NotFoundError("user not found");
 
     const tenant = await prisma.tenant.create({
       data: {
@@ -47,11 +52,17 @@ export const createTenant: ServerAction<
       },
     });
 
-    return { data: { tenantId: tenant.id } };
-  } catch (error: any) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes(error?.name)
-      ? propagateError(error)
-      : reportError(error);
+    return success({ tenantId: tenant.id });
+  } catch (error) {
+    return failure(
+      createActionError(
+        500,
+        "RegistrationError",
+        "Ocorreu um erro durante o registro",
+        {
+          originalError: error instanceof Error ? error.message : String(error),
+        }
+      )
+    );
   }
 };

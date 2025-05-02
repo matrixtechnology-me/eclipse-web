@@ -19,11 +19,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getUserTenants } from "../_actions/get-user-tenants";
-import { NotFoundError } from "@/errors/not-found";
 import { PasswordInput } from "./password-input";
 import { toast } from "sonner";
 import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
-import { InvalidCredentialsError } from "@/errors";
+import { InvalidCredentialsError, NotFoundError } from "@/errors";
 
 const formSchema = z.object({
   email: z.string().min(1, {
@@ -48,13 +47,13 @@ export const AuthenticationForm = () => {
   });
 
   const handleSubmit = async ({ email, password }: FormSchema) => {
-    const result = await authenticateUserAction({
+    const authenticateUserResult = await authenticateUserAction({
       email,
       password,
     });
 
-    if ("error" in result) {
-      switch (result.error) {
+    if (authenticateUserResult.isFailure) {
+      switch (authenticateUserResult.error.name) {
         case NotFoundError.name:
           return toast("Usuário não encontrado", {
             description: "Verifique o e-mail informado e tente novamente",
@@ -74,29 +73,27 @@ export const AuthenticationForm = () => {
       }
     }
 
-    const { sessionId } = result.data;
+    const { sessionId } = authenticateUserResult.value;
 
     setCookie(null, "X-Identity", sessionId, { path: "/" });
 
-    const fetchedUserTenants = await getUserTenants({ userId: sessionId });
+    const getUserTenantsResult = await getUserTenants({ userId: sessionId });
 
-    if ("error" in fetchedUserTenants) {
-      const { error } = fetchedUserTenants;
-
-      if (error === NotFoundError.name) {
+    if (getUserTenantsResult.isFailure) {
+      if (getUserTenantsResult.error.name === NotFoundError.name) {
         return router.push(PATHS.PROTECTED.GET_STARTED);
       } else {
         return alert("Aconteceu um erro ao buscar as empresas");
       }
     }
 
-    const { tenants } = fetchedUserTenants.data;
+    const { tenants } = getUserTenantsResult.value;
 
     const targetTenant = tenants[0];
 
     setCookie(null, "X-Tenant", targetTenant.id, { path: "/" });
 
-    router.push(PATHS.PROTECTED.HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
   };
 
   return (

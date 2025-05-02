@@ -51,7 +51,10 @@ const Page = () => {
 
   const onSubmit = async (values: CreateProductSchema) => {
     try {
-      const session = await getServerSession();
+      const session = await getServerSession({
+        requirements: { tenant: true },
+      });
+
       if (!session) throw new Error("Sessão não encontrada");
 
       const result = await createProduct({
@@ -59,12 +62,12 @@ const Page = () => {
         tenantId: session.tenantId,
       });
 
-      if ("error" in result) {
-        throw new Error(result.error);
+      if (result.isFailure) {
+        return;
       }
 
       toast.success("Produto criado com sucesso");
-      router.push(PATHS.PROTECTED.PRODUCTS.INDEX());
+      router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX());
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -83,13 +86,15 @@ const Page = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Dashboard
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
+                <BreadcrumbLink
+                  href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}
+                >
                   Produtos
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -196,7 +201,9 @@ const Page = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(PATHS.PROTECTED.PRODUCTS.INDEX())}
+              onClick={() =>
+                router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX())
+              }
             >
               Cancelar
             </Button>

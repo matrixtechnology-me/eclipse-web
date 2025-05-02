@@ -37,7 +37,7 @@ const Page = () => {
         </div>
 
         <Link
-          href={PATHS.PROTECTED.PRODUCTS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
           className="w-full sm:w-auto"
         >
           <Button className="w-full sm:w-auto gap-1">

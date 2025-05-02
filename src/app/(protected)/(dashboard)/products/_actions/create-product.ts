@@ -1,31 +1,25 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
+import { failure, ServerAction, success } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
+import { BadRequestError, ConflictError, InternalServerError } from "@/errors";
 import { EStockStrategy } from "@prisma/client";
 
-type CreateProductActionPayload = {
-  name: string;
-  description: string;
-  salePrice: number;
-  costPrice: number;
-  barCode: string;
-  specifications: {
-    label: string;
-    value: string;
-  }[];
-  tenantId: string;
-};
-
-type CreateProductActionResult = {};
-
 export const createProduct: ServerAction<
-  CreateProductActionPayload,
-  CreateProductActionResult
+  {
+    name: string;
+    description: string;
+    salePrice: number;
+    costPrice: number;
+    barCode: string;
+    specifications: Array<{ label: string; value: string }>;
+    tenantId: string;
+  },
+  void
 > = async ({
-  description,
   name,
+  description,
   tenantId,
   costPrice,
   salePrice,
@@ -33,22 +27,26 @@ export const createProduct: ServerAction<
   barCode,
 }) => {
   try {
+    if (!name || !tenantId || salePrice <= 0 || costPrice <= 0) {
+      throw new BadRequestError("Invalid input parameters");
+    }
+
+    const existingProduct = await prisma.product.findFirst({
+      where: { OR: [{ name }, { barCode }], tenantId },
+    });
+    if (existingProduct) throw new ConflictError("Product already exists");
+
     await prisma.product.create({
       data: {
         name,
         description,
         tenantId,
-        skuCode: Math.floor(Math.random() * 0xffffffffffff)
-          .toString(16)
-          .padStart(12, "0"),
+        skuCode: generateSkuCode(),
         salePrice,
         barCode,
         specifications: {
           createMany: {
-            data: specifications.map((specification) => ({
-              label: specification.label,
-              value: specification.value,
-            })),
+            data: specifications,
           },
         },
         stock: {
@@ -62,9 +60,15 @@ export const createProduct: ServerAction<
       },
     });
 
-    return { data: {} };
-  } catch (error) {
-    console.log(error);
-    return propagateError(error as Error);
+    return success(undefined);
+  } catch (error: unknown) {
+    console.error("Failed to create product:", error);
+    return failure(new InternalServerError());
   }
 };
+
+function generateSkuCode(): string {
+  return Math.floor(Math.random() * 0xffffffffffff)
+    .toString(16)
+    .padStart(12, "0");
+}

@@ -1,110 +1,121 @@
-import { NotFoundError } from "@/errors/not-found";
+"use server";
+
+import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction } from "@/types/server-actions";
-import { propagateError } from "@/utils/propagate-error";
-import { reportError } from "@/utils/report-error";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { reportError } from "@/utils/report-error.util";
 import { EStockStrategy } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
-type GetProductsActionPayload = {
+export type Product = {
   id: string;
-};
-
-type GetProductsActionResult = {
-  product: {
+  name: string;
+  description: string;
+  active: boolean;
+  skuCode: string;
+  salePrice: number;
+  createdAt: Date;
+  updatedAt: Date;
+  specifications: Array<{
     id: string;
-    name: string;
-    description: string;
-    active: boolean;
-    skuCode: string;
-    salePrice: number;
-    createdAt: Date;
-    updatedAt: Date;
-    specifications: {
-      id: string;
-      label: string;
-      value: string;
-    }[];
-    stock: {
+    label: string;
+    value: string;
+  }>;
+  stock: {
+    id: string;
+    totalQty: number;
+    availableQty: number;
+    strategy: EStockStrategy;
+    lots: Array<{
       id: string;
       totalQty: number;
-      availableQty: number;
-      strategy: EStockStrategy;
-      lots: {
-        id: string;
-        totalQty: number;
-        costPrice: number;
-        lotNumber: string;
-        expiresAt?: Date;
-        createdAt: Date;
-        updatedAt: Date;
-      }[];
-    };
+      costPrice: number;
+      lotNumber: string;
+      expiresAt?: Date;
+      createdAt: Date;
+      updatedAt: Date;
+    }>;
   };
 };
 
 export const getProduct: ServerAction<
-  GetProductsActionPayload,
-  GetProductsActionResult
+  { id: string },
+  { product: Product }
 > = async ({ id }) => {
   try {
     const product = await prisma.product.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
-        specifications: true,
+        specifications: {
+          select: {
+            id: true,
+            label: true,
+            value: true,
+          },
+        },
         stock: {
           include: {
-            lots: true,
+            lots: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              select: {
+                id: true,
+                totalQty: true,
+                costPrice: true,
+                lotNumber: true,
+                expiresAt: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!product) throw new NotFoundError({ message: "product not found" });
+    if (!product) {
+      return failure(new NotFoundError("Product not found"));
+    }
 
-    if (!product.stock)
-      throw new NotFoundError({ message: "product variation stock not found" });
+    if (!product.stock) {
+      return failure(new NotFoundError("Product stock not found"));
+    }
 
-    return {
-      data: {
-        product: {
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          active: product.active,
-          skuCode: product.skuCode,
-          salePrice: product.salePrice.toNumber(),
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt,
-          specifications: product.specifications.map((specification) => ({
-            id: specification.id,
-            label: specification.label,
-            value: specification.value,
-          })),
-          stock: {
-            id: product.stock.id,
-            availableQty: product.stock.availableQty,
-            strategy: product.stock.strategy,
-            totalQty: product.stock.totalQty,
-            lots:
-              product.stock.lots.map((lot) => ({
-                costPrice: lot.costPrice.toNumber(),
-                id: lot.id,
-                lotNumber: lot.lotNumber,
-                totalQty: lot.totalQty,
-                expiresAt: lot.expiresAt ?? undefined,
-                createdAt: lot.createdAt,
-                updatedAt: lot.updatedAt,
-              })) ?? [],
-          },
-        },
+    const productDetails: Product = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      active: product.active,
+      skuCode: product.skuCode,
+      salePrice: product.salePrice,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      specifications: product.specifications,
+      stock: {
+        id: product.stock.id,
+        totalQty: product.stock.totalQty,
+        availableQty: product.stock.availableQty,
+        strategy: product.stock.strategy,
+        lots: product.stock.lots.map((lot) => ({
+          id: lot.id,
+          totalQty: lot.totalQty,
+          costPrice: lot.costPrice,
+          lotNumber: lot.lotNumber,
+          expiresAt: lot.expiresAt ?? undefined,
+          createdAt: lot.createdAt,
+          updatedAt: lot.updatedAt,
+        })),
       },
     };
-  } catch (error) {
-    const expectedErrors = [NotFoundError.name];
-    return expectedErrors.includes((error as Error).name)
-      ? propagateError(error as Error)
-      : reportError(error as Error);
+
+    return success({ product: productDetails });
+  } catch (error: unknown) {
+    console.error(`Failed to fetch product ${id}:`, error);
+    return failure(
+      new InternalServerError("Ocorreu um erro durante o registro", {
+        originalError: error instanceof Error ? error.message : String(error),
+      })
+    );
   }
 };

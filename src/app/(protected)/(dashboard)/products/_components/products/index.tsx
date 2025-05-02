@@ -4,9 +4,16 @@ import { PATHS } from "@/config/paths";
 import { Product } from "./product";
 import { PackageIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getServerSession } from "@/lib/session";
 
 export const Products = async () => {
-  const result = await getProducts({});
+  const session = await getServerSession({ requirements: { tenant: true } });
+
+  if (!session) throw new Error("Session not found");
+
+  const result = await getProducts({
+    tenantId: session.tenantId,
+  });
 
   if ("error" in result) {
     return (
@@ -19,7 +26,7 @@ export const Products = async () => {
           </p>
         </div>
         <Link
-          href={PATHS.PROTECTED.PRODUCTS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
           className="w-full lg:w-fit"
         >
           <Button variant="outline" className="mt-2">
@@ -31,21 +38,17 @@ export const Products = async () => {
     );
   }
 
-  const { products } = result.data;
+  const { products } = result.value;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
       {products.map((product) => (
         <Link
-          href={PATHS.PROTECTED.PRODUCTS.PRODUCT(product.id).INDEX}
+          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.PRODUCT(product.id).INDEX}
           key={product.id}
-          className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg transition-all"
           aria-label={`Ver detalhes do produto ${product.name}`}
         >
-          <Product
-            data={product}
-            className="group-hover:shadow-md group-hover:border-primary transition-all"
-          />
+          <Product data={product} />
         </Link>
       ))}
     </div>

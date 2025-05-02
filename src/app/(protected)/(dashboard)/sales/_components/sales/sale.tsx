@@ -38,7 +38,7 @@ export const Sale = ({ data }: SaleProps) => {
 
   return (
     <Link
-      href={PATHS.PROTECTED.SALES.SALE(data.id).INDEX}
+      href={PATHS.PROTECTED.DASHBOARD.SALES.SALE(data.id).INDEX}
       className="w-full border rounded-lg p-4 hover:shadow-md transition-shadow bg-card"
     >
       <div className="flex items-start justify-between gap-4">

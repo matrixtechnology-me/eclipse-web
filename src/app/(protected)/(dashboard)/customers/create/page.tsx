@@ -51,7 +51,7 @@ const Page = () => {
   });
 
   const handleSubmit = async ({ name, phoneNumber }: FormSchema) => {
-    const session = await getServerSession();
+    const session = await getServerSession({ requirements: { tenant: true } });
 
     if (!session) throw new Error("session not found");
 
@@ -61,7 +61,7 @@ const Page = () => {
       tenantId: session.tenantId,
     });
 
-    router.push(PATHS.PROTECTED.CUSTOMERS.INDEX());
+    router.push(PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX());
   };
 
   const handleReset = () => {
@@ -79,13 +79,15 @@ const Page = () => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Painel de controle
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.CUSTOMERS.INDEX()}>
+                <BreadcrumbLink
+                  href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX()}
+                >
                   Clientes
                 </BreadcrumbLink>
               </BreadcrumbItem>

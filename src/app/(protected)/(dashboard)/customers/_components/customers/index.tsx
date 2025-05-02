@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getCustomers } from "../../_actions/get-customers";
-import { Customer } from "./customer";
 import { getServerSession } from "@/lib/session";
 import { PlusIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PATHS } from "@/config/paths";
+import { CustomersTable } from "./table";
+import { List } from "./list";
 
 type CustomersProps = {
   page: number;
@@ -17,7 +18,7 @@ export const Customers = async ({
   pageSize = 5,
   query,
 }: CustomersProps) => {
-  const session = await getServerSession();
+  const session = await getServerSession({ requirements: { tenant: true } });
 
   if (!session) throw new Error("session not found");
 
@@ -28,7 +29,7 @@ export const Customers = async ({
     query,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
         <UsersIcon className="size-8 text-muted-foreground" />
@@ -39,7 +40,7 @@ export const Customers = async ({
           </p>
         </div>
         <Link
-          href={PATHS.PROTECTED.CUSTOMERS.CREATE}
+          href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
           className="w-full lg:w-fit"
         >
           <Button variant="outline" className="mt-2">
@@ -51,19 +52,15 @@ export const Customers = async ({
     );
   }
 
-  const { customers } = result.data;
+  const { customers } = result.value;
 
   return (
-    <div className="grid lg:grid-cols-4 gap-5 grid-cols-1 overflow-y-auto">
-      {customers.map((customer) => (
-        <Link
-          href={`/customers/${customer.id}`}
-          key={customer.id}
-          className="h-fit"
-        >
-          <Customer data={customer} />
-        </Link>
-      ))}
-    </div>
+    <>
+      <List data={customers} />
+      <CustomersTable
+        data={customers}
+        pagination={{ initialPage: page, initialPageSize: pageSize }}
+      />
+    </>
   );
 };

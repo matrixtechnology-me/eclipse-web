@@ -10,10 +10,8 @@ import {
 import { PATHS } from "@/config/paths";
 import { getProduct } from "../_actions/get-product";
 import { Property } from "@/components/property";
-import { DeleteCustomer } from "./_components/delete-customer";
 import { SpecificationsTable } from "./_components/specifications-table";
-import { Stock } from "./_components/stock";
-import { Lots } from "./_components/lots";
+import { Stock } from "../../stocks/[id]/_components/stock";
 
 type PageParams = {
   id: string;
@@ -30,11 +28,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
     id,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return <div>Nenhum produto encontrado</div>;
   }
 
-  const { product } = result.data;
+  const { product } = result.value;
 
   const properties = [
     { label: "Nome", value: product.name, copyable: true },
@@ -58,13 +56,15 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.HOMEPAGE}>
+                <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
                   Painel de controle
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={PATHS.PROTECTED.PRODUCTS.INDEX()}>
+                <BreadcrumbLink
+                  href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}
+                >
                   Produtos
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -105,7 +105,6 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           strategy={product.stock.strategy}
           totalQty={product.stock.totalQty}
         />
-        <Lots data={product.stock.lots} stockId={product.stock.id} />
       </div>
     </div>
   );
