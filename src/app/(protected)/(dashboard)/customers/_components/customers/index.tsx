@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getCustomers } from "../../_actions/get-customers";
-import { Customer } from "./customer";
 import { getServerSession } from "@/lib/session";
 import { PlusIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PATHS } from "@/config/paths";
+import { CustomersTable } from "./table";
+import { List } from "./list";
 
 type CustomersProps = {
   page: number;
@@ -54,16 +55,12 @@ export const Customers = async ({
   const { customers } = result.value;
 
   return (
-    <div className="grid lg:grid-cols-4 gap-5 grid-cols-1 overflow-y-auto">
-      {customers.map((customer) => (
-        <Link
-          href={`/customers/${customer.id}`}
-          key={customer.id}
-          className="h-fit"
-        >
-          <Customer data={customer} />
-        </Link>
-      ))}
-    </div>
+    <>
+      <List data={customers} />
+      <CustomersTable
+        data={customers}
+        pagination={{ initialPage: page, initialPageSize: pageSize }}
+      />
+    </>
   );
 };

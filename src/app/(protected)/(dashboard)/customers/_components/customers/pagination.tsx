@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../components/ui/select";
+} from "../../../../../../components/ui/select";
 import { PATHS } from "@/config/paths";
 import { useRouter } from "next/navigation";
 

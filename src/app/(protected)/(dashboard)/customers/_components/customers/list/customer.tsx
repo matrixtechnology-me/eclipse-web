@@ -1,7 +1,7 @@
 import { CircleCheck, User, XCircle, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Customer as CustomerType } from "../../_actions/get-customers";
-import { formatPhoneNumber } from "../../_utils/phone-number-format";
+import type { Customer as CustomerType } from "../../../_actions/get-customers";
+import { formatPhoneNumber } from "../../../_utils/phone-number-format";
 
 type CustomerProps = {
   data: CustomerType;

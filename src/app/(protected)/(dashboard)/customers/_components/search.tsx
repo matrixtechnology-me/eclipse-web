@@ -10,7 +10,6 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,18 +49,17 @@ export const Search: React.FC<SearchProps> = ({ query = "" }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full flex items-end gap-2"
+        className="w-fit flex items-end gap-2"
       >
         <FormField
           name="query"
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel htmlFor="query">Pesquisar</FormLabel>
               <FormControl>
                 <div className="flex items-center gap-2">
                   <Input
-                    className="flex-1"
+                    className="min-w-72"
                     placeholder="Insira a sua busca..."
                     {...field}
                   />

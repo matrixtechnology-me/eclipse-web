@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormMessage } from "@/components/ui/form";
 import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { z } from "zod";
 import { NumericFormat } from "react-number-format";
@@ -20,17 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  DefaultOptionType,
-  SelectPaginated,
-} from "@/components/select-paginated";
-import { GroupBase } from "react-select";
-import { LoadOptions } from "react-select-async-paginate";
-import {
   CreateSaleSchema,
   receivingMethod,
 } from "../../../_utils/validations/create-sale";
-import { getProducts, Product } from "../../../../_actions/get-products";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { ESaleMovementPaymentMethod } from "@prisma/client";
 import {
   Select,

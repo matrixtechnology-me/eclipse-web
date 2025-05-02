@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
-import { Pagination } from "@/app/(protected)/(dashboard)/customers/_components/pagination";
 import { NextPage } from "next";
 import { Search } from "./_components/search";
 import { PATHS } from "@/config/paths";
@@ -32,21 +31,21 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
   return (
     <div className="flex flex-col h-full flex-1">
       <div className="flex flex-col gap-5 p-5 h-[calc(100%-64px)]">
-        <div className="w-full flex flex-col items-center justify-between gap-3">
-          <div className="w-full">
-            <h1>Clientes</h1>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Painel de controle</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Clientes</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+        <div className="w-full">
+          <h1>Clientes</h1>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Painel de controle</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Clientes</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+        <div className="flex flex-col gap-3">
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
             <Search query={query} />
             <Link
@@ -59,16 +58,15 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
               </Button>
             </Link>
           </div>
+          <Suspense fallback={<div>Carregando...</div>}>
+            <Customers
+              page={Number(page)}
+              pageSize={Number(limit)}
+              query={query}
+            />
+          </Suspense>
         </div>
-        <Suspense fallback={<div>Carregando...</div>}>
-          <Customers
-            page={Number(page)}
-            pageSize={Number(limit)}
-            query={query}
-          />
-        </Suspense>
       </div>
-      <Pagination initialPage={Number(page)} initialPageSize={Number(limit)} />
     </div>
   );
 };

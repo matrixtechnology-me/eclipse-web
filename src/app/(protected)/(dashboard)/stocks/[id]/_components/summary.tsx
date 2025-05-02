@@ -3,10 +3,14 @@ import { getStockSummaryAction } from "../_actions/get-stock-summary";
 
 type StockSummaryProps = {
   stockId: string;
+  tenantId: string;
 };
 
-export const StockSummary: FC<StockSummaryProps> = async ({ stockId }) => {
-  const result = await getStockSummaryAction({ stockId });
+export const StockSummary: FC<StockSummaryProps> = async ({
+  stockId,
+  tenantId,
+}) => {
+  const result = await getStockSummaryAction({ stockId, tenantId });
 
   if (result.isFailure) {
     return <div>Erro ao obter resumo de estoque</div>;

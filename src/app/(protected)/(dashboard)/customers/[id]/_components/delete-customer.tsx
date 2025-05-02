@@ -12,7 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { FC } from "react";
-import { deleteCustomer } from "../_actions/delete-customer";
+import { deleteCustomerAction } from "../_actions/delete-customer";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Trash2Icon } from "lucide-react";
@@ -20,14 +20,18 @@ import { PATHS } from "@/config/paths";
 import { toast } from "sonner";
 
 type DeleteCustomerProps = {
-  id: string;
+  customerId: string;
+  tenantId: string;
 };
 
-export const DeleteCustomer: FC<DeleteCustomerProps> = ({ id }) => {
+export const DeleteCustomer: FC<DeleteCustomerProps> = ({
+  customerId,
+  tenantId,
+}) => {
   const router = useRouter();
 
   const handleDelete = async () => {
-    const result = await deleteCustomer({ id });
+    const result = await deleteCustomerAction({ customerId, tenantId });
 
     if ("error" in result) {
       return toast("Falha ao deletar cliente", {

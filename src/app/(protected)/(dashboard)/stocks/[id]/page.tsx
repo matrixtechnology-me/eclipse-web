@@ -81,7 +81,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           totalQty={stock.totalQty}
         />
         <Lots data={stock.lots} stockId={stock.id} />
-        <StockSummary stockId={stock.id} />
+        <StockSummary stockId={stock.id} tenantId={session.tenantId} />
         <History
           stockId={stock.id}
           tenantId={session.tenantId}
