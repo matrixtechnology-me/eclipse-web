@@ -107,8 +107,14 @@ export const getSalesAction: ServerAction<
       updatedAt: sale.updatedAt,
       status: sale.status as "completed" | "pending" | "canceled",
       customer: sale.customer,
-      costPrice: sale.products.reduce((acc, p) => acc + p.costPrice, 0),
-      salePrice: sale.products.reduce((acc, p) => acc + p.salePrice, 0),
+      costPrice: sale.products.reduce(
+        (acc, p) => acc + p.costPrice.toNumber(),
+        0
+      ),
+      salePrice: sale.products.reduce(
+        (acc, p) => acc + p.salePrice.toNumber(),
+        0
+      ),
       totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
     }));
 

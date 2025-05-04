@@ -29,7 +29,7 @@ export const getInvoicing: ServerAction<
       _sum: { total: true },
     });
 
-    const invoicing = aggregation._sum.total ?? 0;
+    const invoicing = aggregation._sum.total?.toNumber() ?? 0;
 
     return success({ invoicing });
   } catch (error: unknown) {

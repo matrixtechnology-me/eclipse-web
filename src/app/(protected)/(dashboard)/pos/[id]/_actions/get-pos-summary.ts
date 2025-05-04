@@ -1,25 +1,40 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventType } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetPosSummaryActionPayload = {
   posId: string;
+  tenantId: string;
 };
 
 type GetPosSummaryActionResult = {
-  entriesCount: number;
-  outputsCount: number;
-  salesCount: number;
+  entries: {
+    count: number;
+    amount: number;
+  };
+  outputs: {
+    count: number;
+    amount: number;
+  };
+  sales: {
+    count: number;
+    amount: number;
+  };
   balance: number;
 };
 
 export const getPosSummaryAction: ServerAction<
   GetPosSummaryActionPayload,
   GetPosSummaryActionResult
-> = async ({ posId }) => {
+> = async ({ posId, tenantId }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
+
   try {
     const events = await prisma.posEvent.findMany({
       where: { posId },
@@ -30,29 +45,32 @@ export const getPosSummaryAction: ServerAction<
       },
     });
 
-    let entriesCount = 0;
-    let outputsCount = 0;
-    let salesCount = 0;
+    let entries = { count: 0, amount: 0 };
+    let outputs = { count: 0, amount: 0 };
+    let sales = { count: 0, amount: 0 };
     let balance = 0;
 
     for (const event of events) {
       switch (event.type) {
         case EPosEventType.Entry:
           if (event.entry) {
-            entriesCount += 1;
-            balance += event.entry.amount;
+            entries.count += 1;
+            entries.amount += event.entry.amount.toNumber();
+            balance += event.entry.amount.toNumber();
           }
           break;
         case EPosEventType.Output:
           if (event.output) {
-            outputsCount += 1;
-            balance -= event.output.amount;
+            outputs.count += 1;
+            outputs.amount += event.output.amount.toNumber();
+            balance -= event.output.amount.toNumber();
           }
           break;
         case EPosEventType.Sale:
           if (event.sale) {
-            salesCount += 1;
-            balance += event.sale.amount;
+            sales.count += 1;
+            sales.amount += event.sale.amount.toNumber();
+            balance += event.sale.amount.toNumber();
           }
           break;
         default:
@@ -61,9 +79,9 @@ export const getPosSummaryAction: ServerAction<
     }
 
     return success({
-      entriesCount,
-      outputsCount,
-      salesCount,
+      entries,
+      outputs,
+      sales,
       balance,
     });
   } catch (error) {

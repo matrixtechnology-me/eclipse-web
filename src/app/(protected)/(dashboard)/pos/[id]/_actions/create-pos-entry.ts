@@ -1,20 +1,23 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventType } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 type CreatePosEventEntryActionPayload = {
   amount: number;
   description: string;
   posId: string;
+  tenantId: string;
 };
 
 export const createPosEntryAction: ServerAction<
   CreatePosEventEntryActionPayload,
   unknown
-> = async ({ amount, description, posId }) => {
+> = async ({ amount, description, posId, tenantId }) => {
   try {
     await prisma.posEventEntry.create({
       data: {
@@ -28,6 +31,8 @@ export const createPosEntryAction: ServerAction<
         },
       },
     });
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
 
     return success({});
   } catch (error) {

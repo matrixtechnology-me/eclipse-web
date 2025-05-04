@@ -46,7 +46,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
     <div className="w-full border rounded-lg overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
-          <TableRow>
+          <TableRow className="h-12">
             <TableHead className="text-left">Tipo de evento</TableHead>
             <TableHead className="text-left">Descrição</TableHead>
             <TableHead className="text-left">Valor</TableHead>
@@ -56,7 +56,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
         </TableHeader>
         <TableBody>
           {data.map((item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id} className="h-12">
               <TableCell>{getPosEventTypeLabel(item.type)}</TableCell>
               <TableCell>{item.description}</TableCell>
               <TableCell>{CurrencyFormatter.format(item.amount)}</TableCell>

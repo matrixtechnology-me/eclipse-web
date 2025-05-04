@@ -23,5 +23,11 @@ export const CACHE_TAGS = {
         LOTS: `tenant-[${tenantId}].stock-[${stockId}].lots`,
       }),
     },
+    POS: {
+      INDEX: `tenant-[${tenantId}].points-of-sale`,
+      POS: (posId: string) => ({
+        INDEX: `tenant-[${tenantId}].point-of-sale-[${posId}]`,
+      }),
+    },
   }),
 };

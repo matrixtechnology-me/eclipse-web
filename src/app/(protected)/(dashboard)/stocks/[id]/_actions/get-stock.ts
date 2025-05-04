@@ -88,6 +88,7 @@ export const getStockAction: ServerAction<
 
     const mappedLots = stock.lots.map((lot) => ({
       ...lot,
+      costPrice: lot.costPrice.toNumber(),
       expiresAt: lot.expiresAt ?? undefined,
     }));
 

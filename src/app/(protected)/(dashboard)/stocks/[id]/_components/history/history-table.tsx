@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { EStockEventType } from "@prisma/client";
 import moment from "moment";
 import { FC } from "react";
@@ -38,7 +37,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
     <div className="w-full border rounded-lg overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
-          <TableRow>
+          <TableRow className="h-12">
             <TableHead className="text-left">Tipo de evento</TableHead>
             <TableHead className="text-left">Descrição</TableHead>
             <TableHead className="text-left">Quantidade</TableHead>
@@ -48,7 +47,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
         </TableHeader>
         <TableBody>
           {data.map((item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.id} className="h-12">
               <TableCell>{getStockEventTypeLabel(item.type)}</TableCell>
               <TableCell>{item.description}</TableCell>
               <TableCell>{item.quantity}</TableCell>

@@ -47,7 +47,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
       <Table className="min-w-max">
         <TableHeader>
           <TableRow className="h-12">
-            <TableHead className="text-left">Índice</TableHead>
+            <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Número de telefone</TableHead>
             <TableHead className="text-left">Está ativo?</TableHead>

@@ -26,6 +26,7 @@ import { createPosEntryAction } from "../_actions/create-pos-entry";
 import { toast } from "sonner";
 import { FC, useState } from "react";
 import { NumericFormat } from "react-number-format";
+import { EPosStatus } from "@prisma/client";
 
 const formSchema = z.object({
   amount: z.number().min(0.01, {
@@ -36,9 +37,11 @@ const formSchema = z.object({
 
 type AddEntryProps = {
   posId: string;
+  posStatus: EPosStatus;
+  tenantId: string;
 };
 
-export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
+export const AddEntry: FC<AddEntryProps> = ({ posId, posStatus, tenantId }) => {
   const [open, setOpen] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,6 +57,7 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
       amount: values.amount,
       description: values.description,
       posId,
+      tenantId,
     });
 
     if (result.isFailure) {
@@ -75,7 +79,9 @@ export const AddEntry: FC<AddEntryProps> = ({ posId }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Nova Entrada</Button>
+        <Button variant="outline" disabled={posStatus !== EPosStatus.Opened}>
+          Nova Entrada
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

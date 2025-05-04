@@ -38,12 +38,15 @@ import {
   createSaleSchema,
   CreateSaleSchema,
 } from "./_utils/validations/create-sale";
+import { EPosStatus } from "@prisma/client";
 
 type AddSaleProps = {
   posId: string;
+  posStatus: EPosStatus;
+  tenantId: string;
 };
 
-export const AddSale: FC<AddSaleProps> = ({ posId }) => {
+export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,6 +76,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
           id: product.id,
           totalQty: Number(product.quantity),
         })),
+        tenantId,
       });
 
       if (result.isFailure) {
@@ -111,7 +115,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
     });
 
     if (response.isFailure) {
-      console.log("error fetching customers");
+      console.log("unable to gets all customers");
       return { options: [], additional, hasMore: true };
     }
 
@@ -128,7 +132,9 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Nova venda</Button>
+        <Button variant="outline" disabled={posStatus !== EPosStatus.Opened}>
+          Nova venda
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -139,7 +145,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
         </DialogHeader>
         {/* Content */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="customerId"
@@ -168,7 +174,6 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
             />
 
             <Products form={form} />
-
             <ReceivingMethods form={form} />
 
             <div className="flex justify-end gap-3 pt-4">
@@ -182,7 +187,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId }) => {
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Registrando..." : "Finalizar Venda"}
+                {isSubmitting ? "Salvando alterações..." : "Salvar alterações"}
               </Button>
             </div>
           </form>

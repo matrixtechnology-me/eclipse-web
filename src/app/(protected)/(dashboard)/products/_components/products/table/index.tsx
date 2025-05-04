@@ -45,7 +45,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
       <TableCn className="min-w-max">
         <TableHeader>
           <TableRow className="h-12">
-            <TableHead className="text-left">Índice</TableHead>
+            <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Código de barras</TableHead>
             <TableHead className="text-left">Está ativo?</TableHead>
