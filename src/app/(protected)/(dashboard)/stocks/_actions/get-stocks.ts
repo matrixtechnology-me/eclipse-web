@@ -51,6 +51,7 @@ export const getStocksAction: ServerAction<
           contains: query,
           mode: "insensitive",
         },
+        deletedAt: null,
       },
     };
 

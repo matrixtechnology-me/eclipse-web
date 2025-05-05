@@ -4,7 +4,7 @@ import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { EPosEventType } from "@prisma/client";
+import { EPosEventStatus, EPosEventType } from "@prisma/client";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 
 type GetPosHistoryActionPayload = {
@@ -15,6 +15,7 @@ type GetPosHistoryActionPayload = {
 type Event = {
   id: string;
   type: EPosEventType;
+  status: EPosEventStatus;
   amount: number;
   description: string;
   createdAt: Date;
@@ -50,6 +51,7 @@ export const getPosHistoryAction: ServerAction<
       const defaultProps = {
         id: event.id,
         type: event.type,
+        status: event.status,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
       };

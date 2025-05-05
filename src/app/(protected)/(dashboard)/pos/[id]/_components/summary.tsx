@@ -19,7 +19,7 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Entradas */}
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
+      <div className="border p-4 rounded-lg flex flex-col items-center">
         <h2 className="text-xl font-semibold">Entradas</h2>
         <p className="text-3xl font-bold">
           {CurrencyFormatter.format(entries.amount)}
@@ -30,7 +30,7 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Saídas */}
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
+      <div className="border p-4 rounded-lg flex flex-col items-center">
         <h2 className="text-xl font-semibold">Saídas</h2>
         <p className="text-3xl font-bold">
           {CurrencyFormatter.format(outputs.amount)}
@@ -41,7 +41,7 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Vendas */}
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
+      <div className="border p-4 rounded-lg flex flex-col items-center">
         <h2 className="text-xl font-semibold">Vendas</h2>
         <p className="text-3xl font-bold">
           {CurrencyFormatter.format(sales.amount)}
@@ -52,7 +52,7 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Balanço */}
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
+      <div className="border p-4 rounded-lg flex flex-col items-center">
         <h2 className="text-xl font-semibold">Balanço</h2>
         <p className="text-3xl font-bold">
           {CurrencyFormatter.format(balance)}

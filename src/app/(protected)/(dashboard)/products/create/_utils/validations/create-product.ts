@@ -10,7 +10,6 @@ export const createProductSchema = z.object({
   description: z.string(),
   barCode: z.string(),
   salePrice: z.number(),
-  costPrice: z.number(),
   specifications: z.array(createSpecificationsSchema),
 });
 

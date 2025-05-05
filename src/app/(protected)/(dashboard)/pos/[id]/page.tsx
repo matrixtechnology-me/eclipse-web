@@ -67,7 +67,7 @@ const Page: FC<PageProps> = async ({ params }) => {
         </div>
       </div>
       <Summary posId={id} tenantId={session.tenantId} />
-      <History posId={id} />
+      <History posId={id} tenantId={session.tenantId} />
     </div>
   );
 };

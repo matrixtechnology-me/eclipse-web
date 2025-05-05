@@ -4,7 +4,7 @@ import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { EPosEventType } from "@prisma/client";
+import { EPosEventStatus, EPosEventType } from "@prisma/client";
 import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetPosSummaryActionPayload = {
@@ -37,7 +37,7 @@ export const getPosSummaryAction: ServerAction<
 
   try {
     const events = await prisma.posEvent.findMany({
-      where: { posId },
+      where: { posId, status: EPosEventStatus.Processed },
       include: {
         entry: true,
         output: true,

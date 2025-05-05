@@ -48,6 +48,16 @@ enum EPosEventType {
   Exchange @map(name: "exchange")
 }
 
+enum EPosEventStatus {
+  Processed @map(name: "processed")
+  Canceled  @map(name: "canceled")
+}
+
+enum ESaleStatus {
+  Processed @map(name: "processed")
+  Canceled  @map(name: "canceled")
+}
+
 enum ESaleMovementPaymentMethod {
   Cash       @map(name: "cash")
   Pix        @map(name: "pix")
@@ -298,11 +308,12 @@ model Pos {
 }
 
 model PosEvent {
-  id        String        @id @default(uuid()) @db.Uuid
+  id        String          @id @default(uuid()) @db.Uuid
   type      EPosEventType
-  posId     String        @map("pos_id") @db.Uuid
-  createdAt DateTime      @default(now()) @map(name: "created_at")
-  updatedAt DateTime      @updatedAt @map(name: "updated_at")
+  status    EPosEventStatus @default(Processed)
+  posId     String          @map("pos_id") @db.Uuid
+  createdAt DateTime        @default(now()) @map(name: "created_at")
+  updatedAt DateTime        @updatedAt @map(name: "updated_at")
 
   entry  PosEventEntry?
   output PosEventOutput?
@@ -368,7 +379,7 @@ model PosEventSaleProduct {
 
 model Sale {
   id              String           @id @default(uuid()) @db.Uuid
-  status          String           @default("pending")
+  status          ESaleStatus      @default(Processed)
   customerId      String           @map("customer_id") @db.Uuid
   tenantId        String           @map("tenant_id") @db.Uuid
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")

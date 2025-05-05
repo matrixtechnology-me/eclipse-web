@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { FC } from "react";
 import { Pagination } from "../pagination";
 import { Badge } from "@/components/ui/badge";
+import { ESaleStatus } from "@prisma/client";
 
 type TableProps = {
   data: {
@@ -24,7 +25,7 @@ type TableProps = {
     costPrice: number;
     salePrice: number;
     totalItems: number;
-    status: "completed" | "pending" | "canceled";
+    status: ESaleStatus;
     customer: {
       id: string;
       name: string;
@@ -51,15 +52,13 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      completed: "Concluída",
-      pending: "Pendente",
-      canceled: "Cancelada",
+      [ESaleStatus.Processed]: "Processada",
+      [ESaleStatus.Canceled]: "Cancelada",
     };
 
     const colorMap = {
-      completed: "bg-green-100 text-green-800",
-      pending: "bg-yellow-100 text-yellow-800",
-      canceled: "bg-red-100 text-red-800",
+      [ESaleStatus.Processed]: "bg-green-100 text-green-800",
+      [ESaleStatus.Canceled]: "bg-red-100 text-red-800",
     };
 
     return (

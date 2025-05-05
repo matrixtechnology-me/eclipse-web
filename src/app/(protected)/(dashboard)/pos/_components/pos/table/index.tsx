@@ -142,8 +142,8 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter className="h-12">
-          <TableRow className="h-12">
+        <TableFooter>
+          <TableRow>
             <TableCell colSpan={10}>
               <Pagination
                 initialPage={pagination.initialPage}

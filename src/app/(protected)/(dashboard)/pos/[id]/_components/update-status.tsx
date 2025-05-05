@@ -41,7 +41,7 @@ const items: { label: string; value: EPosStatus }[] = [
     value: EPosStatus.Closed,
   },
   {
-    label: "Em análise/conferência",
+    label: "Em conferência",
     value: EPosStatus.UnderReview,
   },
 ];

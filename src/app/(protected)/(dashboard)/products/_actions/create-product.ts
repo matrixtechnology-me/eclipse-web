@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { failure, ServerAction, success } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { BadRequestError, ConflictError, InternalServerError } from "@/errors";
 import { EStockStrategy } from "@prisma/client";
 
@@ -11,7 +10,6 @@ export const createProduct: ServerAction<
     name: string;
     description: string;
     salePrice: number;
-    costPrice: number;
     barCode: string;
     specifications: Array<{ label: string; value: string }>;
     tenantId: string;
@@ -21,13 +19,12 @@ export const createProduct: ServerAction<
   name,
   description,
   tenantId,
-  costPrice,
   salePrice,
   specifications,
   barCode,
 }) => {
   try {
-    if (!name || !tenantId || salePrice <= 0 || costPrice <= 0) {
+    if (!name || !tenantId || salePrice <= 0) {
       throw new BadRequestError("Invalid input parameters");
     }
 
