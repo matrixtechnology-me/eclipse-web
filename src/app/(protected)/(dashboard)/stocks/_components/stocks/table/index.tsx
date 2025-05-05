@@ -45,7 +45,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
       <TableCn className="min-w-max">
         <TableHeader>
           <TableRow className="h-12">
-            <TableHead className="text-left">Índice</TableHead>
+            <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome do produto</TableHead>
             <TableHead className="text-left">Quantidade total</TableHead>
             <TableHead className="text-left">Data de criação</TableHead>

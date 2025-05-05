@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
-import { Prisma } from "@prisma/client";
+import { ESaleStatus, Prisma } from "@prisma/client";
 
 export type SaleItem = {
   id: string;
@@ -13,7 +13,7 @@ export type SaleItem = {
   costPrice: number;
   salePrice: number;
   totalItems: number;
-  status: "completed" | "pending" | "canceled";
+  status: ESaleStatus;
   customer: {
     id: string;
     name: string;
@@ -28,7 +28,7 @@ type GetSalesActionPayload = {
   query?: string;
   startDate?: Date;
   endDate?: Date;
-  status?: "completed" | "pending" | "canceled";
+  status?: ESaleStatus;
 };
 
 type GetSalesActionResult = {
@@ -105,10 +105,16 @@ export const getSalesAction: ServerAction<
       id: sale.id,
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
-      status: sale.status as "completed" | "pending" | "canceled",
+      status: sale.status,
       customer: sale.customer,
-      costPrice: sale.products.reduce((acc, p) => acc + p.costPrice, 0),
-      salePrice: sale.products.reduce((acc, p) => acc + p.salePrice, 0),
+      costPrice: sale.products.reduce(
+        (acc, p) => acc + p.costPrice.toNumber(),
+        0
+      ),
+      salePrice: sale.products.reduce(
+        (acc, p) => acc + p.salePrice.toNumber(),
+        0
+      ),
       totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
     }));
 

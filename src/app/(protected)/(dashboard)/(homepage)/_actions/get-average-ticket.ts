@@ -8,6 +8,7 @@ import {
   createActionError,
 } from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
+import { ESaleStatus } from "@prisma/client";
 
 type GetAverageTicketActionPayload = { tenantId: string };
 
@@ -27,7 +28,7 @@ export const getAverageTicket: ServerAction<
     }
 
     const aggregation = await prisma.sale.aggregate({
-      where: { tenantId },
+      where: { tenantId, status: ESaleStatus.Processed },
       _sum: {
         total: true,
       },
@@ -35,7 +36,7 @@ export const getAverageTicket: ServerAction<
     });
 
     const salesCount = aggregation._count;
-    const totalSales = aggregation._sum.total ?? 0;
+    const totalSales = aggregation._sum.total?.toNumber() ?? 0;
     const averageTicket = salesCount > 0 ? totalSales / salesCount : 0;
 
     return success({

@@ -68,7 +68,7 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
         },
         total: saleProducts.reduce(
           (acc, saleProduct) =>
-            acc + saleProduct.salePrice * saleProduct.totalQty,
+            acc + saleProduct.salePrice.toNumber() * saleProduct.totalQty,
           0
         ),
       },

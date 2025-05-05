@@ -1,9 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventType, EStockStrategy, Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 type CreatePosSaleActionPayload = {
   description: string;
@@ -13,12 +15,13 @@ type CreatePosSaleActionPayload = {
     id: string;
     totalQty: number;
   }[];
+  tenantId: string;
 };
 
 export const createPosSaleAction: ServerAction<
   CreatePosSaleActionPayload,
   unknown
-> = async ({ customerId, products, description, posId }) => {
+> = async ({ customerId, products, description, posId, tenantId }) => {
   try {
     const pos = await prisma.pos.findUnique({
       where: {
@@ -65,7 +68,8 @@ export const createPosSaleAction: ServerAction<
     );
 
     const total = mappedProducts.reduce(
-      (acc, saleProduct) => acc + saleProduct.salePrice * saleProduct.totalQty,
+      (acc, saleProduct) =>
+        acc + saleProduct.salePrice.toNumber() * saleProduct.totalQty,
       0
     );
 
@@ -133,6 +137,8 @@ export const createPosSaleAction: ServerAction<
         });
       })
     );
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
 
     return success({});
   } catch (error) {

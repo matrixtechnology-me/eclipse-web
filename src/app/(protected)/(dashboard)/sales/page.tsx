@@ -47,15 +47,6 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
 
       <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
         <Search query={query} />
-        <Link
-          href={PATHS.PROTECTED.DASHBOARD.SALES.CREATE}
-          className="w-full md:w-auto"
-        >
-          <Button variant="outline" className="w-full md:w-auto gap-2">
-            <PlusIcon className="size-4" />
-            <span>Nova Venda</span>
-          </Button>
-        </Link>
       </div>
       <Suspense fallback={<div>Carregando...</div>}>
         <Sales page={Number(page)} pageSize={Number(limit)} query={query} />

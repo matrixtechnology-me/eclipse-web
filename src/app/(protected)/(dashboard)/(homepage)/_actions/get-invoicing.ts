@@ -8,6 +8,7 @@ import {
   createActionError,
 } from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
+import { ESaleStatus } from "@prisma/client";
 
 type GetInvoicingActionPayload = { tenantId: string };
 
@@ -25,11 +26,11 @@ export const getInvoicing: ServerAction<
     }
 
     const aggregation = await prisma.sale.aggregate({
-      where: { tenantId },
+      where: { tenantId, status: ESaleStatus.Processed },
       _sum: { total: true },
     });
 
-    const invoicing = aggregation._sum.total ?? 0;
+    const invoicing = aggregation._sum.total?.toNumber() ?? 0;
 
     return success({ invoicing });
   } catch (error: unknown) {

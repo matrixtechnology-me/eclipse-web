@@ -4,11 +4,13 @@ import { HistoryTable } from "./history-table";
 
 type HistoryProps = {
   posId: string;
+  tenantId: string;
 };
 
-export const History: FC<HistoryProps> = async ({ posId }) => {
+export const History: FC<HistoryProps> = async ({ posId, tenantId }) => {
   const result = await getPosHistoryAction({
     posId,
+    tenantId,
   });
 
   if (result.isFailure) {
@@ -23,7 +25,7 @@ export const History: FC<HistoryProps> = async ({ posId }) => {
       {events.length === 0 ? (
         <div>Não há nenhum evento</div>
       ) : (
-        <HistoryTable data={events} />
+        <HistoryTable data={events} posId={posId} tenantId={tenantId} />
       )}
     </div>
   );

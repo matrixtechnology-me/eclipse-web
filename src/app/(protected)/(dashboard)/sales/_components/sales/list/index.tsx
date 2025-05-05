@@ -1,3 +1,4 @@
+import { ESaleStatus } from "@prisma/client";
 import { Sale } from "./sale";
 
 type ListProps = {
@@ -6,7 +7,7 @@ type ListProps = {
     costPrice: number;
     salePrice: number;
     totalItems: number;
-    status: "completed" | "pending" | "canceled";
+    status: ESaleStatus;
     customer: {
       id: string;
       name: string;

@@ -38,15 +38,13 @@ export const getProductsAction: ServerAction<
   GetProductsActionPayload,
   PaginatedProducts
 > = async ({ tenantId, page, pageSize, query }) => {
-  "use cache";
-  cacheTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX);
-
   try {
     const skip = (page - 1) * pageSize;
 
     const whereCondition: Prisma.ProductWhereInput = {
       tenantId,
       active: true,
+      deletedAt: null,
       OR: [
         { name: { contains: query, mode: "insensitive" } },
         { barCode: { contains: query, mode: "insensitive" } },
@@ -73,7 +71,7 @@ export const getProductsAction: ServerAction<
         name: product.name,
         barCode: product.barCode,
         active: product.active,
-        salePrice: product.salePrice,
+        salePrice: product.salePrice.toNumber(),
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
       })),

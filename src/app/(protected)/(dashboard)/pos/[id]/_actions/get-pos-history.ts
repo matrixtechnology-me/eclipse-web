@@ -1,17 +1,21 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { EPosEventType } from "@prisma/client";
+import { EPosEventStatus, EPosEventType } from "@prisma/client";
+import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 
 type GetPosHistoryActionPayload = {
   posId: string;
+  tenantId: string;
 };
 
 type Event = {
   id: string;
   type: EPosEventType;
+  status: EPosEventStatus;
   amount: number;
   description: string;
   createdAt: Date;
@@ -25,7 +29,10 @@ type GetPosHistoryActionResult = {
 export const getPosHistoryAction: ServerAction<
   GetPosHistoryActionPayload,
   GetPosHistoryActionResult
-> = async ({ posId }) => {
+> = async ({ posId, tenantId }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
+
   try {
     const events = await prisma.posEvent.findMany({
       where: {
@@ -44,6 +51,7 @@ export const getPosHistoryAction: ServerAction<
       const defaultProps = {
         id: event.id,
         type: event.type,
+        status: event.status,
         createdAt: event.createdAt,
         updatedAt: event.updatedAt,
       };
@@ -54,7 +62,7 @@ export const getPosHistoryAction: ServerAction<
 
           mappedEvents.push({
             ...defaultProps,
-            amount: event.entry.amount,
+            amount: event.entry.amount.toNumber(),
             description: event.entry.description,
           });
 
@@ -64,7 +72,7 @@ export const getPosHistoryAction: ServerAction<
 
           mappedEvents.push({
             ...defaultProps,
-            amount: event.output.amount,
+            amount: event.output.amount.toNumber(),
             description: event.output.description,
           });
 
@@ -74,7 +82,7 @@ export const getPosHistoryAction: ServerAction<
 
           mappedEvents.push({
             ...defaultProps,
-            amount: event.sale.amount,
+            amount: event.sale.amount.toNumber(),
             description: event.sale.description,
           });
 

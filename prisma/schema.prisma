@@ -48,11 +48,27 @@ enum EPosEventType {
   Exchange @map(name: "exchange")
 }
 
+enum EPosEventStatus {
+  Processed @map(name: "processed")
+  Canceled  @map(name: "canceled")
+}
+
+enum ESaleStatus {
+  Processed @map(name: "processed")
+  Canceled  @map(name: "canceled")
+}
+
 enum ESaleMovementPaymentMethod {
   Cash       @map(name: "cash")
   Pix        @map(name: "pix")
   CreditCard @map(name: "credit-card")
   DebitCard  @map(name: "debit-card")
+}
+
+enum EPosStatus {
+  Opened      @map(name: "opened")
+  Closed      @map(name: "closed")
+  UnderReview @map(name: "under-review")
 }
 
 model Document {
@@ -180,16 +196,17 @@ model ProductSpecification {
 }
 
 model Product {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String    @id @default(uuid()) @db.Uuid
   name        String
-  description String   @default("")
-  barCode     String   @map("bar_code")
-  active      Boolean  @default(true)
-  skuCode     String   @unique @map("sku_code")
-  tenantId    String   @db.Uuid
-  salePrice   Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  description String    @default("")
+  barCode     String    @map("bar_code")
+  active      Boolean   @default(true)
+  skuCode     String    @unique @map("sku_code")
+  tenantId    String    @db.Uuid
+  salePrice   Decimal
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? @map(name: "deleted_at")
 
   stock  Stock?
   Tenant Tenant @relation(fields: [tenantId], references: [id])
@@ -224,7 +241,7 @@ model StockLot {
   id        String    @id @default(uuid()) @db.Uuid
   lotNumber String    @unique @map("lot_number")
   totalQty  Int       @default(0) @map("total_qty")
-  costPrice Float     @default(0.00) @map("cost_price")
+  costPrice Decimal   @default(0.00) @map("cost_price")
   stockId   String    @map("stock_id") @db.Uuid
   tenantId  String    @map("tenant_id") @db.Uuid
   expiresAt DateTime? @map("expires_at")
@@ -279,22 +296,24 @@ model StockEventOutput {
 }
 
 model Pos {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String     @id @default(uuid()) @db.Uuid
   name        String
-  description String   @default("")
-  tenantId    String   @map("tenant_id") @db.Uuid
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+  description String     @default("")
+  status      EPosStatus @default(Opened)
+  tenantId    String     @map("tenant_id") @db.Uuid
+  createdAt   DateTime   @default(now()) @map(name: "created_at")
+  updatedAt   DateTime   @updatedAt @map(name: "updated_at")
 
   @@map("pos")
 }
 
 model PosEvent {
-  id        String        @id @default(uuid()) @db.Uuid
+  id        String          @id @default(uuid()) @db.Uuid
   type      EPosEventType
-  posId     String        @map("pos_id") @db.Uuid
-  createdAt DateTime      @default(now()) @map(name: "created_at")
-  updatedAt DateTime      @updatedAt @map(name: "updated_at")
+  status    EPosEventStatus @default(Processed)
+  posId     String          @map("pos_id") @db.Uuid
+  createdAt DateTime        @default(now()) @map(name: "created_at")
+  updatedAt DateTime        @updatedAt @map(name: "updated_at")
 
   entry  PosEventEntry?
   output PosEventOutput?
@@ -304,9 +323,9 @@ model PosEvent {
 }
 
 model PosEventEntry {
-  id          String @id @db.Uuid
-  amount      Float
-  description String @default("")
+  id          String  @id @db.Uuid
+  amount      Decimal
+  description String  @default("")
 
   posEvent PosEvent @relation(fields: [id], references: [id])
 
@@ -314,9 +333,9 @@ model PosEventEntry {
 }
 
 model PosEventOutput {
-  id          String @id @db.Uuid
-  amount      Float
-  description String @default("")
+  id          String  @id @db.Uuid
+  amount      Decimal
+  description String  @default("")
 
   posEvent PosEvent @relation(fields: [id], references: [id])
 
@@ -326,7 +345,7 @@ model PosEventOutput {
 model PosEventSale {
   id              String           @id @db.Uuid
   description     String           @default("")
-  amount          Float
+  amount          Decimal
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
   discountValue   Float            @default(0) @map("discount_value")
   customerId      String           @map("customer_id") @db.Uuid
@@ -344,8 +363,8 @@ model PosEventSaleProduct {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
-  costPrice   Float    @map("cost_price")
-  salePrice   Float    @map("sale_price")
+  costPrice   Decimal  @map("cost_price")
+  salePrice   Decimal  @map("sale_price")
   totalQty    Int      @default(0) @map("total_qty")
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
@@ -360,12 +379,12 @@ model PosEventSaleProduct {
 
 model Sale {
   id              String           @id @default(uuid()) @db.Uuid
-  status          String           @default("pending")
+  status          ESaleStatus      @default(Processed)
   customerId      String           @map("customer_id") @db.Uuid
   tenantId        String           @map("tenant_id") @db.Uuid
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
   discountValue   Float            @default(0) @map("discount_value")
-  total           Float
+  total           Decimal
   createdAt       DateTime         @default(now()) @map(name: "created_at")
   updatedAt       DateTime         @updatedAt @map(name: "updated_at")
 
@@ -382,8 +401,8 @@ model SaleProduct {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
-  costPrice   Float    @map("cost_price")
-  salePrice   Float    @map("sale_price")
+  costPrice   Decimal  @map("cost_price")
+  salePrice   Decimal  @map("sale_price")
   totalQty    Int      @default(0) @map("total_qty")
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
@@ -412,7 +431,7 @@ model SaleMovement {
 model SaleMovementPayment {
   id        String                     @id @default(uuid()) @db.Uuid
   method    ESaleMovementPaymentMethod
-  amount    Float
+  amount    Decimal
   createdAt DateTime                   @default(now()) @map(name: "created_at")
   updatedAt DateTime                   @updatedAt @map(name: "updated_at")
 

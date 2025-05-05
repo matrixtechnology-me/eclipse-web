@@ -43,7 +43,6 @@ const Page = () => {
       name: "",
       description: "",
       barCode: "",
-      costPrice: 0,
       salePrice: 0,
       specifications: [],
     },
@@ -133,24 +132,6 @@ const Page = () => {
                   <FormControl>
                     <BarcodeInput
                       placeholder="Digite o código de barras"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="costPrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço de Custo*</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      placeholder="R$ 0,00"
                       onChange={field.onChange}
                       value={field.value}
                     />

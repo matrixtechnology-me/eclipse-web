@@ -15,6 +15,9 @@ import { Description } from "./_components/description";
 import { Name } from "./_components/name";
 import { SalePrice } from "./_components/sale-price";
 import { Specifications } from "./_components/specifications";
+import { DeleteProduct } from "./_components/delete-product";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type PageParams = {
   id: string;
@@ -71,6 +74,16 @@ const Page: NextPage<PageProps> = async ({ params }) => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <Link
+            href={
+              PATHS.PROTECTED.DASHBOARD.STOCKS.STOCK(product.stock.id).INDEX
+            }
+          >
+            <Button variant="outline">Ir para o estoque</Button>
+          </Link>
+          <DeleteProduct productId={product.id} tenantId={session.tenantId} />
         </div>
       </div>
       <div className="flex flex-col gap-5">

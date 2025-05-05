@@ -3,7 +3,6 @@
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
 import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
@@ -44,7 +43,7 @@ export const getProduct: ServerAction<
 > = async ({ id }) => {
   try {
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: {
         specifications: {
           select: {
@@ -88,7 +87,7 @@ export const getProduct: ServerAction<
       description: product.description,
       active: product.active,
       skuCode: product.skuCode,
-      salePrice: product.salePrice,
+      salePrice: product.salePrice.toNumber(),
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,
@@ -100,7 +99,7 @@ export const getProduct: ServerAction<
         lots: product.stock.lots.map((lot) => ({
           id: lot.id,
           totalQty: lot.totalQty,
-          costPrice: lot.costPrice,
+          costPrice: lot.costPrice.toNumber(),
           lotNumber: lot.lotNumber,
           expiresAt: lot.expiresAt ?? undefined,
           createdAt: lot.createdAt,

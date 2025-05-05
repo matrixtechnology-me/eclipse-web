@@ -10,7 +10,11 @@ export const Alerts: FC = () => {
           sistema.
         </p>
       </div>
-      <div className="flex flex-col gap-3"></div>
+      <div className="flex flex-col items-center justify-center w-full h-64 rounded-lg border border-dashed">
+        <span className="text-sm text-muted-foreground">
+          Sem alertas no momento
+        </span>
+      </div>
     </div>
   );
 };

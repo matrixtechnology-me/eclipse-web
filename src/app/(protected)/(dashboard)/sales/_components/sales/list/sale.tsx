@@ -1,8 +1,9 @@
-import { UserIcon, ShoppingCart, CheckCircle2, XCircle } from "lucide-react";
+import { UserIcon, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { PATHS } from "@/config/paths";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { formatPhoneNumber } from "../../../_utils/phone-number-format";
+import { ESaleStatus } from "@prisma/client";
 
 type SaleProps = {
   data: {
@@ -10,7 +11,7 @@ type SaleProps = {
     costPrice: number;
     salePrice: number;
     totalItems: number;
-    status: "completed" | "pending" | "canceled";
+    status: ESaleStatus;
     customer: {
       id: string;
       name: string;
@@ -21,17 +22,12 @@ type SaleProps = {
 
 export const Sale = ({ data }: SaleProps) => {
   const statusConfig = {
-    completed: {
+    [ESaleStatus.Processed]: {
       icon: CheckCircle2,
       color: "text-green-500",
       label: "Concluída",
     },
-    pending: {
-      icon: ShoppingCart,
-      color: "text-yellow-500",
-      label: "Pendente",
-    },
-    canceled: {
+    [ESaleStatus.Canceled]: {
       icon: XCircle,
       color: "text-red-500",
       label: "Cancelada",
@@ -85,7 +81,7 @@ export const Sale = ({ data }: SaleProps) => {
         </div>
       </div>
 
-      {data.status === "completed" && (
+      {data.status === ESaleStatus.Processed && (
         <div className="mt-2 text-xs text-muted-foreground">
           Lucro:{" "}
           <span className="font-medium">

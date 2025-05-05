@@ -41,11 +41,6 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
                   Number(field.quantity) * field.salePrice
                 )}
               </TableCell>
-              {/* <TableCell className="text-left">
-                {field.discount.variant === "cash"
-                  ? CurrencyFormatter.format(Number(field.discount.amount))
-                  : PercentageFormatter.format(Number(field.discount.amount))}
-              </TableCell> */}
               <TableCell className="text-center">
                 <Button
                   variant="outline"
@@ -64,14 +59,12 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6}>Total</TableCell>
+            <TableCell colSpan={4}>Total</TableCell>
             <TableCell className="text-left">
               {CurrencyFormatter.format(
                 productsFieldArray.fields.reduce(
                   (acc, field) =>
-                    acc +
-                    (field.salePrice - field.costPrice) *
-                      Number(field.quantity),
+                    acc + field.salePrice * Number(field.quantity),
                   0
                 )
               )}
