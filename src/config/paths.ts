@@ -65,3 +65,21 @@ export const PATHS = {
     },
   },
 };
+
+type PathObject = { [key: string]: string | PathObject };
+
+const extractPaths = (obj: PathObject): string[] => {
+  const paths: string[] = [];
+
+  for (const value of Object.values(obj)) {
+    if (typeof value === "string") {
+      paths.push(value);
+    } else if (typeof value === "object" && value !== null) {
+      paths.push(...extractPaths(value));
+    }
+  }
+
+  return paths;
+};
+
+export const publicPaths = extractPaths(PATHS.PUBLIC);

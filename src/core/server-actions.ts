@@ -50,12 +50,3 @@ export const failure = <E extends ServerActionError>(
     ...(error.metadata && { metadata: error.metadata }),
   },
 });
-
-export const createActionError = (
-  statusCode: number,
-  name: string,
-  message: string,
-  metadata?: Record<string, unknown>
-): ServerActionError => {
-  return new HttpError(statusCode, message, { ...metadata, errorName: name });
-};

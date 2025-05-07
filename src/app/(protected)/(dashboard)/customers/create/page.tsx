@@ -27,6 +27,7 @@ import {
 import { PATHS } from "@/config/paths";
 import { PatternFormat } from "react-number-format";
 import { getServerSession } from "@/lib/session";
+import { PhoneNumberFormatter } from "@/utils/formatters/phone-number";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -57,7 +58,7 @@ const Page = () => {
 
     await createCustomer({
       name,
-      phoneNumber,
+      phoneNumber: PhoneNumberFormatter.unformat(phoneNumber),
       tenantId: session.tenantId,
     });
 

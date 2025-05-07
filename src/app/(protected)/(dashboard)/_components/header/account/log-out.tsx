@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { COOKIE_KEYS } from "@/config/cookie-keys";
 import { PATHS } from "@/config/paths";
 import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -21,7 +22,14 @@ export const LogOut = () => {
   const router = useRouter();
 
   const handleSignOut = () => {
-    destroyCookie(null, "X-Identity", { path: "/" });
+    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS, {
+      path: "/",
+    });
+    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH, {
+      path: "/",
+    });
+
+    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TENANT, { path: "/" });
     router.push(PATHS.PUBLIC.AUTH.SIGN_IN);
   };
 

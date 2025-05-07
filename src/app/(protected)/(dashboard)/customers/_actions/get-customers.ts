@@ -38,8 +38,10 @@ export const getCustomers: ServerAction<
 > = async ({ page, pageSize, tenantId, query }) => {
   try {
     const skip = (page - 1) * pageSize;
+
     const whereCondition: Prisma.CustomerWhereInput = {
       tenantId,
+      deletedAt: null,
       OR: [
         { name: { contains: query, mode: "insensitive" } },
         { phoneNumber: { contains: query, mode: "insensitive" } },
@@ -63,6 +65,7 @@ export const getCustomers: ServerAction<
     return success({
       customers: customers.map((customer) => ({
         ...customer,
+        phoneNumber: customer.phoneNumber!,
         active: Boolean(customer.active),
       })),
       pagination: {

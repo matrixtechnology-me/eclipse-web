@@ -66,7 +66,9 @@ export const CustomersTable: FC<CustomersTableProps> = ({
             >
               <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell>{item.name}</TableCell>
-              <TableCell>{PhoneNumberFormatter.format(item.name)}</TableCell>
+              <TableCell>
+                {PhoneNumberFormatter.format(item.phoneNumber)}
+              </TableCell>
               <TableCell>
                 <YesNo value={item.active} />
               </TableCell>

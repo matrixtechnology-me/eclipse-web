@@ -1,10 +1,18 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
+import { PATHS } from "@/config/paths";
 import { failure, ServerAction, success } from "@/core/server-actions";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { EPosEventType, EStockStrategy, Prisma } from "@prisma/client";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
+import {
+  EMembershipRole,
+  EPosEventType,
+  EStockStrategy,
+  Prisma,
+} from "@prisma/client";
+import moment from "moment";
 import { revalidateTag } from "next/cache";
 
 type CreatePosSaleActionPayload = {
@@ -23,9 +31,27 @@ export const createPosSaleAction: ServerAction<
   unknown
 > = async ({ customerId, products, description, posId, tenantId }) => {
   try {
+    const tenant = await prisma.tenant.findUnique({
+      where: {
+        id: tenantId,
+      },
+    });
+
+    if (!tenant) return failure(new NotFoundError("tenant not found"));
+
+    const customer = await prisma.customer.findUnique({
+      where: {
+        id: customerId,
+        tenantId,
+      },
+    });
+
+    if (!customer) return failure(new NotFoundError("customer not found"));
+
     const pos = await prisma.pos.findUnique({
       where: {
         id: posId,
+        tenantId,
       },
     });
 
@@ -79,9 +105,7 @@ export const createPosSaleAction: ServerAction<
         tenantId: pos.tenantId,
         products: {
           createMany: {
-            data: mappedProducts.map(
-              ({ stockId, stockLotId, ...rest }) => rest
-            ),
+            data: mappedProducts.map(({ stockId, ...rest }) => rest),
           },
         },
         total,
@@ -137,6 +161,52 @@ export const createPosSaleAction: ServerAction<
         });
       })
     );
+
+    const tenantOwner = await prisma.tenantMembership.findFirst({
+      where: {
+        tenantId,
+        membership: {
+          role: EMembershipRole.Owner,
+        },
+      },
+      select: {
+        membership: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (tenantOwner) {
+      await prisma.notification.create({
+        data: {
+          body: `A Loja ${tenant.name} vendeu ${CurrencyFormatter.format(
+            sale.total.toNumber()
+          )} às ${moment(sale.createdAt).format(
+            "HH:mm"
+          )}. Bora conferir os detalhes?`,
+          subject: `Venda feita para ${customer.name}! 💰`,
+          href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
+          targets: {
+            createMany: {
+              data: [
+                {
+                  tenantId,
+                  userId: tenantOwner.membership.userId,
+                },
+              ],
+              skipDuplicates: true,
+            },
+          },
+        },
+      });
+
+      revalidateTag(
+        CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
+          .NOTIFICATIONS
+      );
+    }
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
 

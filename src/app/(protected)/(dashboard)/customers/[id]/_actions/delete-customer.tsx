@@ -30,8 +30,14 @@ export const deleteCustomerAction: ServerAction<
 
     if (!customer) return failure(new NotFoundError("customer not found"));
 
-    await prisma.customer.delete({
+    await prisma.customer.update({
       where: { id: customerId },
+      data: {
+        name: "Anônimo",
+        phoneNumber: null,
+        active: false,
+        deletedAt: new Date(),
+      },
     });
 
     return success({});

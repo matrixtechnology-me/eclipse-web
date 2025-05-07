@@ -7,7 +7,6 @@ import { setCookie } from "nookies";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,6 +22,8 @@ import { PasswordInput } from "./password-input";
 import { toast } from "sonner";
 import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
 import { InvalidCredentialsError, NotFoundError } from "@/errors";
+import { COOKIE_KEYS } from "@/config/cookie-keys";
+import { JwtService } from "@/services/jwt.service";
 
 const formSchema = z.object({
   email: z.string().min(1, {
@@ -73,11 +74,16 @@ export const AuthenticationForm = () => {
       }
     }
 
-    const { sessionId } = authenticateUserResult.value;
+    const { accessToken, refreshToken, userId } = authenticateUserResult.value;
 
-    setCookie(null, "X-Identity", sessionId, { path: "/" });
+    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS, accessToken, {
+      path: "/",
+    });
+    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH, refreshToken, {
+      path: "/",
+    });
 
-    const getUserTenantsResult = await getUserTenants({ userId: sessionId });
+    const getUserTenantsResult = await getUserTenants({ userId });
 
     if (getUserTenantsResult.isFailure) {
       if (getUserTenantsResult.error.name === NotFoundError.name) {
@@ -91,7 +97,9 @@ export const AuthenticationForm = () => {
 
     const targetTenant = tenants[0];
 
-    setCookie(null, "X-Tenant", targetTenant.id, { path: "/" });
+    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TENANT, targetTenant.id, {
+      path: "/",
+    });
 
     router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
   };

@@ -1,6 +1,10 @@
 import { NextPage } from "next";
 import { getSaleAction } from "./_actions/get-sale";
 import { getServerSession } from "@/lib/session";
+import { Separator } from "@/components/ui/separator";
+import { PhoneNumberFormatter } from "@/utils/formatters/phone-number";
+import { Items } from "./_components/items";
+import { Moviments } from "./_components/moviments";
 
 type PageParams = {
   id: string;
@@ -32,7 +36,17 @@ const Page: NextPage<PageProps> = async ({ params }) => {
 
   const { sale } = result.value;
 
-  return <div>{sale.id}</div>;
+  return (
+    <div className="p-5 flex flex-col gap-5">
+      {/* Customer */}
+      <div>
+        <span>{sale.customer.name}</span>
+        <span>{PhoneNumberFormatter.format(sale.customer.phoneNumber)}</span>
+      </div>
+      <Items />
+      <Moviments />
+    </div>
+  );
 };
 
 export default Page;

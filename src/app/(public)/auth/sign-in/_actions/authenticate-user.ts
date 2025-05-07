@@ -1,14 +1,14 @@
 "use server";
 
-import { InvalidCredentialsError, NotFoundError } from "@/errors";
+import {
+  InternalServerError,
+  InvalidCredentialsError,
+  NotFoundError,
+} from "@/errors";
 import prisma from "@/lib/prisma";
 import { HashingService } from "@/services/hashing.service";
-import {
-  ServerAction,
-  success,
-  failure,
-  createActionError,
-} from "@/core/server-actions";
+import { ServerAction, success, failure } from "@/core/server-actions";
+import { JwtService } from "@/services/jwt.service";
 
 type AuthenticateUserActionPayload = {
   email: string;
@@ -17,7 +17,7 @@ type AuthenticateUserActionPayload = {
 
 export const authenticateUserAction: ServerAction<
   AuthenticateUserActionPayload,
-  { sessionId: string }
+  { accessToken: string; refreshToken: string; userId: string }
 > = async ({ email, password }) => {
   try {
     if (!email || !password) {
@@ -54,18 +54,20 @@ export const authenticateUserAction: ServerAction<
       return failure(new InvalidCredentialsError("Invalid credentials"));
     }
 
-    return success({ sessionId: user.id });
-  } catch (error: unknown) {
-    console.error("Authentication error:", error);
-    return failure(
-      createActionError(
-        500,
-        "AuthenticationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
-      )
+    const jwtService = new JwtService(process.env.JWT_SECRET ?? "");
+
+    const accessToken = await jwtService.sign(
+      { sub: user.id, type: "access" },
+      "15m"
     );
+    const refreshToken = await jwtService.sign(
+      { sub: user.id, type: "refresh" },
+      "30d"
+    );
+
+    return success({ accessToken, refreshToken, userId: user.id });
+  } catch (error: unknown) {
+    console.error(error);
+    return failure(new InternalServerError("unable to authenticate user"));
   }
 };

@@ -1,13 +1,9 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import {
-  ServerAction,
-  success,
-  failure,
-  createActionError,
-} from "@/core/server-actions";
+import { ServerAction, success, failure } from "@/core/server-actions";
 import { BadRequestError } from "@/errors/http/bad-request.error";
+import { InternalServerError } from "@/errors";
 
 type GetCustomersCountActionPayload = { tenantId: string };
 
@@ -34,13 +30,8 @@ export const getCustomersCount: ServerAction<
     );
 
     return failure(
-      createActionError(
-        500,
-        "RegistrationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
+      new InternalServerError(
+        `failed to get customer count for tenant ${tenantId}`
       )
     );
   }

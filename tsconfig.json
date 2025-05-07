@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2024",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+    "strictPropertyInitialization": false,
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

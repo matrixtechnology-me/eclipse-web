@@ -1,4 +1,3 @@
-// lib/types/either.ts
 import { HttpError } from "@/errors/http.error";
 
 export class Success<T> {

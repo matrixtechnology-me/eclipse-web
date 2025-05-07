@@ -1,5 +1,6 @@
 import { Account } from "./account";
 import { Menu } from "./menu";
+import { Notifications } from "./notifications";
 import { TenantSwicther } from "./tenant-swicther";
 
 export const Header = () => {
@@ -9,6 +10,7 @@ export const Header = () => {
         <Menu />
         <div className="flex gap-2">
           <TenantSwicther />
+          <Notifications />
           <Account />
         </div>
       </div>
