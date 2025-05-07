@@ -12,46 +12,58 @@ import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { TrashIcon } from "lucide-react";
 import { UseFieldArrayReturn } from "react-hook-form";
 import { CreateSaleSchema } from "../../../_utils/validations/create-sale";
-import { ESaleMovementPaymentMethod } from "@prisma/client";
+import { EPaymentMethod, ESaleMovementType } from "@prisma/client";
 
-interface ReceivingMethodsTableProps {
-  receivingMethodsFieldArray: UseFieldArrayReturn<
-    CreateSaleSchema,
-    "receivingMethods"
-  >;
+interface MovementsTableProps {
+  movementsFieldArray: UseFieldArrayReturn<CreateSaleSchema, "movements">;
 }
 
-const getPaymentMethodLabel = (method: ESaleMovementPaymentMethod) => {
+const getMovementTypeLabel = (type: ESaleMovementType) => {
+  switch (type) {
+    case ESaleMovementType.Change:
+      return "Troco";
+    case ESaleMovementType.Payment:
+      return "Pagamento";
+    default:
+      return "-";
+  }
+};
+
+const getPaymentMethodLabel = (method: EPaymentMethod) => {
   switch (method) {
-    case ESaleMovementPaymentMethod.Cash:
+    case EPaymentMethod.Cash:
       return "Dinheiro";
-    case ESaleMovementPaymentMethod.CreditCard:
+    case EPaymentMethod.CreditCard:
       return "Cartão de crédito";
-    case ESaleMovementPaymentMethod.DebitCard:
+    case EPaymentMethod.DebitCard:
       return "Cartão de débito";
-    case ESaleMovementPaymentMethod.Pix:
+    case EPaymentMethod.Pix:
       return "Pix";
     default:
       return "-";
   }
 };
 
-export const ReceivingMethodsTable = ({
-  receivingMethodsFieldArray,
-}: ReceivingMethodsTableProps) => {
-  return receivingMethodsFieldArray.fields.length ? (
+export const MovementsTable = ({
+  movementsFieldArray,
+}: MovementsTableProps) => {
+  return movementsFieldArray.fields.length ? (
     <div className="w-full border rounded-lg overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
-            <TableHead className="text-left">Método</TableHead>
+            <TableHead className="text-left">Tipo</TableHead>
+            <TableHead className="text-left">Forma de pagamento</TableHead>
             <TableHead className="text-left">Valor</TableHead>
             <TableHead className="text-center">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {receivingMethodsFieldArray.fields.map((field) => (
+          {movementsFieldArray.fields.map((field) => (
             <TableRow key={field.id}>
+              <TableCell className="font-medium">
+                {getMovementTypeLabel(field.type)}
+              </TableCell>
               <TableCell className="font-medium">
                 {getPaymentMethodLabel(field.method)}
               </TableCell>
@@ -61,8 +73,8 @@ export const ReceivingMethodsTable = ({
                   variant="outline"
                   className="p-0 size-9"
                   onClick={() =>
-                    receivingMethodsFieldArray.remove(
-                      receivingMethodsFieldArray.fields.indexOf(field)
+                    movementsFieldArray.remove(
+                      movementsFieldArray.fields.indexOf(field)
                     )
                   }
                 >
@@ -77,7 +89,7 @@ export const ReceivingMethodsTable = ({
             <TableCell colSpan={2}>Total</TableCell>
             <TableCell className="text-right">
               {CurrencyFormatter.format(
-                receivingMethodsFieldArray.fields.reduce(
+                movementsFieldArray.fields.reduce(
                   (acc, field) => acc + field.amount,
                   0
                 )

@@ -55,7 +55,7 @@ enum EPosStatus {
   UnderReview @map(name: "under-review")
 }
 
-enum ESaleMovementPaymentMethod {
+enum EPaymentMethod {
   Cash       @map(name: "cash")
   Pix        @map(name: "pix")
   CreditCard @map(name: "credit-card")
@@ -63,7 +63,10 @@ enum ESaleMovementPaymentMethod {
 }
 
 enum ESaleMovementType {
-  Payment @map(name: "payment")
+  Payment    @map("payment")
+  Change     @map("change")
+  Refund     @map("refund")
+  Withdrawal @map("withdrawal")
 }
 
 enum ESaleStatus {
@@ -246,12 +249,54 @@ model PosEventSale {
   customerId      String           @map("customer_id") @db.Uuid
   saleId          String           @map("sale_id") @db.Uuid
 
-  sale     Sale                  @relation(fields: [saleId], references: [id])
-  customer Customer              @relation(fields: [customerId], references: [id])
-  posEvent PosEvent              @relation(fields: [id], references: [id])
-  products PosEventSaleProduct[]
+  sale     Sale     @relation(fields: [saleId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  posEvent PosEvent @relation(fields: [id], references: [id])
+
+  products  PosEventSaleProduct[]
+  movements PosEventSaleMovement[]
 
   @@map("pos_event_sales")
+}
+
+model PosEventSaleMovement {
+  id        String            @id @default(uuid()) @db.Uuid
+  type      ESaleMovementType
+  createdAt DateTime          @default(now()) @map(name: "created_at")
+  updatedAt DateTime          @updatedAt @map(name: "updated_at")
+
+  posEventSaleId String @map("pos_event_sale_id") @db.Uuid
+
+  posEventSale PosEventSale @relation(fields: [posEventSaleId], references: [id])
+
+  payments PosEventSaleMovementPayment[]
+  changes  PosEventSaleMovementChange[]
+
+  @@map("pos_event_sale_movements")
+}
+
+model PosEventSaleMovementPayment {
+  id        String         @id @db.Uuid
+  method    EPaymentMethod
+  amount    Decimal        @db.Decimal(19, 6)
+  createdAt DateTime       @default(now()) @map(name: "created_at")
+  updatedAt DateTime       @updatedAt @map(name: "updated_at")
+
+  posEventSaleMovement PosEventSaleMovement @relation(fields: [id], references: [id])
+
+  @@map("pos_event_sale_movement_payments")
+}
+
+model PosEventSaleMovementChange {
+  id        String         @id @db.Uuid
+  method    EPaymentMethod
+  amount    Decimal        @db.Decimal(19, 6)
+  createdAt DateTime       @default(now()) @map(name: "created_at")
+  updatedAt DateTime       @updatedAt @map(name: "updated_at")
+
+  posEventSaleMovement PosEventSaleMovement @relation(fields: [id], references: [id])
+
+  @@map("pos_event_sale_movement_changes")
 }
 
 model PosEventSaleProduct {
@@ -319,7 +364,8 @@ model Sale {
   createdAt       DateTime         @default(now()) @map(name: "created_at")
   updatedAt       DateTime         @updatedAt @map(name: "updated_at")
 
-  products SaleProduct[]
+  products  SaleProduct[]
+  movements SaleMovement[]
 
   customer     Customer       @relation(fields: [customerId], references: [id])
   tenant       Tenant         @relation(fields: [tenantId], references: [id])
@@ -329,24 +375,43 @@ model Sale {
 }
 
 model SaleMovement {
+  id        String            @id @default(uuid()) @db.Uuid
   type      ESaleMovementType
   createdAt DateTime          @default(now()) @map(name: "created_at")
   updatedAt DateTime          @updatedAt @map(name: "updated_at")
 
-  saleId String @db.Uuid
+  saleId String @map("sale_id") @db.Uuid
 
-  @@id([saleId])
+  sale Sale @relation(fields: [saleId], references: [id])
+
+  payments SaleMovementPayment[]
+  changes  SaleMovementChange[]
+
   @@map("sale_movements")
 }
 
 model SaleMovementPayment {
-  id        String                     @id @default(uuid()) @db.Uuid
-  method    ESaleMovementPaymentMethod
-  amount    Decimal                    @db.Decimal(19, 6)
-  createdAt DateTime                   @default(now()) @map(name: "created_at")
-  updatedAt DateTime                   @updatedAt @map(name: "updated_at")
+  id        String         @id @db.Uuid
+  method    EPaymentMethod
+  amount    Decimal        @db.Decimal(19, 6)
+  createdAt DateTime       @default(now()) @map(name: "created_at")
+  updatedAt DateTime       @updatedAt @map(name: "updated_at")
+
+  saleMovement SaleMovement @relation(fields: [id], references: [id])
 
   @@map("sale_movement_payments")
+}
+
+model SaleMovementChange {
+  id        String         @id @db.Uuid
+  method    EPaymentMethod
+  amount    Decimal        @db.Decimal(19, 6)
+  createdAt DateTime       @default(now()) @map(name: "created_at")
+  updatedAt DateTime       @updatedAt @map(name: "updated_at")
+
+  saleMovement SaleMovement @relation(fields: [id], references: [id])
+
+  @@map("sale_movement_changes")
 }
 
 model SaleProduct {

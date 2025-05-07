@@ -21,9 +21,9 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CreateSaleSchema,
-  receivingMethod,
+  movementSchema,
 } from "../../../_utils/validations/create-sale";
-import { ESaleMovementPaymentMethod } from "@prisma/client";
+import { EPaymentMethod, ESaleMovementType } from "@prisma/client";
 import {
   Select,
   SelectContent,
@@ -33,29 +33,32 @@ import {
 } from "@/components/ui/select";
 
 interface IProps {
-  appendProduct: UseFieldArrayAppend<CreateSaleSchema, "receivingMethods">;
+  appendMovement: UseFieldArrayAppend<CreateSaleSchema, "movements">;
 }
 
-type ReceivingMethodItemFormType = z.infer<typeof receivingMethod>;
+type MovementItemFormType = z.infer<typeof movementSchema>;
 
-const formDefaultValues: ReceivingMethodItemFormType = {
-  method: ESaleMovementPaymentMethod.Cash,
+const formDefaultValues: MovementItemFormType = {
+  type: ESaleMovementType.Payment,
+  method: EPaymentMethod.Cash,
   amount: 0,
 };
 
-export const AddProduct = ({ appendProduct }: IProps) => {
+export const AddMovement = ({ appendMovement }: IProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
-  const form = useForm<ReceivingMethodItemFormType>({
+  const form = useForm<MovementItemFormType>({
     defaultValues: formDefaultValues,
-    resolver: zodResolver(receivingMethod),
+    resolver: zodResolver(movementSchema),
   });
+
+  const watchedMovementType = form.watch().type;
 
   // call this function on form 'onSubmit' property causes dialogs to close
   const onSubmit = () => {
     const submissionFn = form.handleSubmit(
-      (formData: ReceivingMethodItemFormType) => {
-        appendProduct(formData);
+      (formData: MovementItemFormType) => {
+        appendMovement(formData);
         setOpen(false);
         form.reset(formDefaultValues);
       },
@@ -83,7 +86,34 @@ export const AddProduct = ({ appendProduct }: IProps) => {
         <Form {...form}>
           <form className="space-y-4">
             <div className="space-y-2">
-              <Label>Método de recebimento*</Label>
+              <Label>Tipo da movimentação*</Label>
+              <Controller
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    onValueChange={(value) => field.onChange(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um tipo de movimentação" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ESaleMovementType.Change}>
+                        Troco
+                      </SelectItem>
+                      <SelectItem value={ESaleMovementType.Payment}>
+                        Pagamento
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FormMessage>{form.formState.errors.method?.message}</FormMessage>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Forma de pagamento*</Label>
               <Controller
                 control={form.control}
                 name="method"
@@ -93,21 +123,23 @@ export const AddProduct = ({ appendProduct }: IProps) => {
                     onValueChange={(value) => field.onChange(value)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione um método de recebimento" />
+                      <SelectValue placeholder="Selecione uma forma de pagamento" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={ESaleMovementPaymentMethod.Cash}>
+                      <SelectItem value={EPaymentMethod.Cash}>
                         Dinheiro
                       </SelectItem>
-                      <SelectItem value={ESaleMovementPaymentMethod.DebitCard}>
-                        Cartão de débito
-                      </SelectItem>
-                      <SelectItem value={ESaleMovementPaymentMethod.CreditCard}>
-                        Cartão de crédito
-                      </SelectItem>
-                      <SelectItem value={ESaleMovementPaymentMethod.Pix}>
-                        Pix
-                      </SelectItem>
+                      {watchedMovementType === ESaleMovementType.Payment ? (
+                        <SelectItem value={EPaymentMethod.DebitCard}>
+                          Cartão de débito
+                        </SelectItem>
+                      ) : null}
+                      {watchedMovementType === ESaleMovementType.Payment ? (
+                        <SelectItem value={EPaymentMethod.CreditCard}>
+                          Cartão de crédito
+                        </SelectItem>
+                      ) : null}
+                      <SelectItem value={EPaymentMethod.Pix}>Pix</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

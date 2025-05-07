@@ -108,10 +108,10 @@ export const AddProduct = ({ appendProduct }: IProps) => {
     };
   };
 
-  const { quantity, salePrice, costPrice } = form.watch();
+  const { quantity, salePrice } = form.watch();
 
   const subTotal = useMemo(
-    () => (salePrice - costPrice) * Number(quantity),
+    () => salePrice * Number(quantity),
     [quantity, salePrice]
   );
 

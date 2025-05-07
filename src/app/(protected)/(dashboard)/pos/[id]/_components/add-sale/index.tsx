@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { createPosSaleAction } from "../../_actions/create-pos-sale";
 import { getCustomers } from "../../_actions/get-customers";
 import { Products } from "./_components/products";
-import { ReceivingMethods } from "./_components/receiving-methods";
+import { Movements } from "./_components/movements";
 import {
   createSaleSchema,
   CreateSaleSchema,
@@ -77,6 +77,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
           totalQty: Number(product.quantity),
         })),
         tenantId,
+        movements: values.movements,
       });
 
       if (result.isFailure) {
@@ -174,7 +175,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
             />
 
             <Products form={form} />
-            <ReceivingMethods form={form} />
+            <Movements form={form} />
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

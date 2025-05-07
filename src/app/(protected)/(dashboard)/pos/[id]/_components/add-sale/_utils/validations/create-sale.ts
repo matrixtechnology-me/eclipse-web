@@ -1,4 +1,4 @@
-import { ESaleMovementPaymentMethod, ESaleMovementType } from "@prisma/client";
+import { EPaymentMethod, ESaleMovementType } from "@prisma/client";
 import { z } from "zod";
 
 export const productSchema = z.object({
@@ -25,17 +25,18 @@ export const productSchema = z.object({
   }), */
 });
 
-export const receivingMethod = z.object({
-  method: z.nativeEnum(ESaleMovementPaymentMethod),
+export const movementSchema = z.object({
+  type: z.nativeEnum(ESaleMovementType),
+  method: z.nativeEnum(EPaymentMethod),
   amount: z.number(),
 });
 
 export const createSaleSchema = z.object({
   customerId: z.string(),
   products: z.array(productSchema),
-  receivingMethods: z.array(receivingMethod),
+  movements: z.array(movementSchema),
 });
 
 export type ProductSchema = z.infer<typeof productSchema>;
-export type ReceivingMethodSchema = z.infer<typeof receivingMethod>;
+export type MovementSchema = z.infer<typeof movementSchema>;
 export type CreateSaleSchema = z.infer<typeof createSaleSchema>;

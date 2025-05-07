@@ -8,7 +8,9 @@ import prisma from "@/lib/prisma";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import {
   EMembershipRole,
+  EPaymentMethod,
   EPosEventType,
+  ESaleMovementType,
   EStockStrategy,
   Prisma,
 } from "@prisma/client";
@@ -23,13 +25,25 @@ type CreatePosSaleActionPayload = {
     id: string;
     totalQty: number;
   }[];
+  movements: {
+    type: ESaleMovementType;
+    method: EPaymentMethod;
+    amount: number;
+  }[];
   tenantId: string;
 };
 
 export const createPosSaleAction: ServerAction<
   CreatePosSaleActionPayload,
   unknown
-> = async ({ customerId, products, description, posId, tenantId }) => {
+> = async ({
+  customerId,
+  products,
+  description,
+  posId,
+  tenantId,
+  movements,
+}) => {
   try {
     const tenant = await prisma.tenant.findUnique({
       where: {
@@ -99,6 +113,10 @@ export const createPosSaleAction: ServerAction<
       0
     );
 
+    const mappedMovements = movements.map((movement) => {
+      return movement;
+    });
+
     const sale = await prisma.sale.create({
       data: {
         customerId,
@@ -112,7 +130,7 @@ export const createPosSaleAction: ServerAction<
       },
     });
 
-    await prisma.posEventSale.create({
+    const posEventSale = await prisma.posEventSale.create({
       data: {
         amount: total,
         description,
@@ -141,6 +159,65 @@ export const createPosSaleAction: ServerAction<
         },
       } as Prisma.PosEventSaleCreateInput,
     });
+
+    await Promise.all([
+      mappedMovements.map(async (movement) => {
+        const childProps = {
+          amount: movement.amount,
+          method: movement.method,
+        };
+
+        const childObj =
+          movement.type === ESaleMovementType.Change
+            ? {
+                type: ESaleMovementType.Change,
+                changes: {
+                  create: {
+                    ...childProps,
+                  },
+                },
+              }
+            : {
+                type: ESaleMovementType.Payment,
+                payments: {
+                  create: {
+                    ...childProps,
+                  },
+                },
+              };
+
+        const posEventSaleRef = {
+          posEventSale: {
+            connect: {
+              id: posEventSale.id,
+            },
+          },
+        };
+
+        const saleRef = {
+          sale: {
+            connect: {
+              id: sale.id,
+            },
+          },
+        };
+
+        await Promise.all([
+          await prisma.posEventSaleMovement.create({
+            data: {
+              ...posEventSaleRef,
+              ...childObj,
+            },
+          }),
+          await prisma.saleMovement.create({
+            data: {
+              ...saleRef,
+              ...childObj,
+            },
+          }),
+        ]);
+      }),
+    ]);
 
     await Promise.all(
       mappedProducts.map(async ({ stockId, stockLotId, totalQty }) => {
