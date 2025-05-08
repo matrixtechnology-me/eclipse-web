@@ -1,6 +1,12 @@
 import { FC } from "react";
 import { getPosSummaryAction } from "../_actions/get-pos-summary";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  ShoppingCart,
+  DollarSign,
+} from "lucide-react";
 
 type SummaryProps = {
   posId: string;
@@ -19,50 +25,79 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Entradas */}
-      <div className="border p-4 rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Entradas</h2>
-        <p className="text-3xl font-bold">
-          {CurrencyFormatter.format(entries.amount)}
-        </p>
-        <span className="text-xs text-muted-foreground">
-          {entries.count} {entries.count > 1 ? "operações" : "operação"}
-        </span>
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <ArrowDownCircle className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {entries.count}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">
+            {CurrencyFormatter.format(entries.amount)}
+          </h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Entradas registradas
+          </p>
+        </div>
       </div>
 
       {/* Saídas */}
-      <div className="border p-4 rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Saídas</h2>
-        <p className="text-3xl font-bold">
-          {CurrencyFormatter.format(outputs.amount)}
-        </p>
-        <span className="text-xs text-muted-foreground">
-          {outputs.count} {outputs.count > 1 ? "operações" : "operação"}
-        </span>
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <ArrowUpCircle className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {outputs.count}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">
+            {CurrencyFormatter.format(outputs.amount)}
+          </h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Saídas registradas
+          </p>
+        </div>
       </div>
 
       {/* Vendas */}
-      <div className="border p-4 rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Vendas</h2>
-        <p className="text-3xl font-bold">
-          {CurrencyFormatter.format(sales.amount)}
-        </p>
-        <span className="text-xs text-muted-foreground">
-          {sales.count} {sales.count > 1 ? "operações" : "operação"}
-        </span>
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <ShoppingCart className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {sales.count}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">{CurrencyFormatter.format(sales.amount)}</h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Vendas realizadas
+          </p>
+        </div>
       </div>
 
       {/* Balanço */}
-      <div className="border p-4 rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Balanço</h2>
-        <p className="text-3xl font-bold">
-          {CurrencyFormatter.format(balance)}
-        </p>
-        <span className="text-xs text-muted-foreground">
-          {entries.count + outputs.count + sales.count}{" "}
-          {entries.count + outputs.count + sales.count > 1
-            ? "operações"
-            : "operação"}
-        </span>
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <DollarSign className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {entries.count + outputs.count + sales.count}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">{CurrencyFormatter.format(balance)}</h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Balanço total
+          </p>
+        </div>
       </div>
     </div>
   );

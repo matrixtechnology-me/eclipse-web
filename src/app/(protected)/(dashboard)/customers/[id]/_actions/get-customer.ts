@@ -30,7 +30,7 @@ export const getCustomer: ServerAction<
 
   try {
     const customer = await prisma.customer.findUnique({
-      where: { id: customerId, tenantId },
+      where: { id: customerId, tenantId, deletedAt: null },
     });
 
     if (!customer) {
@@ -41,6 +41,7 @@ export const getCustomer: ServerAction<
       customer: {
         ...customer,
         active: Boolean(customer.active),
+        phoneNumber: customer.phoneNumber!,
       },
     });
   } catch (error: unknown) {

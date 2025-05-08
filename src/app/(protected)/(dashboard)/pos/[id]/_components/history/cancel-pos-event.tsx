@@ -12,12 +12,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { FC } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PATHS } from "@/config/paths";
 import { cancelPosEventAction } from "../../_actions/cancel-pos-event";
 import { EPosEventStatus } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 type CancelPosEventProps = {
   posId: string;
@@ -58,10 +59,12 @@ export const CancelPosEvent: FC<CancelPosEventProps> = ({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button
-          className="h-8 bg-transparent border border-red-500 text-red-500 hover:text-primary-foreground hover:bg-red-500"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           disabled={value === EPosEventStatus.Canceled}
         >
-          Cancelar evento
+          <Trash2 className="size-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="w-96">
@@ -75,7 +78,7 @@ export const CancelPosEvent: FC<CancelPosEventProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-500 hover:bg-red-600 text-white"
+            className="bg-destructive text-white hover:bg-destructive/90"
             onClick={handleDelete}
           >
             Cancelar

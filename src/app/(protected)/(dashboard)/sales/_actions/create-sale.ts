@@ -63,7 +63,7 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
         tenantId,
         products: {
           createMany: {
-            data: saleProducts.map(({ stockId, stockLotId, ...rest }) => rest),
+            data: saleProducts.map(({ stockId, ...rest }) => rest),
           },
         },
         total: saleProducts.reduce(

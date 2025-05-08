@@ -48,7 +48,7 @@ export const getSaleAction: ServerAction<
         customer: {
           id: sale.customer.id,
           name: sale.customer.name,
-          phoneNumber: sale.customer.phoneNumber,
+          phoneNumber: sale.customer.phoneNumber ?? "00000000000",
         },
       },
     });

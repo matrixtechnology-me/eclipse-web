@@ -321,7 +321,7 @@ model Product {
   id          String    @id @default(uuid()) @db.Uuid
   name        String
   description String    @default("")
-  barCode     String    @map("bar_code")
+  barCode     String    @unique @map("bar_code")
   active      Boolean   @default(true)
   skuCode     String    @unique @map("sku_code")
   tenantId    String    @db.Uuid
@@ -523,14 +523,16 @@ model Tenant {
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
-  memberships        TenantMembership[]
-  customers          Customer[]
-  products           Product[]
-  sales              Sale[]
-  stocks             Stock[]
-  stockLots          StockLot[]
-  StockEvent         StockEvent[]
+  memberships TenantMembership[]
+  customers   Customer[]
+  products    Product[]
+  sales       Sale[]
+  stocks      Stock[]
+  stockLots   StockLot[]
+  StockEvent  StockEvent[]
+
   NotificationTarget NotificationTarget[]
+  UserTenantSettings UserTenantSettings[]
 
   @@map("tenants")
 }
@@ -556,18 +558,22 @@ model User {
   createdAt DateTime @default(now()) @map(name: "created_at")
   updatedAt DateTime @updatedAt @map(name: "updated_at")
 
-  settings UserSettings[]
+  tenantSettings UserTenantSettings[]
 
   NotificationTarget NotificationTarget[]
 
   @@map("users")
 }
 
-model UserSettings {
-  id           String  @id @db.Uuid
+model UserTenantSettings {
   doNotDisturb Boolean @default(false) @map("do_not_disturb")
 
-  user User @relation(fields: [id], references: [id])
+  userId   String @map("user_id") @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
 
-  @@map("user_settings")
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@id([userId, tenantId])
+  @@map("user_tenant_settings")
 }

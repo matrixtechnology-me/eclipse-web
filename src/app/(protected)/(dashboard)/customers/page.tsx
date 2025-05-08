@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { Customers } from "./_components/customers";
-import { Suspense } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,11 +6,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import { NextPage } from "next";
+import { Suspense } from "react";
+import { CreateCustomer } from "./_components/create.customer";
+import { Customers } from "./_components/customers";
 import { Search } from "./_components/search";
-import { PATHS } from "@/config/paths";
 
 type PageSearchParams = {
   page?: string;
@@ -48,15 +45,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
         <div className="flex flex-col gap-3">
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
             <Search query={query} />
-            <Link
-              href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
-              className="w-full lg:w-fit"
-            >
-              <Button variant="outline" className="w-full lg:w-fit">
-                <PlusIcon />
-                <span>Adicionar cliente</span>
-              </Button>
-            </Link>
+            <CreateCustomer />
           </div>
           <Suspense fallback={<div>Carregando...</div>}>
             <Customers

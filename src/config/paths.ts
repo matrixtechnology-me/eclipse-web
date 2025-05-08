@@ -15,16 +15,13 @@ export const PATHS = {
           const queryParams = generateQueryParams({ ...params });
           return `/customers${queryParams}`;
         },
-        CREATE: "/customers/create",
         CUSTOMER: (customerId: string) => `/customers/${customerId}`,
-        EDIT: (customerId: string) => `/customers/${customerId}/update`,
       },
       PRODUCTS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
           return `/products${queryParams}`;
         },
-        CREATE: "/products/create",
         PRODUCT: (productId: string) => ({
           INDEX: `/products/${productId}`,
           VARIATION: (skuCode: string) =>

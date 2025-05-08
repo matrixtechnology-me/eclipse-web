@@ -41,6 +41,7 @@ export const getStockAction: ServerAction<
   "use cache";
 
   cacheTag(
+    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX,
     CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS,
     CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
   );

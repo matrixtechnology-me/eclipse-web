@@ -106,7 +106,10 @@ export const getSalesAction: ServerAction<
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
       status: sale.status,
-      customer: sale.customer,
+      customer: {
+        ...sale.customer,
+        phoneNumber: sale.customer.phoneNumber ?? "00000000000",
+      },
       costPrice: sale.products.reduce(
         (acc, p) => acc + p.costPrice.toNumber(),
         0

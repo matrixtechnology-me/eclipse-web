@@ -19,11 +19,12 @@ export const getProductsCount: ServerAction<
     if (!tenantId) throw new BadRequestError("Tenant ID is required");
 
     const count = await prisma.product.count({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
     });
 
     return success({ count });
   } catch (error: unknown) {
+    console.error(error);
     return failure(
       new InternalServerError(`failed to get products for tenant ${tenantId}`)
     );

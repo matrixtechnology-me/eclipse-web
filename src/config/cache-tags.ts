@@ -22,6 +22,7 @@ export const CACHE_TAGS = {
     STOCKS: {
       INDEX: `tenant-[${tenantId}].stocks`,
       STOCK: (stockId: string) => ({
+        INDEX: `tenant-[${tenantId}].stock-[${stockId}]`,
         EVENTS: `tenant-[${tenantId}].stock-[${stockId}].events`,
         LOTS: `tenant-[${tenantId}].stock-[${stockId}].lots`,
       }),

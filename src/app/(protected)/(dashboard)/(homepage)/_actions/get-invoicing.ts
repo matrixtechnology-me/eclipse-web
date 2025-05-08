@@ -30,6 +30,7 @@ export const getInvoicing: ServerAction<
 
     return success({ invoicing });
   } catch (error: unknown) {
+    console.error(error);
     return failure(
       new InternalServerError(`failed to get invoicing for tenant ${tenantId}`)
     );

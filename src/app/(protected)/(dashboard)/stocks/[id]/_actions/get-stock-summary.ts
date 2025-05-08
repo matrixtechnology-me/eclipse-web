@@ -16,6 +16,7 @@ type GetStockSummaryActionResult = {
   entriesCount: number;
   outputsCount: number;
   balance: number;
+  profitProjection: number;
 };
 
 export const getStockSummaryAction: ServerAction<
@@ -32,27 +33,46 @@ export const getStockSummaryAction: ServerAction<
       include: {
         entry: true,
         output: true,
+        StockLot: true,
+        stock: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
 
     let entriesCount = 0;
     let outputsCount = 0;
     let balance = 0;
+    let profitProjection = 0;
 
     for (const event of events) {
+      const { StockLot, stock } = event;
+
       switch (event.type) {
         case EStockEventType.Entry:
-          if (event.entry) {
+          if (event.entry && StockLot && stock.product?.salePrice) {
+            const { quantity } = event.entry;
+            const costPrice = StockLot.costPrice.toNumber();
+            const salePrice = stock.product.salePrice.toNumber();
+
             entriesCount += 1;
-            balance += event.entry.quantity;
+            balance += quantity * costPrice;
+            profitProjection += quantity * (salePrice - costPrice);
           }
           break;
+
         case EStockEventType.Output:
-          if (event.output) {
+          if (event.output && StockLot) {
+            const { quantity } = event.output;
+            const costPrice = StockLot.costPrice.toNumber();
+
             outputsCount += 1;
-            balance -= event.output.quantity;
+            balance -= quantity * costPrice;
           }
           break;
+
         default:
           continue;
       }
@@ -62,6 +82,7 @@ export const getStockSummaryAction: ServerAction<
       entriesCount,
       outputsCount,
       balance,
+      profitProjection,
     });
   } catch (error) {
     console.log(error);

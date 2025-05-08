@@ -64,7 +64,7 @@ export const Notification = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-xs text-muted-foreground line-clamp-1">
+              <p className="text-start text-xs text-muted-foreground line-clamp-1">
                 {body}
               </p>
             </TooltipTrigger>

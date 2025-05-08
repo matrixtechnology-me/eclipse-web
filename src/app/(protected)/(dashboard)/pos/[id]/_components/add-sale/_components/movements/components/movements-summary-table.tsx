@@ -86,7 +86,7 @@ export const MovementsTable = ({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={2}>Total</TableCell>
+            <TableCell colSpan={3}>Total</TableCell>
             <TableCell className="text-right">
               {CurrencyFormatter.format(
                 movementsFieldArray.fields.reduce(

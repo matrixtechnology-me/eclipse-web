@@ -43,7 +43,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
         <span>{sale.customer.name}</span>
         <span>{PhoneNumberFormatter.format(sale.customer.phoneNumber)}</span>
       </div>
-      <Items />
+      <Items saleId={sale.id} />
       <Moviments />
     </div>
   );

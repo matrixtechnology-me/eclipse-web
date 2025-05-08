@@ -85,7 +85,6 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
       }
 
       toast.success("Venda registrada com sucesso");
-      router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX());
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erro ao registrar venda"

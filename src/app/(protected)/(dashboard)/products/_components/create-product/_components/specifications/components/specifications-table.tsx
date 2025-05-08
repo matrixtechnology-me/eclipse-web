@@ -56,7 +56,7 @@ export const SpecificationsTable = ({
     </div>
   ) : (
     <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-lg">
-      <p className="text-center">
+      <p className="text-center text-sm text-muted-foreground">
         Nenhuma especificação adicionada ainda. Clique em "Adicionar
         especificação" para adicionar um.
       </p>

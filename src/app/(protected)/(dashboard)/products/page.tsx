@@ -15,6 +15,7 @@ import { PATHS } from "@/config/paths";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NextPage } from "next";
 import { Search } from "./_components/search";
+import { CreateProduct } from "./_components/create-product";
 
 type PageSearchParams = {
   page?: string;
@@ -53,15 +54,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
       <div className="rounded-lg flex flex-col gap-5">
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
           <Search query={query} />
-          <Link
-            href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
-            className="w-full lg:w-fit"
-          >
-            <Button variant="outline" className="w-full lg:w-fit">
-              <PlusIcon />
-              <span>Adicionar produto</span>
-            </Button>
-          </Link>
+          <CreateProduct />
         </div>
         <Suspense
           fallback={

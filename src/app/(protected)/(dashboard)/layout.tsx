@@ -17,8 +17,8 @@ const Layout: FC<LayoutProps> = async ({ children }) => {
   if (!session) redirect(PATHS.PUBLIC.AUTH.SIGN_IN);
 
   return (
-    <div>
-      <Header />
+    <div className="w-screen h-screen overflow-hidden">
+      <Header tenantId={session.tenantId} userId={session.id} />
       <Content>{children}</Content>
     </div>
   );

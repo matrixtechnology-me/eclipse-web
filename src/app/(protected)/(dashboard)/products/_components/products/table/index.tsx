@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/table";
 import { YesNo } from "@/components/yes-no";
 import { PATHS } from "@/config/paths";
-import { PhoneNumberFormatter } from "@/utils/formatters/phone-number";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FC } from "react";
 import { Pagination } from "../pagination";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
 
 type TableProps = {
   data: {
@@ -48,6 +48,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
             <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Código de barras</TableHead>
+            <TableHead className="text-left">Preço de venda</TableHead>
             <TableHead className="text-left">Está ativo?</TableHead>
             <TableHead className="text-left">Data de criação</TableHead>
             <TableHead className="text-left">Data de atualização</TableHead>
@@ -65,6 +66,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
               <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.barCode}</TableCell>
+              <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
               <TableCell>
                 <YesNo value={item.active} />
               </TableCell>
@@ -79,7 +81,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
         </TableBody>
         <TableFooter className="h-12">
           <TableRow className="h-12">
-            <TableCell colSpan={6}>
+            <TableCell colSpan={7}>
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}

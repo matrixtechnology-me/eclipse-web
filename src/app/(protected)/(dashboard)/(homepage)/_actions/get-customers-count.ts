@@ -19,7 +19,7 @@ export const getCustomersCount: ServerAction<
     }
 
     const count = await prisma.customer.count({
-      where: { tenantId },
+      where: { tenantId, deletedAt: null },
     });
 
     return success({ count });
