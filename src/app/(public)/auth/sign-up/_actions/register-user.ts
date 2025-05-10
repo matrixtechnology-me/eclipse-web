@@ -2,7 +2,7 @@
 
 import { HashingService } from "@/services/hashing.service";
 import prisma from "@/lib/prisma";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { ConflictError, InternalServerError } from "@/errors";
 
 type RegisterUserActionPayload = {
@@ -13,7 +13,7 @@ type RegisterUserActionPayload = {
 
 type RegisterUserActionResult = { sessionId: string };
 
-export const registerUserAction: ServerAction<
+export const registerUserAction: Action<
   RegisterUserActionPayload,
   RegisterUserActionResult
 > = async ({ email, name, password }) => {

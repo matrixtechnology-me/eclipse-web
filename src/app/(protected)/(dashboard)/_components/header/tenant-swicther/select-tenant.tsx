@@ -24,7 +24,7 @@ export const SelectTenant: FC<SelectTenantProps> = ({ tenants, tenantId }) => {
 
   const handleSelectTenant = (tenantId: string) => {
     setCookie(null, "X-Tenant", tenantId, { path: "/" });
-    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE);
   };
 
   return (

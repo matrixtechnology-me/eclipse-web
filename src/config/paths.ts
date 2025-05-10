@@ -4,62 +4,64 @@ export const PATHS = {
   PUBLIC: {
     AUTH: {
       SIGN_IN: "/auth/sign-in",
+      FIRST_ACCESS: "/auth/first-access",
     },
   },
   PROTECTED: {
     GET_STARTED: "/get-started",
-    DASHBOARD: {
-      HOMEPAGE: "/",
+    DASHBOARD: (tenantId: string) => ({
+      HOMEPAGE: `/${tenantId}`,
       CUSTOMERS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
-          return `/customers${queryParams}`;
+          return `/${tenantId}/customers${queryParams}`;
         },
-        CUSTOMER: (customerId: string) => `/customers/${customerId}`,
+        CUSTOMER: (customerId: string) =>
+          `/${tenantId}/customers/${customerId}`,
       },
       PRODUCTS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
-          return `/products${queryParams}`;
+          return `/${tenantId}/products${queryParams}`;
         },
         PRODUCT: (productId: string) => ({
-          INDEX: `/products/${productId}`,
+          INDEX: `/${tenantId}/products/${productId}`,
           VARIATION: (skuCode: string) =>
-            `/products/${productId}/variations/${skuCode}`,
+            `/${tenantId}/products/${productId}/variations/${skuCode}`,
         }),
       },
       POS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
-          return `/pos${queryParams}`;
+          return `/${tenantId}/pos${queryParams}`;
         },
         POS: (id: string) => ({
-          INDEX: `/pos/${id}`,
+          INDEX: `/${tenantId}/pos/${id}`,
         }),
       },
       STOCKS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
-          return `/stocks${queryParams}`;
+          return `/${tenantId}/stocks${queryParams}`;
         },
         STOCK: (id: string) => ({
-          INDEX: `/stocks/${id}`,
+          INDEX: `/${tenantId}/stocks/${id}`,
         }),
       },
       REPORTS: {
-        INDEX: "/reports",
+        INDEX: `/${tenantId}/reports`,
       },
       SALES: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
-          return `/sales${queryParams}`;
+          return `/${tenantId}/sales${queryParams}`;
         },
-        CREATE: "/sales/create",
+        CREATE: `/${tenantId}/sales/create`,
         SALE: (saleId: string) => ({
-          INDEX: `/sales/${saleId}`,
+          INDEX: `/${tenantId}/sales/${saleId}`,
         }),
       },
-    },
+    }),
   },
 };
 

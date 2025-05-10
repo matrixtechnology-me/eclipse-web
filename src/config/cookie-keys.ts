@@ -3,6 +3,7 @@ export const COOKIE_KEYS = {
     TOKENS: {
       ACCESS: "@authentication:access-token",
       REFRESH: "@authentication:refresh-token",
+      SESSION: "@authentication:session-token",
     },
     TENANT: "@authentication:tenant-id",
   },

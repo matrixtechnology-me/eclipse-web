@@ -1,6 +1,6 @@
 "use server";
 
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EMembershipRole } from "@prisma/client";
@@ -15,7 +15,7 @@ type CreateTenantActionResult = {
   tenantId: string;
 };
 
-export const createTenant: ServerAction<
+export const createTenant: Action<
   CreateTenantActionPayload,
   CreateTenantActionResult
 > = async ({ description, name, userId }) => {

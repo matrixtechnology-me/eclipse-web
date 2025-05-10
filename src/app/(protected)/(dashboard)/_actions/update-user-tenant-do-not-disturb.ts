@@ -1,4 +1,4 @@
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 
@@ -7,7 +7,7 @@ type UpdateUserTenantDoNotDisturbActionPayload = {
   tenantId: string;
 };
 
-export const updateUserTenantDoNotDisturbAction: ServerAction<
+export const updateUserTenantDoNotDisturbAction: Action<
   UpdateUserTenantDoNotDisturbActionPayload
 > = async ({ userId, tenantId }) => {
   try {

@@ -29,12 +29,13 @@ export const getServerSession = async <
   const accessToken = cookieStore.get(
     COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS
   )?.value;
+
   const tenantId = cookieStore.get(COOKIE_KEYS.AUTHENTICATION.TENANT)?.value;
 
   if (!accessToken) return null as SessionReturnType<TOptions>;
 
   try {
-    const jwtService = new JwtService(process.env.JWT_SECRET as string);
+    const jwtService = new JwtService();
     const payload = await jwtService.verify(accessToken);
 
     const sessionId = payload.sub as string | undefined;

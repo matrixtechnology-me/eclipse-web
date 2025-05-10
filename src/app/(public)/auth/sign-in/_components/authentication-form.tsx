@@ -1,9 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { authenticateUserAction } from "../_actions/authenticate-user";
-import { PATHS } from "@/config/paths";
-import { setCookie } from "nookies";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,26 +9,35 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { getUserTenants } from "../_actions/get-user-tenants";
-import { PasswordInput } from "./password-input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { CircleHelpIcon, CircleSlash, UserIcon } from "lucide-react";
-import { InvalidCredentialsError, NotFoundError } from "@/errors";
-import { COOKIE_KEYS } from "@/config/cookie-keys";
-import { JwtService } from "@/services/jwt.service";
+import { z } from "zod";
+import { authenticateUserAction } from "../_actions/authenticate-user";
+import { PasswordInput } from "./password-input";
 
 const formSchema = z.object({
-  email: z.string().min(1, {
-    message: "E-mail é obrigatório.",
-  }),
-  password: z.string().min(1, {
-    message: "Senha é obrigatório.",
-  }),
+  email: z
+    .string()
+    .min(1, { message: "E-mail é obrigatório." })
+    .email({ message: "E-mail inválido." }),
+
+  password: z
+    .string()
+    .min(8, { message: "A senha deve ter pelo menos 8 caracteres." })
+    .regex(/[a-z]/, {
+      message: "A senha deve conter pelo menos uma letra minúscula.",
+    })
+    .regex(/[A-Z]/, {
+      message: "A senha deve conter pelo menos uma letra maiúscula.",
+    })
+    .regex(/[0-9]/, { message: "A senha deve conter pelo menos um número." })
+    .regex(/[^a-zA-Z0-9]/, {
+      message: "A senha deve conter pelo menos um caractere especial.",
+    }),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -48,60 +54,23 @@ export const AuthenticationForm = () => {
   });
 
   const handleSubmit = async ({ email, password }: FormSchema) => {
-    const authenticateUserResult = await authenticateUserAction({
+    const result = await authenticateUserAction({
       email,
       password,
     });
 
-    if (authenticateUserResult.isFailure) {
-      switch (authenticateUserResult.error.name) {
-        case NotFoundError.name:
-          return toast("Usuário não encontrado", {
-            description: "Verifique o e-mail informado e tente novamente",
-            icon: <UserIcon className="size-4" />,
-          });
-        case InvalidCredentialsError.name:
-          return toast("Credenciais inválidas", {
-            description: "E-mail ou senha incorretos. Tente novamente",
-            icon: <CircleSlash className="size-4" />,
-          });
-        default:
-          return toast("Erro inesperado", {
-            description:
-              "Ocorreu um erro ao fazer login. Tente novamente mais tarde",
-            icon: <CircleHelpIcon className="size-4" />,
-          });
-      }
+    if (result.isFailure) {
+      const metadata = result.metadata;
+
+      return toast(metadata?.attributes.title, {
+        description: metadata?.attributes.description,
+        icon: metadata?.attributes.icon,
+      });
     }
 
-    const { accessToken, refreshToken, userId } = authenticateUserResult.value;
+    const { href } = result.value;
 
-    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS, accessToken, {
-      path: "/",
-    });
-    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH, refreshToken, {
-      path: "/",
-    });
-
-    const getUserTenantsResult = await getUserTenants({ userId });
-
-    if (getUserTenantsResult.isFailure) {
-      if (getUserTenantsResult.error.name === NotFoundError.name) {
-        return router.push(PATHS.PROTECTED.GET_STARTED);
-      } else {
-        return alert("Aconteceu um erro ao buscar as empresas");
-      }
-    }
-
-    const { tenants } = getUserTenantsResult.value;
-
-    const targetTenant = tenants[0];
-
-    setCookie(null, COOKIE_KEYS.AUTHENTICATION.TENANT, targetTenant.id, {
-      path: "/",
-    });
-
-    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
+    router.push(href);
   };
 
   return (
@@ -110,7 +79,6 @@ export const AuthenticationForm = () => {
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-5 w-full max-w-sm"
       >
-        {/* E-mail */}
         <FormField
           control={form.control}
           name="email"
@@ -124,7 +92,6 @@ export const AuthenticationForm = () => {
             </FormItem>
           )}
         />
-        {/* Password */}
         <PasswordInput form={form} name="password" label="Sua senha segura" />
         <div className="flex items-center justify-between">
           <div />
@@ -132,7 +99,14 @@ export const AuthenticationForm = () => {
             Esqueceu a senha?
           </span>
         </div>
-        <Button type="submit" className="w-full h-10">
+        <Button
+          type="submit"
+          className="w-full h-10"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Entrar
         </Button>
       </form>

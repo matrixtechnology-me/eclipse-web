@@ -7,14 +7,19 @@ import { EclipseIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FC, HTMLAttributes } from "react";
 
-export const Logotype: FC<HTMLAttributes<HTMLButtonElement>> = ({
+type LogotypeProps = {
+  tenantId: string;
+} & HTMLAttributes<HTMLButtonElement>;
+
+export const Logotype: FC<LogotypeProps> = ({
   className,
+  tenantId,
   ...rest
 }) => {
   const router = useRouter();
 
   const handleRedirect = () => {
-    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE);
   };
 
   return (

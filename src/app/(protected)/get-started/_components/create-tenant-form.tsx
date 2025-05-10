@@ -62,8 +62,10 @@ export const CreateTenantForm = () => {
       throw new Error("Erro ao criar tenant");
     }
 
+    const { tenantId } = result.value;
+
     setCookie(null, "X-Tenant", result.value.tenantId, { path: "/" });
-    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE);
   };
 
   return (

@@ -1,0 +1,99 @@
+"use client";
+
+import {
+  Table as TableCn,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { YesNo } from "@/components/yes-no";
+import { PATHS } from "@/config/paths";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import { FC } from "react";
+import { Pagination } from "../pagination";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
+
+type TableProps = {
+  data: {
+    id: string;
+    name: string;
+    barCode: string;
+    active: boolean;
+    salePrice: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  pagination: {
+    initialPage: number;
+    initialPageSize: number;
+  };
+  tenantId: string;
+};
+
+export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
+  const router = useRouter();
+
+  const handleRedirectToCustomer = (customerId: string) => {
+    router.push(
+      PATHS.PROTECTED.DASHBOARD(tenantId).PRODUCTS.PRODUCT(customerId).INDEX
+    );
+  };
+
+  return (
+    <div className="w-full border rounded-lg overflow-x-auto">
+      <TableCn className="min-w-max">
+        <TableHeader>
+          <TableRow className="h-12">
+            <TableHead className="text-left">#</TableHead>
+            <TableHead className="text-left">Nome</TableHead>
+            <TableHead className="text-left">Código de barras</TableHead>
+            <TableHead className="text-left">Preço de venda</TableHead>
+            <TableHead className="text-left">Está ativo?</TableHead>
+            <TableHead className="text-left">Data de criação</TableHead>
+            <TableHead className="text-left">Data de atualização</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((item, index) => (
+            <TableRow
+              key={item.id}
+              className="h-12"
+              onClick={() => {
+                handleRedirectToCustomer(item.id);
+              }}
+            >
+              <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
+              <TableCell>{item.name}</TableCell>
+              <TableCell>{item.barCode}</TableCell>
+              <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
+              <TableCell>
+                <YesNo value={item.active} />
+              </TableCell>
+              <TableCell>
+                {moment(item.createdAt).format("DD/MM/YYYY")}
+              </TableCell>
+              <TableCell>
+                {moment(item.updatedAt).format("DD/MM/YYYY")}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter className="h-12">
+          <TableRow className="h-12">
+            <TableCell colSpan={7}>
+              <Pagination
+                initialPage={pagination.initialPage}
+                initialPageSize={pagination.initialPageSize}
+                tenantId={tenantId}
+              />
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </TableCn>
+    </div>
+  );
+};

@@ -18,15 +18,10 @@ async function main() {
       password: "$2b$12$trB5BToBNm9UZ3Grp//68.0xCguOegVICIjrNxMj3O4F.77pl/Rfi",
       role: "common",
       active: true,
-      settings: {
-        create: {
-          doNotDisturb: false,
-        },
-      },
     },
   });
 
-  await prisma.tenant.create({
+  const tenant = await prisma.tenant.create({
     data: {
       name: "Matrix Store",
       description: "Loja para testes internos durante o desenvolvimento",
@@ -40,6 +35,14 @@ async function main() {
           },
         },
       },
+    },
+  });
+
+  await prisma.userTenantSettings.create({
+    data: {
+      doNotDisturb: false,
+      tenantId: tenant.id,
+      userId: user.id,
     },
   });
 

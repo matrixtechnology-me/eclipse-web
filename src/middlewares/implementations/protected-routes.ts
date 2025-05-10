@@ -24,11 +24,6 @@ export class ProtectedRoutesMiddleware extends Middleware {
     if (session && !isPublicPath) return;
     if (!session && isPublicPath) return;
 
-    if (isPublicPath && session)
-      return NextResponse.redirect(
-        baseURL + PATHS.PROTECTED.DASHBOARD.HOMEPAGE
-      );
-
     return NextResponse.redirect(
       baseURL +
         PATHS.PUBLIC.AUTH.SIGN_IN +

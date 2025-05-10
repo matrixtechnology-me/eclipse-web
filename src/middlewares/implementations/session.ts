@@ -29,45 +29,10 @@ export class SessionMiddleware extends Middleware {
     // Chain continues without session (unauthenticated).
     if (!accessToken || !refreshToken) return;
 
-    const jwtService = new JwtService(process.env.JWT_SECRET ?? "");
+    const jwtService = new JwtService();
 
-    // Chain continues with session (user is logged, valid accessToken).
-    if (!jwtService.isAccessExpired()) {
-      ctx.addResponseCookie(
-        COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS,
-        accessToken
-      );
-      ctx.addResponseCookie(
-        COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH,
-        refreshToken
-      );
+    const payload = await jwtService.verify(accessToken);
 
-      const { sub } = jwtService.getAccessPayload();
-      ctx.setSession({ id: sub as string });
-      return;
-    }
-
-    // Chain continues without session (session lost).
-    if (jwtService.isRefreshExpired()) return;
-
-    // refreshToken still valid. A refresh attempt is made.
-    const refreshed = await jwtService.attemptRefresh();
-
-    // Chain continues without session (unable to refresh).
-    if (!refreshed) return;
-
-    // Chain continues with session (user is logged, session refreshed).
-    // Set updated tokens refreshed by JwtService.
-    ctx.addResponseCookie(
-      COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS,
-      jwtService.getAccessToken()
-    );
-    ctx.addResponseCookie(
-      COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH,
-      jwtService.getRefreshToken()
-    );
-
-    const { sub } = jwtService.getAccessPayload();
-    ctx.setSession({ id: sub as string });
+    ctx.setSession({ id: payload.sub as string });
   }
 }

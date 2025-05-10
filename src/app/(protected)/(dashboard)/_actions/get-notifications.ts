@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { ENotificationType } from "@prisma/client";
@@ -23,7 +23,7 @@ type GetNotificationsActionResult = {
   }[];
 };
 
-export const getNotificationsAction: ServerAction<
+export const getNotificationsAction: Action<
   GetNotificationsActionPayload,
   GetNotificationsActionResult
 > = async ({ tenantId, userId }) => {
