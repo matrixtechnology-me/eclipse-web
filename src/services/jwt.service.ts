@@ -1,4 +1,11 @@
-import { importPKCS8, importSPKI, JWTPayload, jwtVerify, SignJWT } from "jose";
+import {
+  importPKCS8,
+  importSPKI,
+  JWTPayload,
+  jwtVerify,
+  SignJWT,
+  decodeJwt,
+} from "jose";
 
 type DefaultTokens = {
   accessToken: string;
@@ -48,5 +55,9 @@ export class JwtService {
     });
 
     return payload as T;
+  }
+
+  decode<T = JWTPayload>(token: string): T {
+    return decodeJwt(token) as T;
   }
 }

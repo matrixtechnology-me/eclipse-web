@@ -5,25 +5,22 @@ import { PATHS } from "@/config/paths";
 import { Header } from "./_components/header";
 import { Content } from "./_components/content";
 
-type LayoutParams = {
-  "tenant-id": string;
-};
-
 type LayoutProps = {
   children: React.ReactNode;
-  params: Promise<LayoutParams>;
 };
 
-const Layout: FC<LayoutProps> = async ({ children, params }) => {
-  const { "tenant-id": tenantId } = await params;
-
-  const session = await getServerSession();
+const Layout: FC<LayoutProps> = async ({ children }) => {
+  const session = await getServerSession({
+    requirements: {
+      tenant: true,
+    },
+  });
 
   if (!session) redirect(PATHS.PUBLIC.AUTH.SIGN_IN);
 
   return (
     <div className="w-screen h-screen overflow-hidden">
-      <Header tenantId={tenantId} userId={session.id} />
+      <Header tenantId={session.tenantId} userId={session.id} />
       <Content>
         <Suspense
           fallback={

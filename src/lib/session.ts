@@ -36,9 +36,9 @@ export const getServerSession = async <
 
   try {
     const jwtService = new JwtService();
-    const payload = await jwtService.verify(accessToken);
+    const payload = jwtService.decode(accessToken);
 
-    const sessionId = payload.sub as string | undefined;
+    const sessionId = payload.sub as string;
     if (!sessionId) return null as SessionReturnType<TOptions>;
 
     if (options.requirements.tenant && !tenantId)

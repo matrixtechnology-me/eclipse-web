@@ -19,7 +19,7 @@ export const Logotype: FC<LogotypeProps> = ({
   const router = useRouter();
 
   const handleRedirect = () => {
-    router.push(PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
   };
 
   return (

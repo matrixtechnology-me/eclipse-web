@@ -12,7 +12,7 @@ const Layout: FC<LayoutProps> = async ({ children }) => {
     requirements: { tenant: true },
   });
 
-  if (session) redirect(PATHS.PROTECTED.DASHBOARD(session.tenantId).HOMEPAGE);
+  if (session) redirect(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
 
   return <>{children}</>;
 };

@@ -32,43 +32,43 @@ export const Nav: FC<NavProps> = ({
       )}
       {...rest}
     >
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
         <Button variant="ghost">
           <CircleGaugeIcon className="size-4" />
           Painel de Controle
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).CUSTOMERS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX()}>
         <Button variant="ghost">
           <UsersIcon className="size-4" />
           Clientes
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).PRODUCTS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}>
         <Button variant="ghost">
           <BoxIcon className="size-4" />
           Produtos
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).STOCKS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.STOCKS.INDEX()}>
         <Button variant="ghost">
           <BoxIcon className="size-4" />
           Estoques
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).POS.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.POS.INDEX()}>
         <Button variant="ghost">
           <ShoppingBasketIcon className="size-4" />
           PDV
         </Button>
       </Link>
-      <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).SALES.INDEX()}>
+      <Link href={PATHS.PROTECTED.DASHBOARD.SALES.INDEX()}>
         <Button variant="ghost">
           <DollarSignIcon className="size-4" />
           Vendas
         </Button>
       </Link>
-      {/* <Link href={PATHS.PROTECTED.DASHBOARD(tenantId).REPORTS.INDEX}>
+      {/* <Link href={PATHS.PROTECTED.DASHBOARD.REPORTS.INDEX}>
         <Button variant="ghost">
           <FileChartColumnIncreasingIcon className="size-4" />
           Relatórios

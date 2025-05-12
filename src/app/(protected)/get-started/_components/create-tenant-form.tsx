@@ -65,7 +65,7 @@ export const CreateTenantForm = () => {
     const { tenantId } = result.value;
 
     setCookie(null, "X-Tenant", result.value.tenantId, { path: "/" });
-    router.push(PATHS.PROTECTED.DASHBOARD(tenantId).HOMEPAGE);
+    router.push(PATHS.PROTECTED.DASHBOARD.HOMEPAGE);
   };
 
   return (

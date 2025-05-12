@@ -115,7 +115,7 @@ export const authenticateUserAction: Action<
     }
 
     const [accessToken, refreshToken] = await Promise.all([
-      await jwtService.sign({ sub: user.id, type: "access" }, "15m"),
+      await jwtService.sign({ sub: user.id, type: "access" }, "1h"),
       await jwtService.sign({ sub: user.id, type: "refresh" }, "30d"),
     ]);
 
@@ -166,7 +166,7 @@ export const authenticateUserAction: Action<
       secure: process.env.NODE_ENV === "production",
     });
 
-    return success({ href: PATHS.PROTECTED.DASHBOARD(tenant.id).HOMEPAGE });
+    return success({ href: PATHS.PROTECTED.DASHBOARD.HOMEPAGE });
   } catch (error: unknown) {
     console.error(error);
     return failure(
