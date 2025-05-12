@@ -1,4 +1,3 @@
-import { NextPage } from "next";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,13 +7,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PATHS } from "@/config/paths";
-import { Stock } from "../../stocks/[id]/_components/stock";
-import { getStockAction } from "./_actions/get-stock";
 import { getServerSession } from "@/lib/session";
-import { Lots } from "./_components/lots";
+import { NextPage } from "next";
+import { Stock } from "./_components/stock";
+import { getStockAction } from "./_actions/get-stock";
 import { History } from "./_components/history";
-import { Summary } from "../../pos/[id]/_components/summary";
+import { Lots } from "./_components/lots";
 import { StockSummary } from "./_components/summary";
+import { Separator } from "@/components/ui/separator";
 
 type PageParams = {
   id: string;
@@ -75,18 +75,20 @@ const Page: NextPage<PageProps> = async ({ params }) => {
       <div className="flex flex-col gap-5">
         <Stock
           id={stock.id}
-          lots={stock.lots}
           availableQty={stock.availableQty}
           strategy={stock.strategy}
           totalQty={stock.totalQty}
+          tenantId={session.tenantId}
         />
-        <Lots data={stock.lots} stockId={stock.id} />
+        <Separator className="my-5" />
         <StockSummary stockId={stock.id} tenantId={session.tenantId} />
         <History
           stockId={stock.id}
           tenantId={session.tenantId}
           stockLots={stock.lots}
         />
+        <Separator className="my-5" />
+        <Lots data={stock.lots} stockId={stock.id} />
       </div>
     </div>
   );

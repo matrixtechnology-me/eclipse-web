@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventStatus, EPosEventType } from "@prisma/client";
@@ -28,7 +28,7 @@ type GetPosSummaryActionResult = {
   balance: number;
 };
 
-export const getPosSummaryAction: ServerAction<
+export const getPosSummaryAction: Action<
   GetPosSummaryActionPayload,
   GetPosSummaryActionResult
 > = async ({ posId, tenantId }) => {

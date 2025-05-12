@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
@@ -12,7 +12,7 @@ type DeleteProductSpecificationActionPayload = {
   productId: string;
 };
 
-export const deleteProductSpecificationAction: ServerAction<
+export const deleteProductSpecificationAction: Action<
   DeleteProductSpecificationActionPayload
 > = async ({ specificationId, tenantId, productId }) => {
   try {

@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosStatus } from "@prisma/client";
@@ -13,7 +13,7 @@ type UpdatePosStatusActionPayload = {
   status: EPosStatus;
 };
 
-export const updatePosStatusAction: ServerAction<
+export const updatePosStatusAction: Action<
   UpdatePosStatusActionPayload
 > = async ({ posId, tenantId, status }) => {
   try {

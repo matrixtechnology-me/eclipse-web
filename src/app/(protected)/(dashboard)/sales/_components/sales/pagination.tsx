@@ -14,6 +14,7 @@ import { PATHS } from "@/config/paths";
 import { useRouter } from "next/navigation";
 
 type PaginationProps = {
+  tenantId: string;
   initialPage: number;
   initialPageSize: number;
 };
@@ -21,6 +22,7 @@ type PaginationProps = {
 export const Pagination: FC<PaginationProps> = ({
   initialPage,
   initialPageSize,
+  tenantId,
 }) => {
   const router = useRouter();
 

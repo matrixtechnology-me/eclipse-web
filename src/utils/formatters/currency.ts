@@ -8,11 +8,13 @@ export const CurrencyFormatter = {
       style: "currency",
       currency: "BRL",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 6,
+      useGrouping: true,
     }).format(value);
 
     return formattedValue;
   },
+
   unformat(value: string) {
     if (typeof value !== "string") {
       throw new Error("value must be a string.");

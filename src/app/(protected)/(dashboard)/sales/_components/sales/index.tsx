@@ -32,10 +32,11 @@ export const Sales: FC<SalesProps> = async ({ page, pageSize, query }) => {
 
   return (
     <>
-      <List data={sales} />
+      <List data={sales} tenantId={session.tenantId} />
       <Table
         data={sales}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
+        tenantId={session.tenantId}
       />
     </>
   );

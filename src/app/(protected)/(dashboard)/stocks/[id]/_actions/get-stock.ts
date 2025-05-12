@@ -1,12 +1,8 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import {
-  createActionError,
-  failure,
-  ServerAction,
-  success,
-} from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
+import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EStockStrategy } from "@prisma/client";
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -38,13 +34,14 @@ type GetStockActionResult = {
   };
 };
 
-export const getStockAction: ServerAction<
+export const getStockAction: Action<
   GetStockActionPayload,
   GetStockActionResult
 > = async ({ tenantId, stockId }) => {
   "use cache";
 
   cacheTag(
+    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX,
     CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS,
     CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
   );
@@ -81,9 +78,7 @@ export const getStockAction: ServerAction<
     });
 
     if (!stock) {
-      return failure(
-        createActionError(404, "StockNotFound", "Estoque não encontrado")
-      );
+      return failure(new NotFoundError("stock not found"));
     }
 
     const mappedLots = stock.lots.map((lot) => ({
@@ -100,10 +95,6 @@ export const getStockAction: ServerAction<
     });
   } catch (error) {
     console.error(error);
-    return failure(
-      createActionError(500, "FetchError", "Erro ao buscar o estoque", {
-        originalError: error instanceof Error ? error.message : String(error),
-      })
-    );
+    return failure(new InternalServerError("unable to get stock"));
   }
 };

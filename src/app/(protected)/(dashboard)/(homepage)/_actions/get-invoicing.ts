@@ -1,14 +1,10 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import {
-  ServerAction,
-  success,
-  failure,
-  createActionError,
-} from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { ESaleStatus } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
 type GetInvoicingActionPayload = { tenantId: string };
 
@@ -16,7 +12,7 @@ export type GetInvoicingActionResult = {
   invoicing: number;
 };
 
-export const getInvoicing: ServerAction<
+export const getInvoicing: Action<
   GetInvoicingActionPayload,
   GetInvoicingActionResult
 > = async ({ tenantId }) => {
@@ -34,15 +30,9 @@ export const getInvoicing: ServerAction<
 
     return success({ invoicing });
   } catch (error: unknown) {
+    console.error(error);
     return failure(
-      createActionError(
-        500,
-        "RegistrationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
-      )
+      new InternalServerError(`failed to get invoicing for tenant ${tenantId}`)
     );
   }
 };

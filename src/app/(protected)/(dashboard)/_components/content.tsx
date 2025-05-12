@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FC } from "react";
 
 type ContentProps = {
@@ -6,8 +7,8 @@ type ContentProps = {
 
 export const Content: FC<ContentProps> = ({ children }) => {
   return (
-    <div className="flex-1 h-[calc(100dvh-128px)]">
+    <ScrollArea className="flex-1 h-[calc(100dvh-128px)]">
       <div className="w-full h-full max-w-7xl mx-auto">{children}</div>
-    </div>
+    </ScrollArea>
   );
 };

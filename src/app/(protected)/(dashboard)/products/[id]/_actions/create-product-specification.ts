@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
@@ -15,7 +15,7 @@ type CreateProductSpecificationActionPayload = {
 
 type CreateProductSpecificationActionResult = {};
 
-export const createProductSpecificationAction: ServerAction<
+export const createProductSpecificationAction: Action<
   CreateProductSpecificationActionPayload,
   CreateProductSpecificationActionResult
 > = async ({ label, productId, value, tenantId }) => {

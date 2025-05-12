@@ -1,5 +1,5 @@
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { unstable_cacheTag as cacheTag } from "next/cache";
@@ -17,7 +17,7 @@ type GetProductSpecificationsActionResult = {
   }[];
 };
 
-export const getProductSpecificationsAction: ServerAction<
+export const getProductSpecificationsAction: Action<
   GetProductSpecificationsActionPayload,
   GetProductSpecificationsActionResult
 > = async ({ productId, tenantId }) => {

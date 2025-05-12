@@ -2,12 +2,8 @@
 
 import { HashingService } from "@/services/hashing.service";
 import prisma from "@/lib/prisma";
-import {
-  createActionError,
-  failure,
-  ServerAction,
-  success,
-} from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
+import { ConflictError, InternalServerError } from "@/errors";
 
 type RegisterUserActionPayload = {
   name: string;
@@ -17,37 +13,25 @@ type RegisterUserActionPayload = {
 
 type RegisterUserActionResult = { sessionId: string };
 
-export const registerUserAction: ServerAction<
+export const registerUserAction: Action<
   RegisterUserActionPayload,
   RegisterUserActionResult
 > = async ({ email, name, password }) => {
   try {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return failure(
-        createActionError(
-          400,
-          "InvalidEmailError",
-          "Por favor, insira um email válido"
-        )
-      );
+      return failure(new ConflictError("invalid email address"));
     }
 
     if (password.length < 8) {
       return failure(
-        createActionError(
-          400,
-          "WeakPasswordError",
-          "A senha deve ter pelo menos 8 caracteres"
-        )
+        new ConflictError("password must be at least 8 characters long")
       );
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      return failure(
-        createActionError(409, "ConflictError", "Email já está em uso")
-      );
+      return failure(new ConflictError("email is already in use"));
     }
 
     const hashedPassword = await new HashingService().hashPassword(password);
@@ -58,15 +42,6 @@ export const registerUserAction: ServerAction<
     return success({ sessionId: user.id });
   } catch (error: unknown) {
     console.error("Registration error:", error);
-    return failure(
-      createActionError(
-        500,
-        "RegistrationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
-      )
-    );
+    return failure(new InternalServerError("unable to register a new user"));
   }
 };

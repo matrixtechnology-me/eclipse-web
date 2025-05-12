@@ -1,13 +1,13 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
 import { EStockEventType } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
 
-export const addStockEntry: ServerAction<
+export const addStockEntry: Action<
   {
     stockId: string;
     stockLotId: string;

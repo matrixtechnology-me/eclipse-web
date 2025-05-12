@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
 import { ESaleStatus, Prisma } from "@prisma/client";
@@ -41,7 +41,7 @@ type GetSalesActionResult = {
   };
 };
 
-export const getSalesAction: ServerAction<
+export const getSalesAction: Action<
   GetSalesActionPayload,
   GetSalesActionResult
 > = async ({ tenantId, page, pageSize, query, startDate, endDate, status }) => {
@@ -106,7 +106,10 @@ export const getSalesAction: ServerAction<
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
       status: sale.status,
-      customer: sale.customer,
+      customer: {
+        ...sale.customer,
+        phoneNumber: sale.customer.phoneNumber ?? "00000000000",
+      },
       costPrice: sale.products.reduce(
         (acc, p) => acc + p.costPrice.toNumber(),
         0

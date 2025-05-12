@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { createPosSaleAction } from "../../_actions/create-pos-sale";
 import { getCustomers } from "../../_actions/get-customers";
 import { Products } from "./_components/products";
-import { ReceivingMethods } from "./_components/receiving-methods";
+import { Movements } from "./_components/movements";
 import {
   createSaleSchema,
   CreateSaleSchema,
@@ -49,6 +49,7 @@ type AddSaleProps = {
 export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<CreateSaleSchema>({
     resolver: zodResolver(createSaleSchema),
@@ -77,6 +78,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
           totalQty: Number(product.quantity),
         })),
         tenantId,
+        movements: values.movements,
       });
 
       if (result.isFailure) {
@@ -84,7 +86,8 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
       }
 
       toast.success("Venda registrada com sucesso");
-      router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX());
+      form.reset();
+      setOpen(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erro ao registrar venda"
@@ -130,7 +133,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
   }, []);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" disabled={posStatus !== EPosStatus.Opened}>
           Nova venda
@@ -143,7 +146,6 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
             Faça alterações e clique em "Salvar" quando terminar.
           </DialogDescription>
         </DialogHeader>
-        {/* Content */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
@@ -174,7 +176,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
             />
 
             <Products form={form} />
-            <ReceivingMethods form={form} />
+            <Movements form={form} />
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

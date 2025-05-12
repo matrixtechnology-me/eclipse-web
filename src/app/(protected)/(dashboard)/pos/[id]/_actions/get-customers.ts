@@ -2,8 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { Prisma, Customer } from "@prisma/client";
-import { failure, ServerAction, success } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 
 type GetCustomersActionPayload = {
@@ -23,7 +22,7 @@ type CustomerWithPagination = {
   };
 };
 
-export const getCustomers: ServerAction<
+export const getCustomers: Action<
   GetCustomersActionPayload,
   CustomerWithPagination
 > = async ({ searchValue, page, limit, active }) => {

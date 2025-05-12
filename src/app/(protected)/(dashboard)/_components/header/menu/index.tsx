@@ -10,8 +10,13 @@ import {
 import { MenuIcon } from "lucide-react";
 import { Logotype } from "../../../../_components/logotype";
 import { Nav } from "./nav";
+import { FC } from "react";
 
-export function Menu() {
+type MenuProps = {
+  tenantId: string;
+};
+
+export const Menu: FC<MenuProps> = ({ tenantId }) => {
   return (
     <div className="flex items-center gap-5">
       <Sheet>
@@ -30,15 +35,19 @@ export function Menu() {
         </SheetHeader>
         <SheetContent side="left">
           <div className="p-8 flex flex-col gap-8">
-            <Logotype />
-            <Nav orientation="vertical" />
+            <Logotype tenantId={tenantId} />
+            <Nav orientation="vertical" tenantId={tenantId} />
           </div>
         </SheetContent>
       </Sheet>
-      <Logotype className="flex md:hidden lg:flex" />
+      <Logotype className="flex md:hidden lg:flex" tenantId={tenantId} />
       <div className="flex items-center gap-8">
-        <Nav orientation="horizontal" className="hidden lg:flex" />
+        <Nav
+          orientation="horizontal"
+          className="hidden lg:flex"
+          tenantId={tenantId}
+        />
       </div>
     </div>
   );
-}
+};

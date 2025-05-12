@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EStockEventType } from "@prisma/client";
@@ -25,7 +25,7 @@ type GetStockHistoryActionResult = {
   events: StockEvent[];
 };
 
-export const getStockHistoryAction: ServerAction<
+export const getStockHistoryAction: Action<
   GetStockHistoryActionPayload,
   GetStockHistoryActionResult
 > = async ({ stockId, tenantId }) => {

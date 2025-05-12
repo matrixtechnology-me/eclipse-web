@@ -2,8 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
-import { reportError } from "@/utils/report-error.util";
+import { Action, success, failure } from "@/core/action";
 import { InternalServerError } from "@/errors";
 
 export type Tenant = {
@@ -15,7 +14,7 @@ export type Tenant = {
   updatedAt: Date;
 };
 
-export const getUserTenants: ServerAction<
+export const getUserTenants: Action<
   { userId: string },
   { tenants: Tenant[] }
 > = async ({ userId }) => {

@@ -1,4 +1,7 @@
 export const CACHE_TAGS = {
+  USER_TENANT: (userId: string, tenantId: string) => ({
+    NOTIFICATIONS: `user_tenant-[${userId},${tenantId}].notifications`,
+  }),
   USER: (userId: string) => {},
   TENANT: (tenantId: string) => ({
     CUSTOMERS: {
@@ -19,14 +22,15 @@ export const CACHE_TAGS = {
     STOCKS: {
       INDEX: `tenant-[${tenantId}].stocks`,
       STOCK: (stockId: string) => ({
+        INDEX: `tenant-[${tenantId}].stock-[${stockId}]`,
         EVENTS: `tenant-[${tenantId}].stock-[${stockId}].events`,
         LOTS: `tenant-[${tenantId}].stock-[${stockId}].lots`,
       }),
     },
     POS: {
-      INDEX: `tenant-[${tenantId}].points-of-sale`,
+      INDEX: `tenant-[${tenantId}].points_of_sale`,
       POS: (posId: string) => ({
-        INDEX: `tenant-[${tenantId}].point-of-sale-[${posId}]`,
+        INDEX: `tenant-[${tenantId}].point_of_sale-[${posId}]`,
       }),
     },
   }),

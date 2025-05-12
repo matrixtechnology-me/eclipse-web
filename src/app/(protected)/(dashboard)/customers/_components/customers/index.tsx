@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PATHS } from "@/config/paths";
 import { CustomersTable } from "./table";
 import { List } from "./list";
+import { CreateCustomer } from "../create.customer";
 
 type CustomersProps = {
   page: number;
@@ -39,15 +40,7 @@ export const Customers = async ({
             Cadastre seu primeiro cliente para começar
           </p>
         </div>
-        <Link
-          href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
-          className="w-full lg:w-fit"
-        >
-          <Button variant="outline" className="mt-2">
-            <PlusIcon className="size-4 mr-2" />
-            Adicionar cliente
-          </Button>
-        </Link>
+        <CreateCustomer />
       </div>
     );
   }
@@ -56,10 +49,11 @@ export const Customers = async ({
 
   return (
     <>
-      <List data={customers} />
+      <List data={customers} tenandId={session.tenantId} />
       <CustomersTable
         data={customers}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
+        tenantId={session.tenantId}
       />
     </>
   );

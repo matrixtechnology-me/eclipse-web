@@ -1,6 +1,6 @@
 "use server";
 
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 
@@ -14,7 +14,7 @@ type CreatePosActionResult = {
   posId: string;
 };
 
-export const createPosAction: ServerAction<
+export const createPosAction: Action<
   CreatePosActionPayload,
   CreatePosActionResult
 > = async ({ description, name, tenantId }) => {

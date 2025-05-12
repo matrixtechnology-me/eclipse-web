@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import { unstable_cacheTag as cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
@@ -21,7 +21,7 @@ type GetCustomerActionPayload = {
   tenantId: string;
 };
 
-export const getCustomer: ServerAction<
+export const getCustomer: Action<
   GetCustomerActionPayload,
   { customer: Customer }
 > = async ({ customerId, tenantId }) => {
@@ -30,7 +30,7 @@ export const getCustomer: ServerAction<
 
   try {
     const customer = await prisma.customer.findUnique({
-      where: { id: customerId, tenantId },
+      where: { id: customerId, tenantId, deletedAt: null },
     });
 
     if (!customer) {
@@ -41,6 +41,7 @@ export const getCustomer: ServerAction<
       customer: {
         ...customer,
         active: Boolean(customer.active),
+        phoneNumber: customer.phoneNumber!,
       },
     });
   } catch (error: unknown) {

@@ -2,10 +2,10 @@ import { GetAverageTicketActionResult } from "../_actions/get-average-ticket";
 import { FC } from "react";
 import { TicketIcon } from "lucide-react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { ServerActionResult } from "@/core/server-actions";
+import { ActionResult } from "@/core/action";
 
 type AverageTicketProps = {
-  result: ServerActionResult<GetAverageTicketActionResult>;
+  result: ActionResult<GetAverageTicketActionResult>;
 };
 
 export const AverageTicket: FC<AverageTicketProps> = ({ result }) => {

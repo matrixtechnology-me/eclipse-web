@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { YesNo } from "@/components/yes-no";
 import { PATHS } from "@/config/paths";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -31,9 +30,10 @@ type TableProps = {
     initialPage: number;
     initialPageSize: number;
   };
+  tenantId: string;
 };
 
-export const Table: FC<TableProps> = ({ data, pagination }) => {
+export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
   const router = useRouter();
 
   const handleRedirectToCustomer = (stockId: string) => {
@@ -79,6 +79,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}
+                tenantId={tenantId}
               />
             </TableCell>
           </TableRow>

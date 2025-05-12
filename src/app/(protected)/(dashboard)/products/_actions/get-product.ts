@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
@@ -37,10 +37,9 @@ export type Product = {
   };
 };
 
-export const getProduct: ServerAction<
-  { id: string },
-  { product: Product }
-> = async ({ id }) => {
+export const getProduct: Action<{ id: string }, { product: Product }> = async ({
+  id,
+}) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id, deletedAt: null },

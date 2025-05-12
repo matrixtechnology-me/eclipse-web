@@ -5,7 +5,6 @@ import {
   BoxIcon,
   CircleGaugeIcon,
   DollarSignIcon,
-  FileChartColumnIncreasingIcon,
   ShoppingBasketIcon,
   UsersIcon,
 } from "lucide-react";
@@ -14,9 +13,15 @@ import { FC, HTMLAttributes } from "react";
 
 type NavProps = {
   orientation: "vertical" | "horizontal";
+  tenantId: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export const Nav: FC<NavProps> = ({ orientation, className, ...rest }) => {
+export const Nav: FC<NavProps> = ({
+  orientation,
+  className,
+  tenantId,
+  ...rest
+}) => {
   return (
     <div
       className={cn(

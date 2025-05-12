@@ -1,10 +1,10 @@
 import { FC } from "react";
 import { UsersIcon } from "lucide-react";
-import { ServerActionResult } from "@/core/server-actions";
+import { ActionResult } from "@/core/action";
 import { GetCustomersCountActionResult } from "../_actions/get-customers-count";
 
 type CustomersCounterProps = {
-  result: ServerActionResult<GetCustomersCountActionResult>;
+  result: ActionResult<GetCustomersCountActionResult>;
 };
 
 export const CustomersCounter: FC<CustomersCounterProps> = ({ result }) => {

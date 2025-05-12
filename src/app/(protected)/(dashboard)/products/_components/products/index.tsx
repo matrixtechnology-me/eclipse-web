@@ -7,6 +7,7 @@ import { getServerSession } from "@/lib/session";
 import { List } from "./list";
 import { FC } from "react";
 import { Table } from "./table";
+import { CreateProduct } from "../create-product";
 
 type ProductsProps = {
   page: number;
@@ -40,15 +41,7 @@ export const Products: FC<ProductsProps> = async ({
             Cadastre seu primeiro produto para começar
           </p>
         </div>
-        <Link
-          href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
-          className="w-full lg:w-fit"
-        >
-          <Button variant="outline" className="mt-2">
-            <PlusIcon className="size-4 mr-2" />
-            Adicionar produto
-          </Button>
-        </Link>
+        <CreateProduct />
       </div>
     );
   }
@@ -57,10 +50,11 @@ export const Products: FC<ProductsProps> = async ({
 
   return (
     <>
-      <List data={products} />
+      <List data={products} tenantId={session.tenantId} />
       <Table
         data={products}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
+        tenantId={session.tenantId}
       />
     </>
   );

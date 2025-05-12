@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import { revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
@@ -13,7 +13,7 @@ type UpdateProductDescriptionActionPayload = {
   value: string;
 };
 
-export const updateProductDescriptionAction: ServerAction<
+export const updateProductDescriptionAction: Action<
   UpdateProductDescriptionActionPayload,
   void
 > = async ({ value, productId, tenantId }) => {

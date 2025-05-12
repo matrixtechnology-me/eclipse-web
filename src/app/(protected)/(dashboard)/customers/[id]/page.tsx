@@ -41,20 +41,6 @@ const Page: NextPage<PageProps> = async ({ params }) => {
 
   const { customer } = result.value;
 
-  const properties = [
-    { label: "Nome", value: customer.name, copyable: true },
-    {
-      label: "Número de telefone",
-      value: customer.phoneNumber,
-      copyable: true,
-    },
-    {
-      label: "Status",
-      value: customer.active ? "Ativo" : "Inativo",
-      copyable: false,
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">

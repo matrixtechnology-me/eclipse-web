@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
@@ -15,7 +15,7 @@ type CreateSaleActionPayload = {
   }[];
 };
 
-export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
+export const createSale: Action<CreateSaleActionPayload, void> = async ({
   customerId,
   products,
   tenantId,
@@ -63,7 +63,7 @@ export const createSale: ServerAction<CreateSaleActionPayload, void> = async ({
         tenantId,
         products: {
           createMany: {
-            data: saleProducts.map(({ stockId, stockLotId, ...rest }) => rest),
+            data: saleProducts.map(({ stockId, ...rest }) => rest),
           },
         },
         total: saleProducts.reduce(

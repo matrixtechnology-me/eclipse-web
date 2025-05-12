@@ -1,6 +1,6 @@
 "use server";
 
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventType, EPosStatus, Prisma } from "@prisma/client";
@@ -35,7 +35,7 @@ type GetPosActionResult = {
   };
 };
 
-export const getPosAction: ServerAction<
+export const getPosAction: Action<
   GetPosActionPayload,
   GetPosActionResult
 > = async ({ tenantId, page, pageSize, query }) => {

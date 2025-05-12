@@ -1,6 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { JwtService } from "@/services/jwt.service";
+import { COOKIE_KEYS } from "@/config/cookie-keys";
 
 type SessionRequirements = {
   tenant: boolean;
@@ -24,16 +26,30 @@ export const getServerSession = async <
 ): Promise<SessionReturnType<TOptions>> => {
   const cookieStore = await cookies();
 
-  const sessionId = cookieStore.get("X-Identity")?.value;
-  const tenantId = cookieStore.get("X-Tenant")?.value;
+  const accessToken = cookieStore.get(
+    COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS
+  )?.value;
 
-  if (!sessionId) return null as SessionReturnType<TOptions>;
+  const tenantId = cookieStore.get(COOKIE_KEYS.AUTHENTICATION.TENANT)?.value;
 
-  if (options.requirements.tenant && !tenantId)
+  if (!accessToken) return null as SessionReturnType<TOptions>;
+
+  try {
+    const jwtService = new JwtService();
+    const payload = jwtService.decode(accessToken);
+
+    const sessionId = payload.sub as string;
+    if (!sessionId) return null as SessionReturnType<TOptions>;
+
+    if (options.requirements.tenant && !tenantId)
+      return null as SessionReturnType<TOptions>;
+
+    return {
+      id: sessionId,
+      ...(tenantId && { tenantId }),
+    } as SessionReturnType<TOptions>;
+  } catch (error) {
+    console.error("Erro ao decodificar token:", error);
     return null as SessionReturnType<TOptions>;
-
-  return {
-    id: sessionId,
-    ...(tenantId && { tenantId }),
-  } as SessionReturnType<TOptions>;
+  }
 };

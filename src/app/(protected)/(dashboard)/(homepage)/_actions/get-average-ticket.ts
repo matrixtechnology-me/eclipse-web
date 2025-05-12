@@ -1,14 +1,10 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import {
-  ServerAction,
-  success,
-  failure,
-  createActionError,
-} from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { ESaleStatus } from "@prisma/client";
+import { InternalServerError } from "@/errors";
 
 type GetAverageTicketActionPayload = { tenantId: string };
 
@@ -18,7 +14,7 @@ export type GetAverageTicketActionResult = {
   salesCount: number;
 };
 
-export const getAverageTicket: ServerAction<
+export const getAverageTicket: Action<
   GetAverageTicketActionPayload,
   GetAverageTicketActionResult
 > = async ({ tenantId }) => {
@@ -51,13 +47,8 @@ export const getAverageTicket: ServerAction<
     );
 
     return failure(
-      createActionError(
-        500,
-        "RegistrationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
+      new InternalServerError(
+        `failed to calculate average ticket for tenant ${tenantId}`
       )
     );
   }

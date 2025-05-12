@@ -4,6 +4,7 @@ export const PATHS = {
   PUBLIC: {
     AUTH: {
       SIGN_IN: "/auth/sign-in",
+      FIRST_ACCESS: "/auth/first-access",
     },
   },
   PROTECTED: {
@@ -15,16 +16,13 @@ export const PATHS = {
           const queryParams = generateQueryParams({ ...params });
           return `/customers${queryParams}`;
         },
-        CREATE: "/customers/create",
         CUSTOMER: (customerId: string) => `/customers/${customerId}`,
-        EDIT: (customerId: string) => `/customers/${customerId}/update`,
       },
       PRODUCTS: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
           return `/products${queryParams}`;
         },
-        CREATE: "/products/create",
         PRODUCT: (productId: string) => ({
           INDEX: `/products/${productId}`,
           VARIATION: (skuCode: string) =>
@@ -50,14 +48,14 @@ export const PATHS = {
         }),
       },
       REPORTS: {
-        INDEX: "/reports",
+        INDEX: `/reports`,
       },
       SALES: {
         INDEX: (params?: Record<string, string | undefined>) => {
           const queryParams = generateQueryParams({ ...params });
           return `/sales${queryParams}`;
         },
-        CREATE: "/sales/create",
+        CREATE: `/sales/create`,
         SALE: (saleId: string) => ({
           INDEX: `/sales/${saleId}`,
         }),
@@ -65,3 +63,21 @@ export const PATHS = {
     },
   },
 };
+
+type PathObject = { [key: string]: string | PathObject };
+
+const extractPaths = (obj: PathObject): string[] => {
+  const paths: string[] = [];
+
+  for (const value of Object.values(obj)) {
+    if (typeof value === "string") {
+      paths.push(value);
+    } else if (typeof value === "object" && value !== null) {
+      paths.push(...extractPaths(value));
+    }
+  }
+
+  return paths;
+};
+
+export const publicPaths = extractPaths(PATHS.PUBLIC);

@@ -10,6 +10,7 @@ import {
 import { Search } from "./_components/search";
 import { Suspense } from "react";
 import { Stocks } from "./_components/stocks";
+import { getServerSession } from "@/lib/session";
 
 type PageSearchParams = {
   page?: string;
@@ -23,6 +24,10 @@ type PageProps = {
 
 const Page: NextPage<PageProps> = async ({ searchParams }) => {
   const { page = 1, limit = 5, query = "" } = await searchParams;
+
+  const session = await getServerSession({ requirements: { tenant: true } });
+
+  if (!session) throw new Error("session not found");
 
   return (
     <div className="flex flex-col h-full flex-1">
@@ -43,7 +48,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
         </div>
         <div className="flex flex-col gap-3">
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
-            <Search query={query} />
+            <Search query={query} tenantId={session.tenantId} />
           </div>
           <Suspense fallback={<div>Carregando...</div>}>
             <Stocks

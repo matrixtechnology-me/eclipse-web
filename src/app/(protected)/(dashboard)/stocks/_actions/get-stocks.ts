@@ -1,11 +1,7 @@
 "use server";
 
-import {
-  createActionError,
-  failure,
-  ServerAction,
-  success,
-} from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
+import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
@@ -37,7 +33,7 @@ type GetStocksActionResult = {
   };
 };
 
-export const getStocksAction: ServerAction<
+export const getStocksAction: Action<
   GetStocksActionPayload,
   GetStocksActionResult
 > = async ({ tenantId, page, pageSize, query }) => {
@@ -105,15 +101,6 @@ export const getStocksAction: ServerAction<
     });
   } catch (error) {
     console.error(error);
-    return failure(
-      createActionError(
-        500,
-        "RegistrationError",
-        "Ocorreu um erro durante o registro",
-        {
-          originalError: error instanceof Error ? error.message : String(error),
-        }
-      )
-    );
+    return failure(new InternalServerError("unable to get stocks"));
   }
 };

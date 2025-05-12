@@ -1,10 +1,10 @@
 import { FC } from "react";
 import { PackageIcon } from "lucide-react";
-import { ServerActionResult } from "@/core/server-actions";
+import { ActionResult } from "@/core/action";
 import { GetProductsCountActionResult } from "../_actions/get-products-count";
 
 type ProductsCounterProps = {
-  result: ServerActionResult<GetProductsCountActionResult>;
+  result: ActionResult<GetProductsCountActionResult>;
 };
 
 export const ProductsCounter: FC<ProductsCounterProps> = ({ result }) => {

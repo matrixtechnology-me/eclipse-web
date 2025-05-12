@@ -35,9 +35,10 @@ type TableProps = {
     initialPage: number;
     initialPageSize: number;
   };
+  tenantId: string;
 };
 
-export const Table: FC<TableProps> = ({ data, pagination }) => {
+export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
   const router = useRouter();
 
   const handleRedirectToSale = (saleId: string) => {
@@ -107,6 +108,7 @@ export const Table: FC<TableProps> = ({ data, pagination }) => {
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}
+                tenantId={tenantId}
               />
             </TableCell>
           </TableRow>

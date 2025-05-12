@@ -6,6 +6,7 @@ import { PATHS } from "@/config/paths";
 import { List } from "./list";
 import { Table } from "./table";
 import { getStocksAction } from "../../_actions/get-stocks";
+import { CreateProduct } from "../../../products/_components/create-product";
 
 type StocksProps = {
   page: number;
@@ -36,18 +37,10 @@ export const Stocks = async ({
         <div>
           <p className="font-medium">Nenhum cliente cadastrado</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre seu primeiro cliente para começar
+            Cadastre seu primeiro produto para começar
           </p>
         </div>
-        <Link
-          href={PATHS.PROTECTED.DASHBOARD.CUSTOMERS.CREATE}
-          className="w-full lg:w-fit"
-        >
-          <Button variant="outline" className="mt-2">
-            <PlusIcon className="size-4 mr-2" />
-            Adicionar cliente
-          </Button>
-        </Link>
+        <CreateProduct />
       </div>
     );
   }
@@ -56,10 +49,11 @@ export const Stocks = async ({
 
   return (
     <>
-      <List data={stocks} />
+      <List data={stocks} tenantId={session.tenantId} />
       <Table
         data={stocks}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
+        tenantId={session.tenantId}
       />
     </>
   );

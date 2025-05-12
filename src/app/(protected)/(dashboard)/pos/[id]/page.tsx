@@ -39,7 +39,7 @@ const Page: FC<PageProps> = async ({ params }) => {
   const { pos } = result.value;
 
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="flex flex-col gap-8 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AddEntry

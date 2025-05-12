@@ -32,10 +32,11 @@ export const Pos: FC<PosProps> = async ({ page, pageSize, query }) => {
 
   return (
     <>
-      <List data={pos} />
+      <List data={pos} tenantId={session.tenantId} />
       <Table
         data={pos}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
+        tenantId={session.tenantId}
       />
     </>
   );

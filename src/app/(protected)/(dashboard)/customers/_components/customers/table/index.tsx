@@ -30,11 +30,13 @@ type CustomersTableProps = {
     initialPage: number;
     initialPageSize: number;
   };
+  tenantId: string;
 };
 
 export const CustomersTable: FC<CustomersTableProps> = ({
   data,
   pagination,
+  tenantId,
 }) => {
   const router = useRouter();
 
@@ -66,7 +68,9 @@ export const CustomersTable: FC<CustomersTableProps> = ({
             >
               <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell>{item.name}</TableCell>
-              <TableCell>{PhoneNumberFormatter.format(item.name)}</TableCell>
+              <TableCell>
+                {PhoneNumberFormatter.format(item.phoneNumber)}
+              </TableCell>
               <TableCell>
                 <YesNo value={item.active} />
               </TableCell>
@@ -85,6 +89,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}
+                tenantId={tenantId}
               />
             </TableCell>
           </TableRow>

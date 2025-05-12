@@ -1,11 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { BadRequestError, ConflictError, InternalServerError } from "@/errors";
 import { EStockStrategy } from "@prisma/client";
 
-export const createProduct: ServerAction<
+export const createProduct: Action<
   {
     name: string;
     description: string;

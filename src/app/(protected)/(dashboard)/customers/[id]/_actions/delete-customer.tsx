@@ -1,6 +1,6 @@
 "use server";
 
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 
@@ -9,7 +9,7 @@ type DeleteCustomerActionPayload = {
   tenantId: string;
 };
 
-export const deleteCustomerAction: ServerAction<
+export const deleteCustomerAction: Action<
   DeleteCustomerActionPayload
 > = async ({ customerId, tenantId }) => {
   try {
@@ -30,8 +30,14 @@ export const deleteCustomerAction: ServerAction<
 
     if (!customer) return failure(new NotFoundError("customer not found"));
 
-    await prisma.customer.delete({
+    await prisma.customer.update({
       where: { id: customerId },
+      data: {
+        name: "Anônimo",
+        phoneNumber: null,
+        active: false,
+        deletedAt: new Date(),
+      },
     });
 
     return success({});

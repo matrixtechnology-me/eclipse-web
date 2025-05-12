@@ -1,43 +1,24 @@
 import { Property } from "@/components/property";
 import { EStockStrategy } from "@prisma/client";
 import { FC } from "react";
-import { AddStockEntry } from "../history/add-stock-entry";
-import { AddStockOutput } from "../history/add-stock-output";
-
-const getStockStrategyLabel = (strategy: EStockStrategy) => {
-  switch (strategy) {
-    case EStockStrategy.Fifo:
-      return "PEPS - Primeiro a Entrar, Primeiro a Sair";
-    case EStockStrategy.Lifo:
-      return "UEPS - Último que Entra, Primeiro a Sair";
-  }
-};
+import { Strategy } from "./strategy";
 
 type StockProps = {
   id: string;
   strategy: EStockStrategy;
   availableQty: number;
   totalQty: number;
-  lots: {
-    id: string;
-    lotNumber: string;
-    totalQty: number;
-  }[];
+  tenantId: string;
 };
 
 export const Stock: FC<StockProps> = ({
   availableQty,
   strategy,
   totalQty,
-  lots,
+  tenantId,
   id,
 }) => {
   const properties = [
-    {
-      label: "Estratégia",
-      value: getStockStrategyLabel(strategy),
-      copyable: false,
-    },
     {
       label: "Quantidade total",
       value: totalQty,
@@ -57,6 +38,7 @@ export const Stock: FC<StockProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <Strategy initialValue={strategy} stockId={id} tenantId={tenantId} />
       {properties.map((property) => (
         <Property
           key={property.label}

@@ -12,9 +12,10 @@ type ListProps = {
       name: string;
     };
   }[];
+  tenantId: string;
 };
 
-export const List: FC<ListProps> = ({ data }) => {
+export const List: FC<ListProps> = ({ data, tenantId }) => {
   return (
     <div className="grid lg:grid-cols-4 gap-5 grid-cols-1 overflow-y-auto lg:hidden">
       {data.map((item) => (

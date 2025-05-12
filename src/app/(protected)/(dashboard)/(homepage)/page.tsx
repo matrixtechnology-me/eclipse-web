@@ -39,7 +39,7 @@ const Page: NextPage = async () => {
         <AverageTicket result={results.averageTicket} />
         <Invoicing result={results.invoicing} />
       </div>
-      <Shortcuts />
+      <Shortcuts tenantId={session.tenantId} />
       <Alerts />
     </div>
   );

@@ -19,9 +19,10 @@ type SearchFormInputs = z.infer<typeof searchFormSchema>;
 
 type SearchProps = {
   query: string;
+  tenantId: string;
 };
 
-export const Search: React.FC<SearchProps> = ({ query = "" }) => {
+export const Search: React.FC<SearchProps> = ({ query = "", tenantId }) => {
   const router = useRouter();
 
   const form = useForm<SearchFormInputs>({

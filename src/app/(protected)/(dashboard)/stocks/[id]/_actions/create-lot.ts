@@ -1,12 +1,14 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
 import { revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
+import { EStockEventType } from "@prisma/client";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
 
-export const createLotAction: ServerAction<
+export const createLotAction: Action<
   {
     costPrice: number;
     totalQty: number;
@@ -27,14 +29,37 @@ export const createLotAction: ServerAction<
       });
       if (!stock) throw new NotFoundError("Stock not found");
 
+      const generatedLotNumber = generateLotNumber();
+
       await tx.stockLot.create({
         data: {
           stockId,
-          lotNumber: generateLotNumber(),
+          lotNumber: generatedLotNumber,
           tenantId,
           costPrice,
           totalQty,
           expiresAt,
+        },
+      });
+
+      const stockEvent = await tx.stockEvent.create({
+        data: {
+          type: EStockEventType.Entry,
+          stockId,
+          tenantId,
+          description: `Lote ${generatedLotNumber} chegou! 🎉 São ${totalQty} unidades a caminho. Custo: ${CurrencyFormatter.format(
+            costPrice
+          )}. Vamos vender!`,
+        },
+      });
+
+      await tx.stockEventEntry.create({
+        data: {
+          id: stockEvent.id,
+          quantity: totalQty,
+          description: `Lote ${generatedLotNumber.toUpperCase()} chegou! 🎉 São ${totalQty} unidades a caminho. Custo: ${CurrencyFormatter.format(
+            costPrice
+          )}. Vamos vender!`,
         },
       });
 
@@ -47,6 +72,7 @@ export const createLotAction: ServerAction<
       });
     });
 
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
     revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
 
     return success(undefined);

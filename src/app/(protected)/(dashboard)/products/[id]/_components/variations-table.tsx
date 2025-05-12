@@ -22,11 +22,13 @@ type VariationsTableProps = {
     specificationsCount: number;
   }[];
   productId: string;
+  tenantId: string;
 };
 
 export const VariationsTable: FC<VariationsTableProps> = ({
   data,
   productId,
+  tenantId,
 }) => {
   const router = useRouter();
 

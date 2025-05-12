@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { reportError } from "@/utils/report-error.util";
 import { ConflictError } from "@/errors/http/conflict.error";
 import { BadRequestError } from "@/errors/http/bad-request.error";
@@ -13,7 +13,7 @@ type CreateCustomerActionPayload = {
   tenantId: string;
 };
 
-export const createCustomer: ServerAction<
+export const createCustomer: Action<
   CreateCustomerActionPayload,
   void
 > = async ({ name, phoneNumber, tenantId }) => {

@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { EStockStrategy, Prisma } from "@prisma/client";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 
 type GetProductsActionPayload = {
@@ -29,7 +29,7 @@ export type ProductsWithPagination = {
   };
 };
 
-export const getProducts: ServerAction<
+export const getProducts: Action<
   GetProductsActionPayload,
   ProductsWithPagination
 > = async ({ searchValue, page, limit, active }) => {

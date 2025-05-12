@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { Prisma } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
@@ -32,14 +32,16 @@ type GetCustomersActionPayload = {
   tenantId: string;
 };
 
-export const getCustomers: ServerAction<
+export const getCustomers: Action<
   GetCustomersActionPayload,
   PaginatedCustomers
 > = async ({ page, pageSize, tenantId, query }) => {
   try {
     const skip = (page - 1) * pageSize;
+
     const whereCondition: Prisma.CustomerWhereInput = {
       tenantId,
+      deletedAt: null,
       OR: [
         { name: { contains: query, mode: "insensitive" } },
         { phoneNumber: { contains: query, mode: "insensitive" } },
@@ -63,6 +65,7 @@ export const getCustomers: ServerAction<
     return success({
       customers: customers.map((customer) => ({
         ...customer,
+        phoneNumber: customer.phoneNumber!,
         active: Boolean(customer.active),
       })),
       pagination: {

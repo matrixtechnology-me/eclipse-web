@@ -2,7 +2,7 @@
 
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
-import { ServerAction, success, failure } from "@/core/server-actions";
+import { Action, success, failure } from "@/core/action";
 import { Prisma } from "@prisma/client";
 import { unstable_cacheTag as cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
@@ -34,7 +34,7 @@ type GetProductsActionPayload = {
   query: string;
 };
 
-export const getProductsAction: ServerAction<
+export const getProductsAction: Action<
   GetProductsActionPayload,
   PaginatedProducts
 > = async ({ tenantId, page, pageSize, query }) => {

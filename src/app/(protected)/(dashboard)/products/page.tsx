@@ -15,6 +15,8 @@ import { PATHS } from "@/config/paths";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NextPage } from "next";
 import { Search } from "./_components/search";
+import { CreateProduct } from "./_components/create-product";
+import { getServerSession } from "@/lib/session";
 
 type PageSearchParams = {
   page?: string;
@@ -28,6 +30,10 @@ type PageProps = {
 
 const Page: NextPage<PageProps> = async ({ searchParams }) => {
   const { page = 1, limit = 5, query = "" } = await searchParams;
+
+  const session = await getServerSession({ requirements: { tenant: true } });
+
+  if (!session) throw new Error("session not found");
 
   return (
     <div className="flex flex-col gap-5 p-4 sm:p-5">
@@ -52,16 +58,8 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
       </div>
       <div className="rounded-lg flex flex-col gap-5">
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
-          <Search query={query} />
-          <Link
-            href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.CREATE}
-            className="w-full lg:w-fit"
-          >
-            <Button variant="outline" className="w-full lg:w-fit">
-              <PlusIcon />
-              <span>Adicionar produto</span>
-            </Button>
-          </Link>
+          <Search query={query} tenantId={session.tenantId} />
+          <CreateProduct />
         </div>
         <Suspense
           fallback={

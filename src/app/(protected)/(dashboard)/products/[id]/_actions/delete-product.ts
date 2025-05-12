@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
@@ -11,9 +11,10 @@ export type DeleteProductActionPayload = {
   tenantId: string;
 };
 
-export const deleteProductAction: ServerAction<
-  DeleteProductActionPayload
-> = async ({ productId, tenantId }) => {
+export const deleteProductAction: Action<DeleteProductActionPayload> = async ({
+  productId,
+  tenantId,
+}) => {
   try {
     const product = await prisma.product.findUnique({
       where: {

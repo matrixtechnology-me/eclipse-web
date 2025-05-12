@@ -18,9 +18,10 @@ type SaleProps = {
       phoneNumber: string;
     };
   };
+  tenantId: string;
 };
 
-export const Sale = ({ data }: SaleProps) => {
+export const Sale = ({ data, tenantId }: SaleProps) => {
   const statusConfig = {
     [ESaleStatus.Processed]: {
       icon: CheckCircle2,

@@ -1,9 +1,7 @@
-import { failure, ServerActionResult } from "@/core/server-actions";
+import { failure, ActionResult } from "@/core/action";
 import { HttpError } from "@/errors/http.error";
 
-export const propagateError = <T = never>(
-  error: unknown
-): ServerActionResult<T> => {
+export const propagateError = <T = never>(error: unknown): ActionResult<T> => {
   if (error instanceof HttpError) {
     return failure(error);
   }

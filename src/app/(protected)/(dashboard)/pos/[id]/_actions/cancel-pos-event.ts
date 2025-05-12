@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosEventStatus, EPosEventType, ESaleStatus } from "@prisma/client";
@@ -13,7 +13,7 @@ type CancelPosEventActionPayload = {
   posEventId: string;
 };
 
-export const cancelPosEventAction: ServerAction<
+export const cancelPosEventAction: Action<
   CancelPosEventActionPayload
 > = async ({ posEventId, posId, tenantId }) => {
   try {

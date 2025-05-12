@@ -1,5 +1,12 @@
 import { FC } from "react";
 import { getStockSummaryAction } from "../_actions/get-stock-summary";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Warehouse,
+  DollarSign,
+} from "lucide-react";
 
 type StockSummaryProps = {
   stockId: string;
@@ -16,21 +23,83 @@ export const StockSummary: FC<StockSummaryProps> = async ({
     return <div>Erro ao obter resumo de estoque</div>;
   }
 
-  const { entriesCount, outputsCount, balance } = result.value;
+  const { entriesCount, outputsCount, balance, profitProjection } =
+    result.value;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Entradas</h2>
-        <p className="text-3xl font-bold">{entriesCount}</p>
+      {/* Entradas */}
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <ArrowDownCircle className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {entriesCount}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">{entriesCount} registros</h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Entradas no estoque
+          </p>
+        </div>
       </div>
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Saídas</h2>
-        <p className="text-3xl font-bold">{outputsCount}</p>
+
+      {/* Saídas */}
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <ArrowUpCircle className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {outputsCount}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">{outputsCount} registros</h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Saídas do estoque
+          </p>
+        </div>
       </div>
-      <div className="border p-4 shadow-lg rounded-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold">Balanço</h2>
-        <p className="text-3xl font-bold">{balance}</p>
+
+      {/* Valor do estoque */}
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <Warehouse className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {entriesCount - outputsCount}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">{CurrencyFormatter.format(balance)}</h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Valor total do estoque (custo)
+          </p>
+        </div>
+      </div>
+
+      {/* Projeção de lucro */}
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+            <DollarSign className="size-4" />
+          </div>
+          <span className="text-sm md:text-md lg:text-lg font-bold">
+            {entriesCount - outputsCount}
+          </span>
+        </div>
+        <div>
+          <h1 className="text-sm">
+            {CurrencyFormatter.format(profitProjection)}
+          </h1>
+          <p className="text-xs md:text-sm lg:text-md text-muted-foreground">
+            Projeção de lucro
+          </p>
+        </div>
       </div>
     </div>
   );

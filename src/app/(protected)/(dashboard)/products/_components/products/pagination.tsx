@@ -16,11 +16,13 @@ import { useRouter } from "next/navigation";
 type PaginationProps = {
   initialPage: number;
   initialPageSize: number;
+  tenantId: string;
 };
 
 export const Pagination: FC<PaginationProps> = ({
   initialPage,
   initialPageSize,
+  tenantId,
 }) => {
   const router = useRouter();
 

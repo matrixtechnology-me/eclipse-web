@@ -1,11 +1,11 @@
 import { FC } from "react";
 import { DollarSignIcon } from "lucide-react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { ServerActionResult } from "@/core/server-actions";
+import { ActionResult } from "@/core/action";
 import { GetInvoicingActionResult } from "../_actions/get-invoicing";
 
 type InvoicingProps = {
-  result: ServerActionResult<GetInvoicingActionResult>;
+  result: ActionResult<GetInvoicingActionResult>;
 };
 
 export const Invoicing: FC<InvoicingProps> = ({ result }) => {

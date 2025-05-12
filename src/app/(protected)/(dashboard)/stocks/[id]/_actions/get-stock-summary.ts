@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, ServerAction, success } from "@/core/server-actions";
+import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EStockEventType } from "@prisma/client";
@@ -16,15 +16,17 @@ type GetStockSummaryActionResult = {
   entriesCount: number;
   outputsCount: number;
   balance: number;
+  profitProjection: number;
 };
 
-export const getStockSummaryAction: ServerAction<
+export const getStockSummaryAction: Action<
   GetStockSummaryActionPayload,
   GetStockSummaryActionResult
 > = async ({ stockId, tenantId }) => {
   "use cache";
 
   cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
+  cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
 
   try {
     const events = await prisma.stockEvent.findMany({
@@ -32,27 +34,50 @@ export const getStockSummaryAction: ServerAction<
       include: {
         entry: true,
         output: true,
+        StockLot: true,
+        stock: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
+
+    console.log("events", events);
 
     let entriesCount = 0;
     let outputsCount = 0;
     let balance = 0;
+    let profitProjection = 0;
 
     for (const event of events) {
+      console.log(event);
+
+      const { StockLot, stock } = event;
+
       switch (event.type) {
         case EStockEventType.Entry:
-          if (event.entry) {
+          if (event.entry && StockLot && stock.product?.salePrice) {
+            const { quantity } = event.entry;
+            const costPrice = StockLot.costPrice.toNumber();
+            const salePrice = stock.product.salePrice.toNumber();
+
             entriesCount += 1;
-            balance += event.entry.quantity;
+            balance += quantity * costPrice;
+            profitProjection += quantity * (salePrice - costPrice);
           }
           break;
+
         case EStockEventType.Output:
-          if (event.output) {
+          if (event.output && StockLot) {
+            const { quantity } = event.output;
+            const costPrice = StockLot.costPrice.toNumber();
+
             outputsCount += 1;
-            balance -= event.output.quantity;
+            balance -= quantity * costPrice;
           }
           break;
+
         default:
           continue;
       }
@@ -62,6 +87,7 @@ export const getStockSummaryAction: ServerAction<
       entriesCount,
       outputsCount,
       balance,
+      profitProjection,
     });
   } catch (error) {
     console.log(error);

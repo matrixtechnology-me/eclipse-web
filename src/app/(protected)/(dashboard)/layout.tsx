@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, Suspense } from "react";
 import { getServerSession } from "../../../lib/session";
 import { redirect } from "next/navigation";
 import { PATHS } from "@/config/paths";
@@ -11,15 +11,27 @@ type LayoutProps = {
 
 const Layout: FC<LayoutProps> = async ({ children }) => {
   const session = await getServerSession({
-    requirements: { tenant: true },
+    requirements: {
+      tenant: true,
+    },
   });
 
   if (!session) redirect(PATHS.PUBLIC.AUTH.SIGN_IN);
 
   return (
-    <div>
-      <Header />
-      <Content>{children}</Content>
+    <div className="w-screen h-screen overflow-hidden">
+      <Header tenantId={session.tenantId} userId={session.id} />
+      <Content>
+        <Suspense
+          fallback={
+            <div>
+              <span>Carregando...</span>
+            </div>
+          }
+        >
+          {children}
+        </Suspense>
+      </Content>
     </div>
   );
 };
