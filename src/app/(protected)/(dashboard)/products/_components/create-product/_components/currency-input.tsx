@@ -10,12 +10,23 @@ export const CurrencyInput = forwardRef<
     getInputRef={ref}
     thousandSeparator="."
     decimalSeparator=","
+    prefix="R$"
+    allowNegative={false}
     decimalScale={2}
     fixedDecimalScale
-    prefix="R$ "
     placeholder={placeholder}
-    value={value}
-    onValueChange={(values) => onChange(values.floatValue ?? 0)}
+    value={value === 0 ? "" : value}
+    onValueChange={({ floatValue }) => {
+      onChange(floatValue ?? 0);
+    }}
+    onFocus={(e) => {
+      if (value === 0) {
+        e.currentTarget.setSelectionRange(
+          e.currentTarget.value.length,
+          e.currentTarget.value.length
+        );
+      }
+    }}
     customInput={Input}
     {...props}
   />

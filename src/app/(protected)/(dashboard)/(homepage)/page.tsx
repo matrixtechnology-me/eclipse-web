@@ -9,7 +9,6 @@ import { ProductsCounter } from "./_components/products-counter";
 import { AverageTicket } from "./_components/average-ticket";
 import { Invoicing } from "./_components/invoicing";
 import { Shortcuts } from "./_components/shortcuts";
-import { Alerts } from "./_components/alerts";
 import { Retrospective } from "./_components/retrospective";
 
 const Page: NextPage = async () => {

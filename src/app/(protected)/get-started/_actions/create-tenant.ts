@@ -1,9 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EMembershipRole } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 type CreateTenantActionPayload = {
   name: string;
@@ -44,6 +46,8 @@ export const createTenant: Action<
         },
       },
     });
+
+    revalidateTag(CACHE_TAGS.USER(userId).TENANTS);
 
     return success({ tenantId: tenant.id });
   } catch (error) {

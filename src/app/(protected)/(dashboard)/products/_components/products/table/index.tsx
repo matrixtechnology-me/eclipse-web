@@ -22,6 +22,7 @@ type TableProps = {
     id: string;
     name: string;
     barCode: string;
+    internalCode: string;
     active: boolean;
     salePrice: number;
     createdAt: Date;
@@ -48,6 +49,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
           <TableRow className="h-12">
             <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
+            <TableHead className="text-left">Código interno</TableHead>
             <TableHead className="text-left">Código de barras</TableHead>
             <TableHead className="text-left">Preço de venda</TableHead>
             <TableHead className="text-left">Está ativo?</TableHead>
@@ -66,6 +68,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
             >
               <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell>{item.name}</TableCell>
+              <TableCell>{item.internalCode.toUpperCase()}</TableCell>
               <TableCell>{item.barCode}</TableCell>
               <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
               <TableCell>
@@ -82,7 +85,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
         </TableBody>
         <TableFooter className="h-12">
           <TableRow className="h-12">
-            <TableCell colSpan={7}>
+            <TableCell colSpan={8}>
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}

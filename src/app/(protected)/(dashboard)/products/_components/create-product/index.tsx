@@ -2,9 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
 import { createProduct } from "../../_actions/create-product";
 import { BarcodeInput } from "./_components/barcode-input";
@@ -37,9 +36,10 @@ import {
 } from "./_utils/validations/create-product";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DatePicker } from "./_components/date-picker";
 
 export const CreateProduct = () => {
-  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const form = useForm<CreateProductSchema>({
     resolver: zodResolver(createProductSchema),
@@ -48,6 +48,8 @@ export const CreateProduct = () => {
       description: "",
       barCode: "",
       salePrice: 0,
+      costPrice: 0,
+      initialQuantity: 0,
       specifications: [],
     },
   });
@@ -69,7 +71,10 @@ export const CreateProduct = () => {
       if (result.isFailure) return;
 
       toast.success("Produto criado com sucesso");
-      router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX());
+      form.reset();
+      setOpen(false);
+
+      window.location.reload();
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -80,7 +85,7 @@ export const CreateProduct = () => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <PlusIcon className="size-4" />
@@ -118,6 +123,24 @@ export const CreateProduct = () => {
 
                 <FormField
                   control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descrição do produto"
+                          className="min-h-48"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="barCode"
                   render={({ field }) => (
                     <FormItem>
@@ -125,6 +148,24 @@ export const CreateProduct = () => {
                       <FormControl>
                         <BarcodeInput
                           placeholder="Digite o código de barras"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="costPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Custo*</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          placeholder="R$ 0,00"
                           onChange={field.onChange}
                           value={field.value}
                         />
@@ -154,15 +195,37 @@ export const CreateProduct = () => {
 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="initialQuantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descrição</FormLabel>
+                      <FormLabel>Quantidade inicial*</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Descrição do produto"
-                          className="min-h-48"
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Insira a quantidade inicial"
                           {...field}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            field.onChange(isNaN(value) ? 0 : value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="expiresAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de validade (opcional)</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          onChange={field.onChange}
+                          value={field.value}
                         />
                       </FormControl>
                       <FormMessage />
@@ -178,7 +241,10 @@ export const CreateProduct = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
               >
                 Cancelar
               </Button>

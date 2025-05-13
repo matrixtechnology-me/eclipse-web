@@ -13,7 +13,6 @@ import { Stock } from "./_components/stock";
 import { getStockAction } from "./_actions/get-stock";
 import { History } from "./_components/history";
 import { Lots } from "./_components/lots";
-import { StockSummary } from "./_components/summary";
 import { Separator } from "@/components/ui/separator";
 
 type PageParams = {
@@ -81,7 +80,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           tenantId={session.tenantId}
         />
         <Separator className="my-5" />
-        <StockSummary stockId={stock.id} tenantId={session.tenantId} />
+        {/* <StockSummary stockId={stock.id} tenantId={session.tenantId} /> */}
         <History
           stockId={stock.id}
           tenantId={session.tenantId}

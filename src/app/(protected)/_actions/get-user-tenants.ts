@@ -4,6 +4,8 @@ import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/core/action";
 import { InternalServerError } from "@/errors";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type Tenant = {
   id: string;
@@ -18,6 +20,9 @@ export const getUserTenants: Action<
   { userId: string },
   { tenants: Tenant[] }
 > = async ({ userId }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.USER(userId).TENANTS);
+
   try {
     const tenants = await prisma.tenant.findMany({
       where: {
@@ -34,8 +39,6 @@ export const getUserTenants: Action<
         name: "asc",
       },
     });
-
-    console.log(tenants);
 
     if (!tenants.length) {
       return failure(new NotFoundError("No tenants found for this user"));

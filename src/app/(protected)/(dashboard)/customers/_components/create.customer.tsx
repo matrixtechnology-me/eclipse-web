@@ -23,15 +23,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { useRouter } from "next/navigation";
 import { PatternFormat } from "react-number-format";
 
-import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
 import { PhoneNumberFormatter } from "@/utils/formatters/phone-number";
 import { PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import { createCustomer } from "../_actions/create-customer";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -45,7 +44,7 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 export const CreateCustomer = () => {
-  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -70,14 +69,17 @@ export const CreateCustomer = () => {
       });
 
       toast.success("Cliente criado com sucesso!");
-      router.push(PATHS.PROTECTED.DASHBOARD.CUSTOMERS.INDEX());
-    } catch (err) {
+      form.reset();
+      setOpen(false);
+
+      window.location.reload();
+    } catch {
       toast.error("Erro ao criar cliente.");
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
           <PlusIcon className="size-4" />
@@ -135,7 +137,10 @@ export const CreateCustomer = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
               >
                 Cancelar
               </Button>
