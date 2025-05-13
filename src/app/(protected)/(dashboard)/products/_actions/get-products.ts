@@ -4,13 +4,12 @@ import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/core/action";
 import { Prisma } from "@prisma/client";
-import { unstable_cacheTag as cacheTag } from "next/cache";
-import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type ProductListItem = {
   id: string;
   name: string;
   barCode: string;
+  internalCode: string;
   active: boolean;
   salePrice: number;
   createdAt: Date;
@@ -48,6 +47,7 @@ export const getProductsAction: Action<
       OR: [
         { name: { contains: query, mode: "insensitive" } },
         { barCode: { contains: query, mode: "insensitive" } },
+        { internalCode: { contains: query, mode: "insensitive" } },
       ],
     };
 
@@ -70,6 +70,7 @@ export const getProductsAction: Action<
         id: product.id,
         name: product.name,
         barCode: product.barCode,
+        internalCode: product.internalCode,
         active: product.active,
         salePrice: product.salePrice.toNumber(),
         createdAt: product.createdAt,

@@ -44,6 +44,24 @@ const getPaymentMethodLabel = (method: EPaymentMethod) => {
   }
 };
 
+const getSubtotal = (
+  movements: {
+    type: ESaleMovementType;
+    method: EPaymentMethod;
+    amount: number;
+  }[]
+) => {
+  const paymentsAmount = movements
+    .filter((mv) => mv.type === ESaleMovementType.Payment)
+    .reduce((acc, field) => acc + field.amount, 0);
+
+  const changesAmount = movements
+    .filter((mv) => mv.type === ESaleMovementType.Change)
+    .reduce((acc, field) => acc + field.amount, 0);
+
+  return paymentsAmount - changesAmount;
+};
+
 export const MovementsTable = ({
   movementsFieldArray,
 }: MovementsTableProps) => {
@@ -89,10 +107,7 @@ export const MovementsTable = ({
             <TableCell colSpan={3}>Total</TableCell>
             <TableCell className="text-right">
               {CurrencyFormatter.format(
-                movementsFieldArray.fields.reduce(
-                  (acc, field) => acc + field.amount,
-                  0
-                )
+                getSubtotal(movementsFieldArray.fields)
               )}
             </TableCell>
           </TableRow>

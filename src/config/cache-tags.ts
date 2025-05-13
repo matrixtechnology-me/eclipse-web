@@ -2,7 +2,9 @@ export const CACHE_TAGS = {
   USER_TENANT: (userId: string, tenantId: string) => ({
     NOTIFICATIONS: `user_tenant-[${userId},${tenantId}].notifications`,
   }),
-  USER: (userId: string) => {},
+  USER: (userId: string) => ({
+    TENANTS: `user-[${userId}].tenants`,
+  }),
   TENANT: (tenantId: string) => ({
     CUSTOMERS: {
       INDEX: `tenant-[${tenantId}].customers`,

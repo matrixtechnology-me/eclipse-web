@@ -12,24 +12,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { COOKIE_KEYS } from "@/config/cookie-keys";
 import { PATHS } from "@/config/paths";
 import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { destroyCookie } from "nookies";
+import { clearAuthCookiesAction } from "../../../_actions/clear-auth-cookies";
+import { toast } from "sonner";
 
 export const LogOut = () => {
   const router = useRouter();
 
-  const handleSignOut = () => {
-    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS, {
-      path: "/",
-    });
-    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH, {
-      path: "/",
-    });
+  const handleSignOut = async () => {
+    const result = await clearAuthCookiesAction({});
 
-    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TENANT, { path: "/" });
+    if (result.isFailure) {
+      return toast("Não foi possível encerrar a sessão");
+    }
+
     router.push(PATHS.PUBLIC.AUTH.SIGN_IN);
   };
 

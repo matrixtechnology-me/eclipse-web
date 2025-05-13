@@ -26,7 +26,6 @@ export const getStockSummaryAction: Action<
   "use cache";
 
   cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
-  cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
 
   try {
     const events = await prisma.stockEvent.findMany({

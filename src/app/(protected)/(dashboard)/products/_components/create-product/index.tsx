@@ -2,9 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
 import { createProduct } from "../../_actions/create-product";
 import { BarcodeInput } from "./_components/barcode-input";
@@ -35,9 +34,12 @@ import {
   createProductSchema,
   CreateProductSchema,
 } from "./_utils/validations/create-product";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { DatePicker } from "./_components/date-picker";
 
 export const CreateProduct = () => {
-  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const form = useForm<CreateProductSchema>({
     resolver: zodResolver(createProductSchema),
@@ -46,6 +48,8 @@ export const CreateProduct = () => {
       description: "",
       barCode: "",
       salePrice: 0,
+      costPrice: 0,
+      initialQuantity: 0,
       specifications: [],
     },
   });
@@ -67,7 +71,10 @@ export const CreateProduct = () => {
       if (result.isFailure) return;
 
       toast.success("Produto criado com sucesso");
-      router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX());
+      form.reset();
+      setOpen(false);
+
+      window.location.reload();
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -78,15 +85,15 @@ export const CreateProduct = () => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <PlusIcon className="size-4" />
           Novo Produto
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl px-0">
+        <DialogHeader className="px-5">
           <DialogTitle>Novo Produto</DialogTitle>
           <DialogDescription>
             Preencha os campos abaixo para cadastrar um novo produto.
@@ -94,78 +101,150 @@ export const CreateProduct = () => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome do Produto*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o nome do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <ScrollArea className="h-full max-h-[512px] px-5">
+              <div className="space-y-5">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Produto*</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome do produto"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="barCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Barras*</FormLabel>
-                  <FormControl>
-                    <BarcodeInput
-                      placeholder="Digite o código de barras"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descrição do produto"
+                          className="min-h-48"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="salePrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço de Venda*</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      placeholder="R$ 0,00"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="barCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código de Barras*</FormLabel>
+                      <FormControl>
+                        <BarcodeInput
+                          placeholder="Digite o código de barras"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Descrição do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="costPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Custo*</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          placeholder="R$ 0,00"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Specifications form={form} />
+                <FormField
+                  control={form.control}
+                  name="salePrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Venda*</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          placeholder="R$ 0,00"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="flex justify-end gap-3 pt-4">
+                <FormField
+                  control={form.control}
+                  name="initialQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade inicial*</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Insira a quantidade inicial"
+                          {...field}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            field.onChange(isNaN(value) ? 0 : value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="expiresAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de validade (opcional)</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Specifications form={form} />
+              </div>
+            </ScrollArea>
+
+            <div className="flex justify-end gap-3 px-5">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
               >
                 Cancelar
               </Button>

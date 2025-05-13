@@ -45,7 +45,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
             <Breadcrumb className="text-sm">
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="/">Painel de Controle</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

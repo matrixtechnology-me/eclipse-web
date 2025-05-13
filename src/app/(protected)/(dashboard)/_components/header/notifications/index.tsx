@@ -31,7 +31,12 @@ export const Notifications: FC<NotificationsProps> = async ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="outline" className="rounded-full">
+        <Button size="icon" variant="outline" className="relative rounded-full">
+          <div className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-primary border flex items-center justify-center">
+            <span className="text-xs text-primary-foreground">
+              {notifications.length}
+            </span>
+          </div>
           <BellIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>

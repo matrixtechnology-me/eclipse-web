@@ -95,7 +95,11 @@ export const AddSpecification = ({ appendSpecification }: IProps) => {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit(onSubmit)(e);
+            }}
             className="w-full overflow-y-auto no-scrollbar flex flex-col gap-4 p-5"
           >
             <FormField

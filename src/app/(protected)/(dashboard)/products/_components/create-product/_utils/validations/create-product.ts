@@ -32,9 +32,17 @@ export const createProductSchema = z.object({
     .max(50, {
       message: "O código de barras deve ter no máximo 50 caracteres.",
     }),
+  costPrice: z
+    .number({ invalid_type_error: "Informe um valor válido." })
+    .nonnegative({ message: "O preço de venda deve ser zero ou positivo." }),
   salePrice: z
     .number({ invalid_type_error: "Informe um valor válido." })
     .nonnegative({ message: "O preço de venda deve ser zero ou positivo." }),
+  initialQuantity: z
+    .number({ invalid_type_error: "Informe uma quantidade válida." })
+    .int({ message: "A quantidade deve ser um número inteiro." })
+    .nonnegative({ message: "A quantidade deve ser zero ou positiva." }),
+  expiresAt: z.date().optional(),
   specifications: z.array(createSpecificationsSchema).optional().default([]),
 });
 

@@ -8,8 +8,9 @@ export const CurrencyFormatter = {
       style: "currency",
       currency: "BRL",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 2,
       useGrouping: true,
+      roundingMode: "ceil",
     }).format(value);
 
     return formattedValue;
