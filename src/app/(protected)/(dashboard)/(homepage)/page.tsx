@@ -10,6 +10,7 @@ import { AverageTicket } from "./_components/average-ticket";
 import { Invoicing } from "./_components/invoicing";
 import { Shortcuts } from "./_components/shortcuts";
 import { Alerts } from "./_components/alerts";
+import { Retrospective } from "./_components/retrospective";
 
 const Page: NextPage = async () => {
   const session = await getServerSession({ requirements: { tenant: true } });
@@ -40,7 +41,7 @@ const Page: NextPage = async () => {
         <Invoicing result={results.invoicing} />
       </div>
       <Shortcuts tenantId={session.tenantId} />
-      <Alerts />
+      <Retrospective tenantId={session.tenantId} />
     </div>
   );
 };

@@ -35,6 +35,8 @@ export const getUserTenants: Action<
       },
     });
 
+    console.log(tenants);
+
     if (!tenants.length) {
       return failure(new NotFoundError("No tenants found for this user"));
     }

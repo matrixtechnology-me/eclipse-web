@@ -33,7 +33,9 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
         <TableBody>
           {productsFieldArray.fields.map((field) => (
             <TableRow key={field.id}>
-              <TableCell className="font-medium">{field.name}</TableCell>
+              <TableCell className="font-medium">
+                <span className="line-clamp-1">{field.name}</span>
+              </TableCell>
               <TableCell>{field.quantity}</TableCell>
               <TableCell>{CurrencyFormatter.format(field.salePrice)}</TableCell>
               <TableCell className="text-left">

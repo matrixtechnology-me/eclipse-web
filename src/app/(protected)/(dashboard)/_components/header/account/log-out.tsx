@@ -25,7 +25,12 @@ export const LogOut = () => {
     destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.ACCESS, {
       path: "/",
     });
+
     destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TOKENS.REFRESH, {
+      path: "/",
+    });
+
+    destroyCookie(null, COOKIE_KEYS.AUTHENTICATION.TENANT, {
       path: "/",
     });
 

@@ -35,6 +35,8 @@ import {
   createProductSchema,
   CreateProductSchema,
 } from "./_utils/validations/create-product";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const CreateProduct = () => {
   const router = useRouter();
@@ -85,8 +87,8 @@ export const CreateProduct = () => {
           Novo Produto
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl px-0">
+        <DialogHeader className="px-5">
           <DialogTitle>Novo Produto</DialogTitle>
           <DialogDescription>
             Preencha os campos abaixo para cadastrar um novo produto.
@@ -94,74 +96,85 @@ export const CreateProduct = () => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome do Produto*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Digite o nome do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <ScrollArea className="h-full max-h-[512px] px-5">
+              <div className="space-y-5">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Produto*</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome do produto"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="barCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Barras*</FormLabel>
-                  <FormControl>
-                    <BarcodeInput
-                      placeholder="Digite o código de barras"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="barCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código de Barras*</FormLabel>
+                      <FormControl>
+                        <BarcodeInput
+                          placeholder="Digite o código de barras"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="salePrice"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço de Venda*</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      placeholder="R$ 0,00"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="salePrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Venda*</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          placeholder="R$ 0,00"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Descrição do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descrição</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descrição do produto"
+                          className="min-h-48"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Specifications form={form} />
+                <Specifications form={form} />
+              </div>
+            </ScrollArea>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3 px-5">
               <Button
                 type="button"
                 variant="outline"
