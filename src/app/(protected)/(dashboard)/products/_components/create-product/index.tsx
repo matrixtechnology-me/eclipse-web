@@ -1,10 +1,12 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,32 +27,37 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { getServerSession } from "@/lib/session";
 import { createProduct } from "../../_actions/create-product";
 import { BarcodeInput } from "./_components/barcode-input";
 import { CurrencyInput } from "./_components/currency-input";
+import { DatePicker } from "./_components/date-picker";
 import { Specifications } from "./_components/specifications";
 import {
   createProductSchema,
   CreateProductSchema,
 } from "./_utils/validations/create-product";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { DatePicker } from "./_components/date-picker";
 
 export const CreateProduct = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [showStock, setShowStock] = useState<boolean>(false);
 
   const form = useForm<CreateProductSchema>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      barCode: "",
-      salePrice: 0,
-      costPrice: 0,
-      initialQuantity: 0,
-      specifications: [],
+      product: {
+        name: "",
+        description: "",
+        barCode: "",
+        salePrice: 0,
+        specifications: [],
+      },
+      stock: {
+        costPrice: 0,
+        initialQuantity: 0,
+      },
     },
   });
 
@@ -63,8 +70,9 @@ export const CreateProduct = () => {
       if (!session) throw new Error("Sessão não encontrada");
 
       const result = await createProduct({
-        ...values,
-        description: values.description || "",
+        ...values.product,
+        ...values.stock,
+        description: values.product.description || "",
         tenantId: session.tenantId,
       });
 
@@ -101,12 +109,15 @@ export const CreateProduct = () => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-5 my-5"
+          >
             <ScrollArea className="h-full max-h-[512px] px-5">
               <div className="space-y-5">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="product.name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nome do Produto*</FormLabel>
@@ -123,7 +134,7 @@ export const CreateProduct = () => {
 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="product.description"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Descrição</FormLabel>
@@ -141,7 +152,7 @@ export const CreateProduct = () => {
 
                 <FormField
                   control={form.control}
-                  name="barCode"
+                  name="product.barCode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Código de Barras*</FormLabel>
@@ -159,25 +170,7 @@ export const CreateProduct = () => {
 
                 <FormField
                   control={form.control}
-                  name="costPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço de Custo*</FormLabel>
-                      <FormControl>
-                        <CurrencyInput
-                          placeholder="R$ 0,00"
-                          onChange={field.onChange}
-                          value={field.value}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="salePrice"
+                  name="product.salePrice"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Preço de Venda*</FormLabel>
@@ -193,47 +186,103 @@ export const CreateProduct = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="initialQuantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Quantidade inicial*</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Insira a quantidade inicial"
-                          {...field}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value, 10);
-                            field.onChange(isNaN(value) ? 0 : value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="expiresAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de validade (opcional)</FormLabel>
-                      <FormControl>
-                        <DatePicker
-                          onChange={field.onChange}
-                          value={field.value}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <Specifications form={form} />
+
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="stock-switch"
+                        checked={showStock}
+                        onCheckedChange={setShowStock}
+                      />
+                      <Label htmlFor="stock-switch">
+                        Configurar estoque inicial
+                      </Label>
+                    </div>
+                    {!showStock && (
+                      <span className="text-xs text-muted-foreground">
+                        Estoque inicial desativado
+                      </span>
+                    )}
+                  </div>
+
+                  {showStock && (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h1 className="text-sm font-semibold tracking-tight">
+                            Estoque inicial
+                          </h1>
+                          <p className="text-muted-foreground text-xs">
+                            Defina a quantidade, custo e data de validade do
+                            lote inicial.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        <FormField
+                          control={form.control}
+                          name="stock.costPrice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Preço de Custo*</FormLabel>
+                              <FormControl>
+                                <CurrencyInput
+                                  placeholder="R$ 0,00"
+                                  onChange={field.onChange}
+                                  value={field.value}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="stock.initialQuantity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Quantidade inicial*</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  placeholder="Insira a quantidade inicial"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value, 10);
+                                    field.onChange(isNaN(value) ? 0 : value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="stock.expiresAt"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de validade (opcional)</FormLabel>
+                              <FormControl>
+                                <DatePicker
+                                  onChange={field.onChange}
+                                  value={field.value}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </ScrollArea>
 

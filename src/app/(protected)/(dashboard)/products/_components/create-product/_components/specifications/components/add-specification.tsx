@@ -32,7 +32,7 @@ import { z } from "zod";
 interface IProps {
   appendSpecification: UseFieldArrayAppend<
     CreateProductSchema,
-    "specifications"
+    "product.specifications"
   >;
 }
 
