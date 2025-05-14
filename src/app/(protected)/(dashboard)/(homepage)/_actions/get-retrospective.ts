@@ -5,6 +5,7 @@ import { Action, success, failure } from "@/core/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
 import moment from "moment";
+import { ESaleStatus } from "@prisma/client";
 
 type GetRetrospectiveActionPayload = { tenantId: string };
 
@@ -35,11 +36,12 @@ export const getRetrospectiveAction: Action<
     const sales = await prisma.sale.findMany({
       where: {
         tenantId,
-        status: "Processed",
+        status: ESaleStatus.Processed,
         createdAt: {
           gte: startDate,
           lte: endDate,
         },
+        deletedAt: null,
       },
       include: {
         products: {
