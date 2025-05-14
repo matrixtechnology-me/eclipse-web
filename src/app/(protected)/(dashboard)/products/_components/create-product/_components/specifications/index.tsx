@@ -11,9 +11,9 @@ type SpecificationsProps = {
 export const Specifications: FC<SpecificationsProps> = ({ form }) => {
   const specificationsFieldArray = useFieldArray<
     CreateProductSchema,
-    "specifications"
+    "product.specifications"
   >({
-    name: "specifications",
+    name: "product.specifications",
     control: form.control,
   });
 
@@ -30,9 +30,9 @@ export const Specifications: FC<SpecificationsProps> = ({ form }) => {
       <SpecificationsTable
         specificationsFieldArray={specificationsFieldArray}
       />
-      {form.formState.errors.specifications && (
+      {form.formState.errors.product?.specifications && (
         <span className="mt-2 text-sm font-medium text-destructive">
-          {form.formState.errors.specifications.message}
+          {form.formState.errors.product.specifications.message}
         </span>
       )}
     </div>

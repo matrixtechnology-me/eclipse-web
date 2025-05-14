@@ -7,7 +7,11 @@ export const CACHE_TAGS = {
   }),
   TENANT: (tenantId: string) => ({
     CUSTOMERS: {
-      INDEX: `tenant-[${tenantId}].customers`,
+      INDEX: {
+        GENERAL: `tenant-[${tenantId}].customers`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].customers?page=${page}&limit=${limit}`,
+      },
       CUSTOMER: (customerId: string) => ({
         INDEX: `tenant-[${tenantId}].customer-[${customerId}]`,
         EVENTS: `tenant-[${tenantId}].customer-[${customerId}].events`,
@@ -15,7 +19,11 @@ export const CACHE_TAGS = {
       }),
     },
     PRODUCTS: {
-      INDEX: `tenant-[${tenantId}].products`,
+      INDEX: {
+        GENERAL: `tenant-[${tenantId}].products`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].products?page=${page}&limit=${limit}`,
+      },
       PRODUCT: (productId: string) => ({
         INDEX: `tenant-[${tenantId}].product-[${productId}]`,
         SPECIFICATIONS: `tenant-[${tenantId}].product-[${productId}].specifications`,

@@ -6,6 +6,8 @@ import { reportError } from "@/utils/report-error.util";
 import { ConflictError } from "@/errors/http/conflict.error";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
+import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 type CreateCustomerActionPayload = {
   name: string;
@@ -18,12 +20,10 @@ export const createCustomer: Action<
   void
 > = async ({ name, phoneNumber, tenantId }) => {
   try {
-    // Input validation
     if (!name || !phoneNumber) {
       throw new BadRequestError("Name and phone number are required");
     }
 
-    // Check for existing customer
     const existingCustomer = await prisma.customer.findFirst({
       where: {
         phoneNumber,
@@ -36,7 +36,6 @@ export const createCustomer: Action<
       throw new ConflictError("Customer with this phone number already exists");
     }
 
-    // Create customer
     await prisma.customer.create({
       data: {
         name,
@@ -44,6 +43,8 @@ export const createCustomer: Action<
         tenantId,
       },
     });
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.GENERAL);
 
     return success(undefined);
   } catch (error: unknown) {

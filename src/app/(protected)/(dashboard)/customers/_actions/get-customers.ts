@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/core/action";
 import { Prisma } from "@prisma/client";
 import { InternalServerError } from "@/errors";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type Customer = {
   id: string;
@@ -36,6 +38,12 @@ export const getCustomers: Action<
   GetCustomersActionPayload,
   PaginatedCustomers
 > = async ({ page, pageSize, tenantId, query }) => {
+  "use cache";
+  cacheTag(
+    CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.GENERAL,
+    CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.PAGINATED(page, pageSize)
+  );
+
   try {
     const skip = (page - 1) * pageSize;
 

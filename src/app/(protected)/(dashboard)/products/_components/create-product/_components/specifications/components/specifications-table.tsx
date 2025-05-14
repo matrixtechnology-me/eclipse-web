@@ -14,7 +14,7 @@ import { CreateProductSchema } from "../../../_utils/validations/create-product"
 interface SpecificationsTableProps {
   specificationsFieldArray: UseFieldArrayReturn<
     CreateProductSchema,
-    "specifications"
+    "product.specifications"
   >;
 }
 
