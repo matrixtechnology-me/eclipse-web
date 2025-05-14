@@ -40,7 +40,7 @@ export const getStocksAction: Action<
   GetStocksActionResult
 > = async ({ tenantId, page, pageSize, query }) => {
   "use cache";
-  cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX);
+  cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
 
   try {
     const skip = (page - 1) * pageSize;

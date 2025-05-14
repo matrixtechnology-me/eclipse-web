@@ -5,6 +5,8 @@ import { Action, success, failure } from "@/core/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
 import { ESaleStatus, Prisma } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type SaleItem = {
   id: string;
@@ -45,6 +47,12 @@ export const getSalesAction: Action<
   GetSalesActionPayload,
   GetSalesActionResult
 > = async ({ tenantId, page, pageSize, query, startDate, endDate, status }) => {
+  "use cache";
+  cacheTag(
+    CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL,
+    CACHE_TAGS.TENANT(tenantId).SALES.INDEX.PAGINATED(page, pageSize)
+  );
+
   try {
     if (!tenantId) {
       throw new BadRequestError("Tenant ID is required");

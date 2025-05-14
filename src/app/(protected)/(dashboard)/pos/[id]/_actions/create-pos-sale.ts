@@ -201,6 +201,7 @@ export const createPosSaleAction: Action<
         CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
           .NOTIFICATIONS
       );
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
     }
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);

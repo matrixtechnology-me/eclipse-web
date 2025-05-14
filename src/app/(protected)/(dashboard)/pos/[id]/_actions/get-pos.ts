@@ -1,7 +1,9 @@
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, Action, success } from "@/core/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EPosStatus } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetPosActionPayload = {
   posId: string;
@@ -19,10 +21,14 @@ export const getPosAction: Action<
   GetPosActionPayload,
   GetPosActionResult
 > = async ({ posId, tenantId }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
+
   try {
     const pos = await prisma.pos.findUnique({
       where: {
         id: posId,
+        deletedAt: null,
         tenantId,
       },
     });

@@ -109,7 +109,7 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
     });
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.GENERAL);
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
 
     return success(undefined);
   } catch (error: unknown) {

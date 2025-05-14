@@ -22,7 +22,7 @@ export const getInvoicing: Action<
     }
 
     const aggregation = await prisma.sale.aggregate({
-      where: { tenantId, status: ESaleStatus.Processed },
+      where: { tenantId, status: ESaleStatus.Processed, deletedAt: null },
       _sum: { total: true },
     });
 

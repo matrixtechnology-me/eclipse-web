@@ -7,6 +7,7 @@ import { Summary } from "./_components/summary";
 import { UpdateStatus } from "./_components/update-status";
 import { getServerSession } from "@/lib/session";
 import { getPosAction } from "./_actions/get-pos";
+import { DeletePos } from "./_components/delete-pos";
 
 type PageParams = {
   id: string;
@@ -38,36 +39,26 @@ const Page: FC<PageProps> = async ({ params }) => {
 
   const { pos } = result.value;
 
+  const commonProps = {
+    posId: pos.id,
+    tenantId: session.tenantId,
+  };
+
   return (
     <div className="flex flex-col gap-8 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <AddEntry
-            posId={id}
-            posStatus={pos.status}
-            tenantId={session.tenantId}
-          />
-          <AddOutput
-            posId={id}
-            posStatus={pos.status}
-            tenantId={session.tenantId}
-          />
-          <AddSale
-            posId={id}
-            posStatus={pos.status}
-            tenantId={session.tenantId}
-          />
+          <AddEntry posStatus={pos.status} {...commonProps} />
+          <AddOutput posStatus={pos.status} {...commonProps} />
+          <AddSale posStatus={pos.status} {...commonProps} />
         </div>
-        <div className="flex items-center">
-          <UpdateStatus
-            posId={pos.id}
-            tenantId={session.tenantId}
-            value={pos.status}
-          />
+        <div className="flex items-end gap-3">
+          <UpdateStatus value={pos.status} {...commonProps} />
+          <DeletePos {...commonProps} />
         </div>
       </div>
-      <Summary posId={id} tenantId={session.tenantId} />
-      <History posId={id} tenantId={session.tenantId} />
+      <Summary {...commonProps} />
+      <History {...commonProps} />
     </div>
   );
 };

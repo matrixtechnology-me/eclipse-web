@@ -30,7 +30,11 @@ export const CACHE_TAGS = {
       }),
     },
     STOCKS: {
-      INDEX: `tenant-[${tenantId}].stocks`,
+      INDEX: {
+        GENERAL: `tenant-[${tenantId}].stocks`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].stocks?page=${page}&limit=${limit}`,
+      },
       STOCK: (stockId: string) => ({
         INDEX: `tenant-[${tenantId}].stock-[${stockId}]`,
         EVENTS: `tenant-[${tenantId}].stock-[${stockId}].events`,
@@ -38,9 +42,23 @@ export const CACHE_TAGS = {
       }),
     },
     POS: {
-      INDEX: `tenant-[${tenantId}].points_of_sale`,
+      INDEX: {
+        GENERAL: `tenant-[${tenantId}].pos`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].pos?page=${page}&limit=${limit}`,
+      },
       POS: (posId: string) => ({
-        INDEX: `tenant-[${tenantId}].point_of_sale-[${posId}]`,
+        INDEX: `tenant-[${tenantId}].pos-[${posId}]`,
+      }),
+    },
+    SALES: {
+      INDEX: {
+        GENERAL: `tenant-[${tenantId}].sales`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].sales?page=${page}&limit=${limit}`,
+      },
+      SALE: (saleId: string) => ({
+        INDEX: `tenant-[${tenantId}].sale-[${saleId}]`,
       }),
     },
   }),
