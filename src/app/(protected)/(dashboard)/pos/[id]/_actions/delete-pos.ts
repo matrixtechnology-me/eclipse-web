@@ -35,21 +35,29 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
         data: { ...commonAttributes },
       });
 
-      await tx.posEvent.update({
-        where: { id: posId },
-        data: {
-          ...commonAttributes,
-          sale: {
-            update: {
-              sale: {
-                update: {
-                  ...commonAttributes,
+      const posEvents = await tx.posEvent.findMany({
+        where: {
+          id: pos.id,
+        },
+      });
+
+      if (posEvents.length) {
+        await tx.posEvent.update({
+          where: { id: posId },
+          data: {
+            ...commonAttributes,
+            sale: {
+              update: {
+                sale: {
+                  update: {
+                    ...commonAttributes,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
+      }
     });
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);

@@ -132,9 +132,11 @@ model Membership {
   role        EMembershipRole
   permissions String[]
   active      Boolean?        @default(true)
-  userId      String          @map("user_id")
+  userId      String          @map("user_id") @db.Uuid
   createdAt   DateTime        @default(now()) @map(name: "created_at")
   updatedAt   DateTime        @updatedAt @map(name: "updated_at")
+
+  user User @relation(fields: [userId], references: [id])
 
   tenant_memberships TenantMembership[]
 
@@ -567,6 +569,7 @@ model User {
   tenantSettings UserTenantSettings[]
 
   NotificationTarget NotificationTarget[]
+  memberships        Membership[]
 
   @@map("users")
 }
