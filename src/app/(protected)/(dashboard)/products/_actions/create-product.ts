@@ -108,6 +108,9 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
       }
     });
 
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX);
+
     return success(undefined);
   } catch (error: unknown) {
     console.error("Failed to create product:", error);

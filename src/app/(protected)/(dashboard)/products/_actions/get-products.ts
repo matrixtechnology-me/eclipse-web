@@ -4,6 +4,8 @@ import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/core/action";
 import { Prisma } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 export type ProductListItem = {
   id: string;
@@ -37,6 +39,12 @@ export const getProductsAction: Action<
   GetProductsActionPayload,
   PaginatedProducts
 > = async ({ tenantId, page, pageSize, query }) => {
+  "use cache";
+  cacheTag(
+    CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.GENERAL,
+    CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.PAGINATED(page, pageSize)
+  );
+
   try {
     const skip = (page - 1) * pageSize;
 

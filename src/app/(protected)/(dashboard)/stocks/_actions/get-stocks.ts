@@ -1,9 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { failure, Action, success } from "@/core/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetStocksActionPayload = {
   tenantId: string;
@@ -37,6 +39,9 @@ export const getStocksAction: Action<
   GetStocksActionPayload,
   GetStocksActionResult
 > = async ({ tenantId, page, pageSize, query }) => {
+  "use cache";
+  cacheTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX);
+
   try {
     const skip = (page - 1) * pageSize;
 

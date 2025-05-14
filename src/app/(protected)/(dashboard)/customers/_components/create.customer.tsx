@@ -71,8 +71,6 @@ export const CreateCustomer = () => {
       toast.success("Cliente criado com sucesso!");
       form.reset();
       setOpen(false);
-
-      window.location.reload();
     } catch {
       toast.error("Erro ao criar cliente.");
     }

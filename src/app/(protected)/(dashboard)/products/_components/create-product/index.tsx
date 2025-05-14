@@ -81,8 +81,6 @@ export const CreateProduct = () => {
       toast.success("Produto criado com sucesso");
       form.reset();
       setOpen(false);
-
-      window.location.reload();
     } catch (error) {
       toast.error(
         error instanceof Error
