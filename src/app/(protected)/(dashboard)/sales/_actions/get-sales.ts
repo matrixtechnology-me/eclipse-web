@@ -63,6 +63,7 @@ export const getSalesAction: Action<
     const whereCondition: Prisma.SaleWhereInput = {
       tenantId,
       status,
+      deletedAt: null,
       createdAt: {
         gte: startDate,
         lte: endDate,
