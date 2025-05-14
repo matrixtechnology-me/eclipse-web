@@ -1,6 +1,6 @@
 "use server";
 
-import { Action, failure, success } from "@/core/action";
+import { Action, failure, success } from "@/lib/action";
 import {
   InternalServerError,
   NotFoundError,

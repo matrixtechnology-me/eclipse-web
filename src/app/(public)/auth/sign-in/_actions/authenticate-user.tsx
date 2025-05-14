@@ -2,7 +2,7 @@
 
 import { COOKIE_KEYS } from "@/config/cookie-keys";
 import { PATHS } from "@/config/paths";
-import { Action, failure, success } from "@/core/action";
+import { Action, failure, success } from "@/lib/action";
 import {
   InternalServerError,
   InvalidCredentialsError,

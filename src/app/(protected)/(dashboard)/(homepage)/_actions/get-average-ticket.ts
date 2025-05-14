@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { ESaleStatus } from "@prisma/client";
 import { InternalServerError } from "@/errors";
@@ -26,13 +26,13 @@ export const getAverageTicket: Action<
     const aggregation = await prisma.sale.aggregate({
       where: { tenantId, status: ESaleStatus.Processed, deletedAt: null },
       _sum: {
-        total: true,
+        paidTotal: true,
       },
       _count: true,
     });
 
     const salesCount = aggregation._count;
-    const totalSales = aggregation._sum.total?.toNumber() ?? 0;
+    const totalSales = aggregation._sum.paidTotal?.toNumber() ?? 0;
     const averageTicket = salesCount > 0 ? totalSales / salesCount : 0;
 
     return success({

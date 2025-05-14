@@ -31,6 +31,7 @@ import {
   CreateSaleSchema,
   productSchema,
 } from "../../../_utils/validations/create-sale";
+import { toast } from "sonner";
 
 interface IProps {
   appendProduct: UseFieldArrayAppend<CreateSaleSchema, "products">;
@@ -71,6 +72,13 @@ export const AddProduct = ({ appendProduct }: IProps) => {
     submissionFn();
   };
 
+  const onErrors = (errors: Record<string, { message?: string }>) => {
+    Object.entries(errors).forEach(([_, error]) => {
+      if (error?.message) {
+        toast.error(`${error.message}`);
+      }
+    });
+  };
   const loadPaginatedSearchProducts: LoadOptions<
     DefaultOptionType<Product>,
     GroupBase<DefaultOptionType<Product>>,
@@ -92,11 +100,15 @@ export const AddProduct = ({ appendProduct }: IProps) => {
     });
 
     if (result.isFailure) {
-      console.log("error fetching products");
+      toast.error("Erro ao buscar os produtos. Tente novamente.");
       return { options: [], additional, hasMore: true };
     }
 
     const products = result.value.results;
+
+    if (products.length === 0) {
+      toast.info("Nenhum produto encontrado.");
+    }
 
     return {
       options: products.map((product) => ({
@@ -117,13 +129,6 @@ export const AddProduct = ({ appendProduct }: IProps) => {
 
   useEffect(() => {
     if (subTotal == undefined || salePrice <= 0) return;
-    /* form.clearErrors("discount");
-
-    if (subTotal <= 0) {
-      form.setError("discount", {
-        message: "valor de desconto inválido.",
-      });
-    } */
   }, [subTotal, quantity, salePrice]);
 
   return (
@@ -211,7 +216,7 @@ export const AddProduct = ({ appendProduct }: IProps) => {
         <DialogFooter>
           <Button
             type="button"
-            onClick={form.handleSubmit(onSubmit)}
+            onClick={form.handleSubmit(onSubmit, onErrors)}
             disabled={form.formState.isSubmitting}
           >
             {form.formState.isSubmitting

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
 import moment from "moment";

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { ESaleStatus } from "@prisma/client";
 import { InternalServerError } from "@/errors";
@@ -23,10 +23,10 @@ export const getInvoicing: Action<
 
     const aggregation = await prisma.sale.aggregate({
       where: { tenantId, status: ESaleStatus.Processed, deletedAt: null },
-      _sum: { total: true },
+      _sum: { paidTotal: true },
     });
 
-    const invoicing = aggregation._sum.total?.toNumber() ?? 0;
+    const invoicing = aggregation._sum.paidTotal?.toNumber() ?? 0;
 
     return success({ invoicing });
   } catch (error: unknown) {

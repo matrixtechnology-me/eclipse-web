@@ -18,6 +18,7 @@ async function main() {
       password: "$2b$12$trB5BToBNm9UZ3Grp//68.0xCguOegVICIjrNxMj3O4F.77pl/Rfi",
       role: "common",
       active: true,
+      firstAccess: false,
     },
   });
 

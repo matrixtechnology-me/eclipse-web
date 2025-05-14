@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { UsersIcon } from "lucide-react";
-import { ActionResult } from "@/core/action";
+import { ActionResult } from "@/lib/action";
 import { GetCustomersCountActionResult } from "../_actions/get-customers-count";
 
 type CustomersCounterProps = {

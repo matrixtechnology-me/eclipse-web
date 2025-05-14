@@ -1,6 +1,6 @@
 "use server";
 
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
 

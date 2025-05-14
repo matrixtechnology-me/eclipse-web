@@ -1,7 +1,7 @@
 "use server";
 
 import { COOKIE_KEYS } from "@/config/cookie-keys";
-import { Action, failure, success } from "@/core/action";
+import { Action, failure, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 import { cookies } from "next/headers";
 
