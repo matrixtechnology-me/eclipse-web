@@ -5,6 +5,7 @@ import { failure, Action, success } from "@/lib/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
+import { EPosEventType } from "@prisma/client";
 
 type DeletePosActionPayload = {
   posId: string;
@@ -39,7 +40,17 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
 
       const posEvents = await tx.posEvent.findMany({
         where: { posId: pos.id },
-        include: { sale: true },
+        include: {
+          sale: {
+            select: {
+              sale: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       await tx.posEvent.updateMany({
@@ -48,8 +59,8 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
       });
 
       const saleIds = posEvents
-        .map((event) => event.sale?.id)
-        .filter((id): id is string => id !== null && id !== undefined);
+        .filter((pe) => pe.type === EPosEventType.Sale)
+        .map((pe) => pe.sale!.sale.id);
 
       if (saleIds.length > 0) {
         await tx.sale.updateMany({
