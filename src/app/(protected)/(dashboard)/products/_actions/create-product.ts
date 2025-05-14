@@ -73,37 +73,39 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
         },
       });
 
-      await tx.stockLot.create({
-        data: {
-          lotNumber: generatedLotNumber,
-          costPrice,
-          totalQty: initialQuantity,
-          tenantId,
-          expiresAt,
-          stockId: stock.id,
-        },
-      });
+      if (initialQuantity > 0) {
+        await tx.stockLot.create({
+          data: {
+            lotNumber: generatedLotNumber,
+            costPrice,
+            totalQty: initialQuantity,
+            tenantId,
+            expiresAt,
+            stockId: stock.id,
+          },
+        });
 
-      const stockEvent = await tx.stockEvent.create({
-        data: {
-          type: EStockEventType.Entry,
-          stockId: stock.id,
-          tenantId,
-          description: `Lote ${generatedLotNumber} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
-            costPrice
-          )}. Vamos vender!`,
-        },
-      });
+        const stockEvent = await tx.stockEvent.create({
+          data: {
+            type: EStockEventType.Entry,
+            stockId: stock.id,
+            tenantId,
+            description: `Lote ${generatedLotNumber} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
+              costPrice
+            )}. Vamos vender!`,
+          },
+        });
 
-      await tx.stockEventEntry.create({
-        data: {
-          id: stockEvent.id,
-          quantity: initialQuantity,
-          description: `Lote ${generatedLotNumber.toUpperCase()} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
-            costPrice
-          )}. Vamos vender!`,
-        },
-      });
+        await tx.stockEventEntry.create({
+          data: {
+            id: stockEvent.id,
+            quantity: initialQuantity,
+            description: `Lote ${generatedLotNumber.toUpperCase()} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
+              costPrice
+            )}. Vamos vender!`,
+          },
+        });
+      }
     });
 
     return success(undefined);
