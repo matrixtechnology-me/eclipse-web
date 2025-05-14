@@ -5,9 +5,10 @@ import { CreateSaleSchema } from "../../_utils/validations/create-sale";
 
 interface ProductsProps {
   form: UseFormReturn<CreateSaleSchema>;
+  tenantId: string;
 }
 
-export const Products = ({ form }: ProductsProps) => {
+export const Products = ({ form, tenantId }: ProductsProps) => {
   const productsFieldArray = useFieldArray<CreateSaleSchema, "products">({
     name: "products",
     control: form.control,
@@ -17,7 +18,10 @@ export const Products = ({ form }: ProductsProps) => {
     <div className="w-full flex flex-col mt-2 pt-4">
       <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <h2 className="text-[15px]">Produtos</h2>
-        <AddProduct appendProduct={productsFieldArray.append} />
+        <AddProduct
+          appendProduct={productsFieldArray.append}
+          tenantId={tenantId}
+        />
       </div>
       <ProductsTable productsFieldArray={productsFieldArray} />
       {form.formState.errors.products && (

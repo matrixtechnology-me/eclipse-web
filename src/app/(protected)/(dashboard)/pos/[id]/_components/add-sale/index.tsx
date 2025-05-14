@@ -115,6 +115,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
       limit: pageSize,
       page: curPage,
       active: true,
+      tenantId,
     });
 
     if (response.isFailure) {
@@ -175,7 +176,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
               )}
             />
 
-            <Products form={form} />
+            <Products form={form} tenantId={tenantId} />
             <Movements form={form} />
 
             <div className="flex justify-end gap-3 pt-4">
