@@ -6,6 +6,7 @@ import { failure, Action, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 
 type GetCustomersActionPayload = {
+  tenantId: string;
   searchValue: string;
   page: number;
   limit: number;
@@ -25,11 +26,12 @@ type CustomerWithPagination = {
 export const getCustomers: Action<
   GetCustomersActionPayload,
   CustomerWithPagination
-> = async ({ searchValue, page, limit, active }) => {
+> = async ({ searchValue, page, limit, active, tenantId }) => {
   try {
     const skip = (page - 1) * limit;
 
     const whereCondition: Prisma.CustomerWhereInput = {
+      tenantId,
       AND: [
         searchValue
           ? {

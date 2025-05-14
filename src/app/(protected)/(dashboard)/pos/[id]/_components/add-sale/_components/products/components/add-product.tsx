@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 
 interface IProps {
+  tenantId: string;
   appendProduct: UseFieldArrayAppend<CreateSaleSchema, "products">;
 }
 
@@ -51,7 +52,7 @@ const formDefaultValues: OrderItemFormType = {
   }, */
 };
 
-export const AddProduct = ({ appendProduct }: IProps) => {
+export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
   const [open, setOpen] = useState<boolean>(false);
 
   const form = useForm<OrderItemFormType>({
@@ -97,6 +98,7 @@ export const AddProduct = ({ appendProduct }: IProps) => {
       active: true,
       limit: pageSize,
       page: curPage,
+      tenantId,
     });
 
     if (result.isFailure) {

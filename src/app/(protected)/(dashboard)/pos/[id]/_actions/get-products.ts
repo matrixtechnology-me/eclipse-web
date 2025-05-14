@@ -10,6 +10,7 @@ type GetProductsActionPayload = {
   page: number;
   limit: number;
   active: boolean;
+  tenantId: string;
 };
 
 export type Product = {
@@ -32,11 +33,12 @@ export type ProductsWithPagination = {
 export const getProducts: Action<
   GetProductsActionPayload,
   ProductsWithPagination
-> = async ({ searchValue, page, limit, active }) => {
+> = async ({ searchValue, page, limit, active, tenantId }) => {
   try {
     const skip = (page - 1) * limit;
 
     const whereCondition: Prisma.ProductWhereInput = {
+      tenantId,
       AND: [
         searchValue
           ? {
