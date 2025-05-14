@@ -179,29 +179,40 @@ export const createPosSaleAction: Action<
     });
 
     if (tenantOwner) {
-      await prisma.notification.create({
-        data: {
-          subject: `Venda feita para ${customer.name}! 💰`,
-          body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
-            total
-          )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
-            sale.createdAt
-          ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
-          href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
-          targets: {
-            createMany: {
-              data: [{ tenantId, userId: tenantOwner.membership.userId }],
-              skipDuplicates: true,
-            },
+      const userTenantSettings = await prisma.userTenantSettings.findUnique({
+        where: {
+          userId_tenantId: {
+            tenantId,
+            userId: tenantOwner.membership.userId,
           },
         },
       });
 
-      revalidateTag(
-        CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
-          .NOTIFICATIONS
-      );
-      revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
+      if (userTenantSettings?.doNotDisturb) {
+        await prisma.notification.create({
+          data: {
+            subject: `Venda feita para ${customer.name}! 💰`,
+            body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
+              total
+            )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
+              sale.createdAt
+            ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
+            href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
+            targets: {
+              createMany: {
+                data: [{ tenantId, userId: tenantOwner.membership.userId }],
+                skipDuplicates: true,
+              },
+            },
+          },
+        });
+
+        revalidateTag(
+          CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
+            .NOTIFICATIONS
+        );
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
+      }
     }
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
