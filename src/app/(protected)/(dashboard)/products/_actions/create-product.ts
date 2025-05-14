@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { BadRequestError, ConflictError, InternalServerError } from "@/errors";
 import { EStockEventType, EStockStrategy } from "@prisma/client";
 import { CurrencyFormatter } from "@/utils/formatters/currency";

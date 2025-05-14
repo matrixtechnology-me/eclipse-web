@@ -2,7 +2,7 @@ import { GetAverageTicketActionResult } from "../_actions/get-average-ticket";
 import { FC } from "react";
 import { TicketIcon } from "lucide-react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { ActionResult } from "@/core/action";
+import { ActionResult } from "@/lib/action";
 
 type AverageTicketProps = {
   result: ActionResult<GetAverageTicketActionResult>;

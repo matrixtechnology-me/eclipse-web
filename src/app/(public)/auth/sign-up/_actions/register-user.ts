@@ -2,7 +2,7 @@
 
 import { HashingService } from "@/services/hashing.service";
 import prisma from "@/lib/prisma";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { ConflictError, InternalServerError } from "@/errors";
 
 type RegisterUserActionPayload = {

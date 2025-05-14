@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { PackageIcon } from "lucide-react";
-import { ActionResult } from "@/core/action";
+import { ActionResult } from "@/lib/action";
 import { GetProductsCountActionResult } from "../_actions/get-products-count";
 
 type ProductsCounterProps = {

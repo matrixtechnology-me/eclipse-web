@@ -1,4 +1,4 @@
-import { failure, ActionResult } from "@/core/action";
+import { failure, ActionResult } from "@/lib/action";
 import { HttpError } from "@/errors/http.error";
 
 export const propagateError = <T = never>(error: unknown): ActionResult<T> => {

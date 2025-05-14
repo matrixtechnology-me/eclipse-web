@@ -81,12 +81,12 @@ export const AddSpecification = ({ appendSpecification }: IProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
           <PlusIcon className="size-4" />
-          Adicionar variação
+          Adicionar especificação
         </Button>
       </DialogTrigger>
       <DialogContent className="!p-0 flex flex-col no-scrollbar w-md h-fit overflow-hidden">
         <DialogHeader className="p-5 bg-primary-foreground">
-          <DialogTitle>Adicionar variação</DialogTitle>
+          <DialogTitle>Adicionar especificação</DialogTitle>
           <DialogDescription>
             Adicione as especificações do produto. Clique em salvar quando
             terminar.

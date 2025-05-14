@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { EStockStrategy, Prisma } from "@prisma/client";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 
 type GetProductsActionPayload = {
@@ -47,7 +47,16 @@ export const getProducts: Action<
               ],
             }
           : {},
-        { active },
+        {
+          active,
+          stock: {
+            lots: {
+              some: {
+                totalQty: { gt: 0 },
+              },
+            },
+          },
+        },
       ],
     };
 

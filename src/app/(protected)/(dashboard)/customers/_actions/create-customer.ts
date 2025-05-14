@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { reportError } from "@/utils/report-error.util";
 import { ConflictError } from "@/errors/http/conflict.error";
 import { BadRequestError } from "@/errors/http/bad-request.error";

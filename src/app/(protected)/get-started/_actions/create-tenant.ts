@@ -1,7 +1,7 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { EMembershipRole } from "@prisma/client";

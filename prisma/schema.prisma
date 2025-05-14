@@ -361,11 +361,13 @@ model ProductSpecification {
 model Sale {
   id              String           @id @default(uuid()) @db.Uuid
   status          ESaleStatus      @default(Processed)
+  internalCode    String           @unique @map("internal_code")
   customerId      String           @map("customer_id") @db.Uuid
   tenantId        String           @map("tenant_id") @db.Uuid
   discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
   discountValue   Float            @default(0) @map("discount_value")
-  total           Decimal          @db.Decimal(19, 6)
+  paidTotal       Decimal          @map("paid_total") @db.Decimal(19, 6)
+  estimatedTotal  Decimal          @map("estimated_total") @db.Decimal(19, 6)
   createdAt       DateTime         @default(now()) @map(name: "created_at")
   updatedAt       DateTime         @updatedAt @map(name: "updated_at")
   deletedAt       DateTime?        @map(name: "deleted_at")
@@ -445,7 +447,7 @@ model SaleProduct {
 model Stock {
   id           String         @id @default(uuid()) @db.Uuid
   strategy     EStockStrategy
-  productId    String         @unique @map("sku_id") @db.Uuid
+  productId    String         @unique @map("product_id") @db.Uuid
   totalQty     Int            @default(0) @map("total_qty")
   availableQty Int            @default(0) @map("available_qty")
   tenantId     String         @map("tenant_id") @db.Uuid

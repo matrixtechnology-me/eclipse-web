@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 

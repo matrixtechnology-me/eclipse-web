@@ -1,6 +1,6 @@
 "use server";
 
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { InternalServerError, InvalidCredentialsError } from "@/errors";
 import { JwtService } from "@/services/jwt.service";
 

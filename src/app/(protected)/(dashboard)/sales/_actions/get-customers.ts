@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { Prisma, Customer } from "@prisma/client";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { reportError } from "@/utils/report-error.util";
 import { InternalServerError } from "@/errors";
 

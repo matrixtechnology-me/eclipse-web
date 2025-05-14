@@ -2,7 +2,7 @@
 
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
-import { Action, success, failure } from "@/core/action";
+import { Action, success, failure } from "@/lib/action";
 import { Prisma } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 import { unstable_cacheTag as cacheTag } from "next/cache";

@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { DollarSignIcon } from "lucide-react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { ActionResult } from "@/core/action";
+import { ActionResult } from "@/lib/action";
 import { GetInvoicingActionResult } from "../_actions/get-invoicing";
 
 type InvoicingProps = {

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { failure, Action, success } from "@/core/action";
+import { failure, Action, success } from "@/lib/action";
 import { BadRequestError, InternalServerError, NotFoundError } from "@/errors";
 import { revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
