@@ -8,7 +8,6 @@ import { CustomersCounter } from "./_components/customers-counter";
 import { ProductsCounter } from "./_components/products-counter";
 import { AverageTicket } from "./_components/average-ticket";
 import { Invoicing } from "./_components/invoicing";
-import { Shortcuts } from "./_components/shortcuts";
 import { Retrospective } from "./_components/retrospective";
 
 const Page: NextPage = async () => {
@@ -39,7 +38,6 @@ const Page: NextPage = async () => {
         <AverageTicket result={results.averageTicket} />
         <Invoicing result={results.invoicing} />
       </div>
-      <Shortcuts tenantId={session.tenantId} />
       <Retrospective tenantId={session.tenantId} />
     </div>
   );
