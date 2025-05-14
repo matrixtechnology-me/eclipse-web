@@ -29,8 +29,8 @@ export const getRetrospectiveAction: Action<
       throw new BadRequestError("Tenant ID is required");
     }
 
-    const startDate = moment().subtract(11, "months").startOf("month").toDate();
     const endDate = moment().endOf("month").toDate();
+    const startDate = moment().subtract(11, "months").startOf("month").toDate();
 
     const sales = await prisma.sale.findMany({
       where: {

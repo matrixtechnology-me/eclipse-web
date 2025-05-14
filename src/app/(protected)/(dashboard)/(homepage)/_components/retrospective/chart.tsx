@@ -53,7 +53,9 @@ const chartConfig = {
 export const Chart = ({ data, growthPercentage = 0 }: ChartProps) => {
   const chartData = data.map((item) => ({
     ...item,
-    month: new Date(item.month).toLocaleString("pt-BR", { month: "short" }),
+    month: new Date(`${item.month}-30`).toLocaleString("pt-BR", {
+      month: "short",
+    }),
   }));
 
   const currentMonth = new Date().toLocaleString("pt-BR", { month: "long" });
