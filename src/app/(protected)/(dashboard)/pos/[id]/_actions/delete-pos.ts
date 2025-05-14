@@ -6,7 +6,7 @@ import { InternalServerError, NotFoundError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 
-export type DeletePosActionPayload = {
+type DeletePosActionPayload = {
   posId: string;
   tenantId: string;
 };
@@ -15,6 +15,10 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
   posId,
   tenantId,
 }) => {
+  const softDeleteData = {
+    deletedAt: new Date(),
+  };
+
   try {
     const pos = await prisma.pos.findUnique({
       where: {
@@ -23,39 +27,34 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
       },
     });
 
-    if (!pos) return failure(new NotFoundError("PDV não encontrado"));
+    if (!pos) {
+      return failure(new NotFoundError("PDV não encontrado"));
+    }
 
     await prisma.$transaction(async (tx) => {
-      const commonAttributes = {
-        deletedAt: new Date(),
-      };
-
       await tx.pos.update({
         where: { id: posId },
-        data: { ...commonAttributes },
+        data: softDeleteData,
       });
 
       const posEvents = await tx.posEvent.findMany({
-        where: {
-          id: pos.id,
-        },
+        where: { posId: pos.id },
+        include: { sale: true },
       });
 
-      if (posEvents.length) {
-        await tx.posEvent.update({
-          where: { id: posId },
-          data: {
-            ...commonAttributes,
-            sale: {
-              update: {
-                sale: {
-                  update: {
-                    ...commonAttributes,
-                  },
-                },
-              },
-            },
-          },
+      await tx.posEvent.updateMany({
+        where: { posId: pos.id },
+        data: softDeleteData,
+      });
+
+      const saleIds = posEvents
+        .map((event) => event.sale?.id)
+        .filter((id): id is string => id !== null && id !== undefined);
+
+      if (saleIds.length > 0) {
+        await tx.sale.updateMany({
+          where: { id: { in: saleIds } },
+          data: softDeleteData,
         });
       }
     });
@@ -66,7 +65,13 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
 
     return success({});
   } catch (error) {
-    console.error(error);
-    return failure(new InternalServerError("Erro ao deletar o PDV: " + error));
+    console.error("Failed to delete POS:", error);
+    return failure(
+      new InternalServerError(
+        `Erro ao deletar o PDV: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+    );
   }
 };
