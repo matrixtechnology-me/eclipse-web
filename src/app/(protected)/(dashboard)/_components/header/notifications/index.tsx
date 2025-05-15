@@ -9,6 +9,7 @@ import { Notification } from "./notification";
 import { DoNotDisturb } from "./do-not-disturb";
 import { getNotificationsAction } from "../../../_actions/get-notifications";
 import { FC } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type NotificationsProps = {
   userId: string;
@@ -47,7 +48,7 @@ export const Notifications: FC<NotificationsProps> = async ({
           <DoNotDisturb />
         </div>
         {/* Content */}
-        <div className="w-full h-96 flex flex-col">
+        <ScrollArea className="w-full h-96 flex flex-col">
           {notifications.map((notification) => (
             <Notification
               key={notification.id}
@@ -57,7 +58,7 @@ export const Notifications: FC<NotificationsProps> = async ({
               href={notification.href}
             />
           ))}
-        </div>
+        </ScrollArea>
         {/* Footer */}
         <div className="w-full h-12 bg-secondary border-t px-5 flex items-center justify-between">
           <button className="cursor-pointer">
