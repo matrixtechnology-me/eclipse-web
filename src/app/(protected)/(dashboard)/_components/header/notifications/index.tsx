@@ -14,13 +14,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 type NotificationsProps = {
   userId: string;
   tenantId: string;
-  noNotDisturb: boolean;
+  doNotDisturb: boolean;
 };
 
 export const Notifications: FC<NotificationsProps> = async ({
   tenantId,
   userId,
-  noNotDisturb,
+  doNotDisturb,
 }) => {
   const result = await getNotificationsAction({
     tenantId,
@@ -50,7 +50,7 @@ export const Notifications: FC<NotificationsProps> = async ({
           <DoNotDisturb
             tenantId={tenantId}
             userId={userId}
-            initialValue={noNotDisturb}
+            initialValue={doNotDisturb}
           />
         </div>
         {/* Content */}
