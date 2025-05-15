@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { EPaymentMethod, ESaleMovementType } from "@prisma/client";
+import moment from "moment";
 
 interface MovementsTableProps {
   data: {
@@ -71,14 +72,18 @@ export const MovementsTable = ({ data }: MovementsTableProps) => {
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
+            <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Tipo</TableHead>
             <TableHead className="text-left">Forma de pagamento</TableHead>
             <TableHead className="text-left">Valor</TableHead>
+            <TableHead className="text-left">Data de criação</TableHead>
+            <TableHead className="text-left">Data de atualização</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item) => (
+          {data.map((item, index) => (
             <TableRow key={item.id}>
+              <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell className="font-medium">
                 {getMovementTypeLabel(item.type)}
               </TableCell>
@@ -86,12 +91,18 @@ export const MovementsTable = ({ data }: MovementsTableProps) => {
                 {getPaymentMethodLabel(item.method)}
               </TableCell>
               <TableCell>{CurrencyFormatter.format(item.amount)}</TableCell>
+              <TableCell>
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
+              </TableCell>
+              <TableCell>
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={2}>Total</TableCell>
+            <TableCell colSpan={5}>Total</TableCell>
             <TableCell className="text-right">
               {CurrencyFormatter.format(getSubtotal(data))}
             </TableCell>

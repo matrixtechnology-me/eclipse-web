@@ -43,6 +43,7 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
       <TableCn className="min-w-max">
         <TableHeader>
           <TableRow>
+            <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Preço de custo</TableHead>
             <TableHead className="text-left">Preço de venda</TableHead>
@@ -53,8 +54,10 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item) => (
+          {data.map((item, index) => (
             <TableRow key={item.id}>
+              <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
+
               <TableCell>{item.name}</TableCell>
               <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
               <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
@@ -63,17 +66,17 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
               </TableCell>
               <TableCell>{item.totalQty}</TableCell>
               <TableCell>
-                {moment(item.createdAt).format("DD/MM/YYYY")}
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
               </TableCell>
               <TableCell>
-                {moment(item.updatedAt).format("DD/MM/YYYY")}
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={6}>Total</TableCell>
+            <TableCell colSpan={7}>Total</TableCell>
             <TableCell className="text-right">
               {CurrencyFormatter.format(total)}
             </TableCell>
