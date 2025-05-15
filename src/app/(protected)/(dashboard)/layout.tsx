@@ -21,7 +21,11 @@ const Layout: FC<LayoutProps> = async ({ children }) => {
   return (
     <>
       <div className="hidden md:block w-screen h-screen overflow-hidden">
-        <Header tenantId={session.tenantId} userId={session.id} />
+        <Header
+          tenantId={session.tenantId}
+          userId={session.id}
+          doNotDisturb={session.settings.doNotDisturb}
+        />
         <Content>
           <Suspense
             fallback={
