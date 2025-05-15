@@ -65,11 +65,16 @@ export const createPosSaleAction: Action<
         const orderDirection =
           product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
 
-        const [lot] = await prisma.stockLot.findMany({
+        const lot = await prisma.stockLot.findFirst({
           where: { stockId: product.stock.id, totalQty: { gt: 0 } },
-          orderBy: { expiresAt: orderDirection },
+          orderBy: [
+            { expiresAt: orderDirection },
+            { createdAt: orderDirection },
+          ],
           take: 1,
         });
+
+        console.log(lot);
 
         if (!lot) throw new NotFoundError("No lots in product stock");
 
@@ -185,6 +190,11 @@ export const createPosSaleAction: Action<
             },
           },
         });
+
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX);
       })
     );
 

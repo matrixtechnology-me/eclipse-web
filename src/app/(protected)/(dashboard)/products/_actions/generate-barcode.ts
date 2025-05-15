@@ -10,14 +10,18 @@ function generateRandomBarcode(): string {
   );
 }
 
+type GenerateBarcodeActionPayload = {
+  tenantId: string;
+};
+
 type GenerateBarcodeActionResult = {
   barCode: string;
 };
 
 export const generateBarcodeAction: Action<
-  unknown,
+  GenerateBarcodeActionPayload,
   GenerateBarcodeActionResult
-> = async () => {
+> = async ({ tenantId }) => {
   try {
     let unique = false;
     let barcode = "";
@@ -26,7 +30,7 @@ export const generateBarcodeAction: Action<
       barcode = generateRandomBarcode();
 
       const existingProduct = await prisma.product.findUnique({
-        where: { barCode: barcode },
+        where: { barCode: barcode, tenantId },
         select: { id: true },
       });
 

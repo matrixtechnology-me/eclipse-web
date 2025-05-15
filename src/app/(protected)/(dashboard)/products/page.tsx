@@ -59,7 +59,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
       <div className="rounded-lg flex flex-col gap-5">
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
           <Search query={query} tenantId={session.tenantId} />
-          <CreateProduct />
+          <CreateProduct tenantId={session.tenantId} />
         </div>
         <Suspense
           fallback={

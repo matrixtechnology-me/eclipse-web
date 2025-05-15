@@ -57,7 +57,9 @@ export const cancelPosEventAction: Action<
           select: {
             id: true,
             customer: { select: { name: true } },
-            products: { select: { productId: true, totalQty: true } },
+            products: {
+              select: { productId: true, totalQty: true, stockLotId: true },
+            },
             createdAt: true,
             paidTotal: true,
           },
@@ -71,24 +73,17 @@ export const cancelPosEventAction: Action<
         });
 
         const mappedProducts = await Promise.all(
-          sale.products.map(async ({ productId, totalQty }) => {
+          sale.products.map(async ({ productId, stockLotId, totalQty }) => {
             const product = await tx.product.findUnique({
               where: { id: productId },
               include: { stock: { select: { id: true, strategy: true } } },
             });
 
-            console.log(product);
-
             if (!product?.stock)
               throw new NotFoundError("product stock not found");
 
-            const orderDirection =
-              product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
-
-            const [lot] = await tx.stockLot.findMany({
-              where: { stockId: product.stock.id, totalQty: { gt: 0 } },
-              orderBy: { expiresAt: orderDirection },
-              take: 1,
+            const lot = await tx.stockLot.findUnique({
+              where: { id: stockLotId },
             });
 
             if (!lot) throw new NotFoundError("No lots in product stock");
@@ -131,6 +126,18 @@ export const cancelPosEventAction: Action<
                 },
               },
             });
+
+            revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
+            );
           })
         );
 
@@ -176,9 +183,10 @@ export const cancelPosEventAction: Action<
             );
           }
         }
-
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
       }
+
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
 
       revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
     });
