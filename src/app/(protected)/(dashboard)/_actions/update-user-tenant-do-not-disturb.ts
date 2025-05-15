@@ -1,3 +1,5 @@
+"use server";
+
 import { failure, Action, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
@@ -11,7 +13,7 @@ export const updateUserTenantDoNotDisturbAction: Action<
   UpdateUserTenantDoNotDisturbActionPayload
 > = async ({ userId, tenantId }) => {
   try {
-    const userTenantSettings = await prisma.userTenantSettings.findUnique({
+    const existingSettings = await prisma.userTenantSettings.findUnique({
       where: {
         userId_tenantId: { userId, tenantId },
       },
@@ -20,15 +22,21 @@ export const updateUserTenantDoNotDisturbAction: Action<
       },
     });
 
-    if (!userTenantSettings)
-      return failure(new InternalServerError("user-tenant settings not found"));
+    const newDoNotDisturb = existingSettings
+      ? !existingSettings.doNotDisturb
+      : true;
 
-    await prisma.userTenantSettings.update({
+    await prisma.userTenantSettings.upsert({
       where: {
         userId_tenantId: { userId, tenantId },
       },
-      data: {
-        doNotDisturb: !userTenantSettings.doNotDisturb,
+      update: {
+        doNotDisturb: newDoNotDisturb,
+      },
+      create: {
+        userId,
+        tenantId,
+        doNotDisturb: newDoNotDisturb,
       },
     });
 
@@ -36,7 +44,7 @@ export const updateUserTenantDoNotDisturbAction: Action<
   } catch (error) {
     console.error(error);
     return failure(
-      new InternalServerError("unable to update do user not disturb property")
+      new InternalServerError("unable to update do not disturb setting")
     );
   }
 };
