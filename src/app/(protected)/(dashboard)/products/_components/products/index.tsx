@@ -41,7 +41,7 @@ export const Products: FC<ProductsProps> = async ({
             Cadastre seu primeiro produto para começar
           </p>
         </div>
-        <CreateProduct />
+        <CreateProduct tenantId={session.id} />
       </div>
     );
   }

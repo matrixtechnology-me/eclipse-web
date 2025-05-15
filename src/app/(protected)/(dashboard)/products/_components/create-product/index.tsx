@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useState } from "react";
+import { FC, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -40,7 +40,11 @@ import {
   CreateProductSchema,
 } from "./_utils/validations/create-product";
 
-export const CreateProduct = () => {
+type CreateProductProps = {
+  tenantId: string;
+};
+
+export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [showStock, setShowStock] = useState<boolean>(false);
 
@@ -159,6 +163,7 @@ export const CreateProduct = () => {
                           placeholder="Digite o código de barras"
                           onChange={field.onChange}
                           value={field.value}
+                          tenantId={tenantId}
                         />
                       </FormControl>
                       <FormMessage />

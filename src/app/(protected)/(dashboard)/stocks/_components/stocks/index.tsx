@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getServerSession } from "@/lib/session";
-import { PlusIcon, UsersIcon } from "lucide-react";
+import { BlocksIcon, PlusIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PATHS } from "@/config/paths";
 import { List } from "./list";
@@ -33,14 +33,14 @@ export const Stocks = async ({
   if (result.isFailure) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
-        <UsersIcon className="size-8 text-muted-foreground" />
+        <BlocksIcon className="size-8 text-muted-foreground" />
         <div>
-          <p className="font-medium">Nenhum cliente cadastrado</p>
+          <p className="font-medium">Nenhum produto cadastrado</p>
           <p className="text-sm text-muted-foreground mt-1">
             Cadastre seu primeiro produto para começar
           </p>
         </div>
-        <CreateProduct />
+        <CreateProduct tenantId={session.tenantId} />
       </div>
     );
   }

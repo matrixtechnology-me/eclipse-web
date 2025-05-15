@@ -12,15 +12,16 @@ interface BarcodeInputProps {
   onChange: (value: string) => void;
   value?: string;
   placeholder?: string;
+  tenantId: string;
 }
 
 export const BarcodeInput = forwardRef<HTMLInputElement, BarcodeInputProps>(
-  ({ onChange, value, placeholder, ...props }, ref) => {
+  ({ onChange, value, placeholder, tenantId, ...props }, ref) => {
     const [isPending, startTransition] = useTransition();
 
     const handleGenerate = () => {
       startTransition(async () => {
-        const result = await generateBarcodeAction({});
+        const result = await generateBarcodeAction({ tenantId });
 
         if (result.isFailure) {
           toast.error("Erro ao gerar código de barras");

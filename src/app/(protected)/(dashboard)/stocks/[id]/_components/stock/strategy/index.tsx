@@ -11,7 +11,7 @@ const getStockStrategyLabel = (strategy: EStockStrategy) => {
     case EStockStrategy.Fifo:
       return "PEPS - Primeiro a Entrar, Primeiro a Sair";
     case EStockStrategy.Lifo:
-      return "UEPS - Último que Entra, Primeiro a Sair";
+      return "UEPS - Último a Entrar, Primeiro a Sair";
     default:
       return "";
   }
