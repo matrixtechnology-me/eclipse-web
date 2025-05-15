@@ -5,59 +5,83 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import moment from "moment";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 
-type TableProps = {
-  data: {
+type Product = {
+  id: string;
+  name: string;
+  totalQty: number;
+  salePrice: number;
+  costPrice: number;
+  stockLot: {
     id: string;
-    name: string;
-    totalQty: number;
-    salePrice: number;
-    costPrice: number;
     lotNumber: string;
-    expiresAt?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-export const Table: FC<TableProps> = ({ data }) => {
+type TableItemsProps = {
+  data: Product[];
+};
+
+export const TableItems: FC<TableItemsProps> = ({ data }) => {
+  const total = useMemo(() => {
+    const subtotal = data.reduce(
+      (sum, item) => sum + item.salePrice * item.totalQty,
+      0
+    );
+    return subtotal;
+  }, [data]);
+
   return (
     <div className="w-full border rounded-lg overflow-x-auto">
       <TableCn className="min-w-max">
         <TableHeader>
           <TableRow>
-            <TableHead className="text-left">Número</TableHead>
+            <TableHead className="text-left">#</TableHead>
+            <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Preço de custo</TableHead>
+            <TableHead className="text-left">Preço de venda</TableHead>
+            <TableHead className="text-left">Lote</TableHead>
             <TableHead className="text-left">Quantidade total</TableHead>
-            <TableHead className="text-left">Data de validade</TableHead>
             <TableHead className="text-left">Data de criação</TableHead>
             <TableHead className="text-left">Data de atualização</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((item) => (
+          {data.map((item, index) => (
             <TableRow key={item.id}>
-              <TableCell>{item.lotNumber.toUpperCase()}</TableCell>
+              <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
+
+              <TableCell>{item.name}</TableCell>
               <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
+              <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
+              <TableCell>
+                <span>{item.stockLot.lotNumber.toUpperCase()}</span>
+              </TableCell>
               <TableCell>{item.totalQty}</TableCell>
               <TableCell>
-                {item.expiresAt
-                  ? moment(item.expiresAt).format("DD/MM/YYYY")
-                  : "-"}
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
               </TableCell>
               <TableCell>
-                {moment(item.createdAt).format("DD/MM/YYYY")}
-              </TableCell>
-              <TableCell>
-                {moment(item.updatedAt).format("DD/MM/YYYY")}
+                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={7}>Total</TableCell>
+            <TableCell className="text-right">
+              {CurrencyFormatter.format(total)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
       </TableCn>
     </div>
   );

@@ -143,8 +143,8 @@ export const createPosSaleAction: Action<
 
         const createData =
           type === ESaleMovementType.Change
-            ? { type, changes: { create: baseData } }
-            : { type, payments: { create: baseData } };
+            ? { type, change: { create: baseData } }
+            : { type, payment: { create: baseData } };
 
         await Promise.all([
           prisma.posEventSaleMovement.create({

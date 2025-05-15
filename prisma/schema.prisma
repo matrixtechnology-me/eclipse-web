@@ -273,8 +273,8 @@ model PosEventSaleMovement {
 
   posEventSale PosEventSale @relation(fields: [posEventSaleId], references: [id])
 
-  payments PosEventSaleMovementPayment[]
-  changes  PosEventSaleMovementChange[]
+  payment PosEventSaleMovementPayment?
+  change  PosEventSaleMovementChange?
 
   @@map("pos_event_sale_movements")
 }
@@ -392,8 +392,8 @@ model SaleMovement {
 
   sale Sale @relation(fields: [saleId], references: [id])
 
-  payments SaleMovementPayment[]
-  changes  SaleMovementChange[]
+  payment SaleMovementPayment?
+  change  SaleMovementChange?
 
   @@map("sale_movements")
 }
