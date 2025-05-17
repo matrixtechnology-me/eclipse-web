@@ -34,7 +34,7 @@ const getStockEventTypeLabel = (type: EStockEventType): string => {
 
 export const HistoryTable: FC<HistoryTableProps> = ({ data }) => {
   return (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="w-full border rounded-sm overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow className="h-12">

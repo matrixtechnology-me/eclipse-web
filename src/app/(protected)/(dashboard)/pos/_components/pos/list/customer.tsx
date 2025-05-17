@@ -13,7 +13,7 @@ type CustomerProps = {
 
 export const Customer = ({ data }: CustomerProps) => {
   return (
-    <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow bg-card">
+    <div className="border rounded-sm p-4 hover:shadow-sm transition-shadow bg-card">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">

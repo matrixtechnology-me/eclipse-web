@@ -25,9 +25,9 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Entradas */}
-      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
             <ArrowDownCircle className="size-4" />
           </div>
           <span className="text-sm md:text-md lg:text-lg font-bold">
@@ -45,9 +45,9 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Saídas */}
-      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
             <ArrowUpCircle className="size-4" />
           </div>
           <span className="text-sm md:text-md lg:text-lg font-bold">
@@ -65,9 +65,9 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Vendas */}
-      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
             <ShoppingCart className="size-4" />
           </div>
           <span className="text-sm md:text-md lg:text-lg font-bold">
@@ -83,9 +83,9 @@ export const Summary: FC<SummaryProps> = async ({ posId, tenantId }) => {
       </div>
 
       {/* Balanço */}
-      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-lg flex flex-col gap-3">
+      <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
             <DollarSign className="size-4" />
           </div>
           <span className="text-sm md:text-md lg:text-lg font-bold">

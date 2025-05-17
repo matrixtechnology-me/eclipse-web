@@ -33,7 +33,7 @@ export const Products: FC<ProductsProps> = async ({
 
   if ("error" in result) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-sm p-8 text-center">
         <PackageIcon className="size-8 text-muted-foreground" />
         <div>
           <p className="font-medium">Nenhum produto cadastrado</p>

@@ -39,7 +39,7 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
   }, [data]);
 
   return (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="w-full border rounded-sm overflow-x-auto">
       <TableCn className="min-w-max">
         <TableHeader>
           <TableRow>

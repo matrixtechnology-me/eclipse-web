@@ -61,7 +61,7 @@ export const Chart = ({ data, growthPercentage = 0 }: ChartProps) => {
   const currentMonth = new Date().toLocaleString("pt-BR", { month: "long" });
 
   return (
-    <Card className="flex flex-col bg-secondary/25">
+    <Card className="flex flex-col bg-secondary/25 rounded-sm">
       <CardHeader>
         <CardTitle>Desempenho Financeiro</CardTitle>
         <CardDescription>Últimos 12 meses</CardDescription>

@@ -32,7 +32,7 @@ export const Customers = async ({
 
   if (result.isFailure) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-sm p-8 text-center">
         <UsersIcon className="size-8 text-muted-foreground" />
         <div>
           <p className="font-medium">Nenhum cliente cadastrado</p>

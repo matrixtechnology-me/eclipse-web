@@ -35,7 +35,7 @@ export const History: FC<HistoryProps> = async ({
     <div className="flex flex-col gap-5">
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+          <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
             <ClockIcon className="size-4" />
           </div>
           <div>
@@ -53,7 +53,7 @@ export const History: FC<HistoryProps> = async ({
         </div>
       </div>
       {events.length === 0 ? (
-        <div className="w-full min-h-72 border border-dashed rounded-lg flex items-center justify-center">
+        <div className="w-full min-h-72 border border-dashed rounded-sm flex items-center justify-center">
           <span>Nenhuma transação encontrada</span>
         </div>
       ) : (

@@ -66,7 +66,7 @@ export const MovementsTable = ({
   movementsFieldArray,
 }: MovementsTableProps) => {
   return movementsFieldArray.fields.length ? (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="w-full border rounded-sm overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
@@ -115,7 +115,7 @@ export const MovementsTable = ({
       </Table>
     </div>
   ) : (
-    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-lg">
+    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-sm">
       <p className="text-center">
         Nenhum movimentação adicionado ainda. Clique em "Adicionar forma de
         recebimento" para adicionar um.

@@ -13,7 +13,7 @@ import { Retrospective } from "./_components/retrospective";
 const Page: NextPage = async () => {
   const session = await getServerSession({ requirements: { tenant: true } });
 
-  if (!session) return;
+  if (!session) throw new Error("session not found");
 
   const results = {
     customersCount: await getCustomersCount({

@@ -33,7 +33,7 @@ export const VariationsTable: FC<VariationsTableProps> = ({
   const router = useRouter();
 
   return (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="w-full border rounded-sm overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>

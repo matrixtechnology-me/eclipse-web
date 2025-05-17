@@ -15,7 +15,7 @@ type ProductProps = {
 export const Product = ({ data, ...rest }: ProductProps) => {
   return (
     <div
-      className="border rounded-lg p-4 hover:shadow-sm transition-shadow bg-card"
+      className="border rounded-sm p-4 hover:shadow-sm transition-shadow bg-card"
       {...rest}
     >
       <div className="flex items-start justify-between gap-4">
