@@ -46,27 +46,30 @@ const formDefaultValues: OrderItemFormType = {
   costPrice: 0,
   salePrice: 0,
   quantity: "1",
-  /* discount: {
-    amount: "0.00",
-    variant: "cash",
-  }, */
 };
 
 export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
-  const [open, setOpen] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
+  const [maxQuantity, setMaxQuantity] = useState<number | null>(null);
 
   const form = useForm<OrderItemFormType>({
     defaultValues: formDefaultValues,
     resolver: zodResolver(productSchema),
   });
 
-  // call this function on form 'onSubmit' property causes dialogs to close
   const onSubmit = () => {
     const submissionFn = form.handleSubmit(
-      (formData: OrderItemFormType) => {
+      (formData) => {
+        const qty = Number(formData.quantity);
+        if (maxQuantity !== null && qty > maxQuantity) {
+          toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
+          return;
+        }
+
         appendProduct(formData);
         setOpen(false);
         form.reset(formDefaultValues);
+        setMaxQuantity(null);
       },
       (errors) => console.log(errors)
     );
@@ -80,6 +83,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
       }
     });
   };
+
   const loadPaginatedSearchProducts: LoadOptions<
     DefaultOptionType<Product>,
     GroupBase<DefaultOptionType<Product>>,
@@ -130,7 +134,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
   );
 
   useEffect(() => {
-    if (subTotal == undefined || salePrice <= 0) return;
+    if (subTotal === undefined || salePrice <= 0) return;
   }, [subTotal, quantity, salePrice]);
 
   return (
@@ -165,10 +169,12 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                     debounceTimeout={1000}
                     onInputChange={() => form.clearErrors("id")}
                     onChange={(option) => {
-                      field.onChange(option!.value.id);
+                      const product = option!.value;
+                      field.onChange(product.id);
                       form.setValue("name", option!.label);
-                      form.setValue("salePrice", option!.value.salePrice);
-                      form.setValue("costPrice", option!.value.costPrice);
+                      form.setValue("salePrice", product.salePrice);
+                      form.setValue("costPrice", product.costPrice);
+                      setMaxQuantity(product.availableQty);
                     }}
                     additional={{
                       page: 1,
@@ -177,7 +183,6 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                   />
                 )}
               />
-
               <FormMessage>{form.formState.errors.id?.message}</FormMessage>
             </div>
 
@@ -192,7 +197,18 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                     placeholder="Quantidade"
                     value={field.value}
                     onValueChange={(values) => {
+                      const value = Number(values.value);
+                      if (maxQuantity !== null && value > maxQuantity) {
+                        toast.warning(
+                          `Quantidade máxima disponível: ${maxQuantity}`
+                        );
+                      }
                       field.onChange(values.value);
+                    }}
+                    allowNegative={false}
+                    isAllowed={(values) => {
+                      const value = Number(values.value);
+                      return maxQuantity === null || value <= maxQuantity;
                     }}
                   />
                 )}
@@ -201,6 +217,12 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                 {form.formState.errors.quantity?.message}
               </FormMessage>
             </div>
+
+            {maxQuantity !== null && (
+              <p className="text-sm text-muted-foreground">
+                Estoque disponível: {maxQuantity}
+              </p>
+            )}
 
             {salePrice > 0 && (
               <div className="space-y-1">

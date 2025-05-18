@@ -24,6 +24,8 @@ export const Item: FC<ItemProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
+  const regex = new RegExp(`^${path}(\/|$)`);
+
   return (
     <Button
       variant="ghost"
@@ -31,7 +33,7 @@ export const Item: FC<ItemProps> = ({
       className={cn(
         "rounded-sm",
         isCollapsed ? "size-9" : "w-full h-9 flex flex-1 justify-between gap-2",
-        pathname.startsWith(path) && "bg-secondary/25",
+        regex.test(pathname) && "bg-secondary/25",
         className
       )}
       onClick={() => {

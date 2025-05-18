@@ -5,9 +5,37 @@ async function main() {
 
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE
-      "users",
+      "addresses",
+      "customers",
+      "documents",
+      "memberships",
+      "notifications",
+      "notification_targets",
+      "pos",
+      "pos_events",
+      "pos_event_entries",
+      "pos_event_outputs",
+      "pos_event_sales",
+      "pos_event_sale_movements",
+      "pos_event_sale_movement_payments",
+      "pos_event_sale_movement_changes",
+      "pos_event_sale_products",
+      "products",
+      "product_categories",
+      "product_specifications",
+      "sales",
+      "sale_movement_payments",
+      "sale_movement_changes",
+      "sale_products",
+      "stocks",
+      "stock_events",
+      "stock_event_entries",
+      "stock_event_outputs",
+      "stock_lots",
       "tenants",
-      "tenant_memberships"
+      "tenant_memberships",
+      "users",
+      "user_tenant_settings"
     RESTART IDENTITY CASCADE;
   `);
 

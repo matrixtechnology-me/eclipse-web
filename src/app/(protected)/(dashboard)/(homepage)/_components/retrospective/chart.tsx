@@ -61,7 +61,7 @@ export const Chart = ({ data, growthPercentage = 0 }: ChartProps) => {
   const currentMonth = new Date().toLocaleString("pt-BR", { month: "long" });
 
   return (
-    <Card className="flex flex-col bg-secondary/25 rounded-sm">
+    <Card className="flex flex-col bg-secondary/25 rounded-sm shadow-none">
       <CardHeader>
         <CardTitle>Desempenho Financeiro</CardTitle>
         <CardDescription>Últimos 12 meses</CardDescription>
@@ -77,7 +77,7 @@ export const Chart = ({ data, growthPercentage = 0 }: ChartProps) => {
               {Object.entries(chartConfig).map(([key, { label, color }]) => (
                 <div key={key} className="flex items-center">
                   <div
-                    className="mr-2 h-3 w-3 rounded-full"
+                    className="mr-2 h-3 w-3 rounded-sm"
                     style={{ backgroundColor: color }}
                   />
                   <span className="text-sm">{label}</span>

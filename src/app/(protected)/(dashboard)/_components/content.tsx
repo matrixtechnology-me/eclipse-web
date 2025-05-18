@@ -8,7 +8,7 @@ type ContentProps = {
 export const Content: FC<ContentProps> = ({ children }) => {
   return (
     <ScrollArea className="w-full flex-1 h-[calc(100dvh-64px)]">
-      <div className="w-full h-full max-w-7xl mx-auto">{children}</div>
+      {children}
     </ScrollArea>
   );
 };

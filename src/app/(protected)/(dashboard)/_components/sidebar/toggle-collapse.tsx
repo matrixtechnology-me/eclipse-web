@@ -16,7 +16,7 @@ export const ToggleCollapse: FC<ToggleCollapseProps> = ({
   return (
     <Button
       variant="ghost"
-      className="absolute -right-3 top-[52px] z-10 flex h-6 w-6 bg-background cursor-pointer items-center justify-center rounded-sm border border-solid p-0 pr-[2px] shadow-sm max-md:hidden"
+      className="absolute -right-3 top-[52px] z-10 flex h-6 w-6 bg-background cursor-pointer items-center justify-center rounded-sm border border-solid p-0 pr-[2px] max-md:hidden"
       onClick={toggleCollapse}
     >
       {collapsed ? (

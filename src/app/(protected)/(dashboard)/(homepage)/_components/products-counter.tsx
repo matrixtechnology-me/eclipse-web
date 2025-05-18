@@ -15,7 +15,7 @@ export const ProductsCounter: FC<ProductsCounterProps> = ({ result }) => {
   const { count } = result.value;
 
   return (
-    <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
+    <div className="flex-1 border p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
           <PackageIcon className="size-4" />

@@ -9,6 +9,9 @@ import { ProductsCounter } from "./_components/products-counter";
 import { AverageTicket } from "./_components/average-ticket";
 import { Invoicing } from "./_components/invoicing";
 import { Retrospective } from "./_components/retrospective";
+import { Customers } from "./_components/customers";
+import { Sales } from "./_components/sales";
+import { Categories } from "./_components/categories";
 
 const Page: NextPage = async () => {
   const session = await getServerSession({ requirements: { tenant: true } });
@@ -31,14 +34,29 @@ const Page: NextPage = async () => {
   };
 
   return (
-    <div className="p-5 flex flex-col gap-5">
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 ">
-        <CustomersCounter result={results.customersCount} />
-        <ProductsCounter result={results.productsCount} />
-        <AverageTicket result={results.averageTicket} />
-        <Invoicing result={results.invoicing} />
+    <div className="flex flex-col gap-5 p-5">
+      <div className="grid grid-cols-8 gap-5">
+        <div className="flex flex-col gap-5 col-span-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 ">
+            <CustomersCounter result={results.customersCount} />
+            <ProductsCounter result={results.productsCount} />
+            <AverageTicket result={results.averageTicket} />
+            <Invoicing result={results.invoicing} />
+          </div>
+          <Retrospective tenantId={session.tenantId} />
+        </div>
+        <div className="col-span-2">
+          <Customers tenantId={session.tenantId} />
+        </div>
       </div>
-      <Retrospective tenantId={session.tenantId} />
+      <div className="h-[650px] grid grid-cols-8 gap-5">
+        <div className="col-span-2">
+          <Categories tenantId={session.tenantId} />
+        </div>
+        <div className="col-span-6">
+          <Sales tenantId={session.tenantId} />
+        </div>
+      </div>
     </div>
   );
 };

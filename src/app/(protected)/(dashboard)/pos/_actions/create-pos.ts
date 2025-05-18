@@ -3,6 +3,8 @@
 import { failure, Action, success } from "@/lib/action";
 import { InternalServerError } from "@/errors";
 import prisma from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 type CreatePosActionPayload = {
   name: string;
@@ -26,6 +28,8 @@ export const createPosAction: Action<
         tenantId,
       },
     });
+
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.INDEX.GENERAL);
 
     return success({ posId: pos.id });
   } catch (error) {

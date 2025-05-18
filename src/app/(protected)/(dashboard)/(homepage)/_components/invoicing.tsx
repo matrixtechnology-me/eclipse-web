@@ -16,7 +16,7 @@ export const Invoicing: FC<InvoicingProps> = ({ result }) => {
   const { invoicing } = result.value;
 
   return (
-    <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
+    <div className="flex-1 border p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
           <DollarSignIcon className="size-4" />

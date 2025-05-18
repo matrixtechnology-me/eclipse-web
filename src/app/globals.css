@@ -138,3 +138,13 @@ select:-webkit-autofill {
   color: white !important;
   -webkit-text-fill-color: white !important;
 }
+
+@layer utilities {
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

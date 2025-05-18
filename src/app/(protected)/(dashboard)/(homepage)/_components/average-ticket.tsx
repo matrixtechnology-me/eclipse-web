@@ -16,7 +16,7 @@ export const AverageTicket: FC<AverageTicketProps> = ({ result }) => {
   const { averageTicket } = result.value;
 
   return (
-    <div className="flex-1 border border-secondary p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
+    <div className="flex-1 border p-5 bg-secondary/25 rounded-sm flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
           <TicketIcon className="size-4" />

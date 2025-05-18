@@ -47,7 +47,6 @@ type AddSaleProps = {
 };
 
 export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -148,7 +147,10 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="w-full flex flex-col"
+          >
             <FormField
               control={form.control}
               name="customerId"
@@ -183,9 +185,10 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() =>
-                  router.push(PATHS.PROTECTED.DASHBOARD.SALES.INDEX())
-                }
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
               >
                 Cancelar
               </Button>

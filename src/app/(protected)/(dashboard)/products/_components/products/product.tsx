@@ -20,7 +20,7 @@ export const Product = ({ data, ...rest }: ProductProps) => {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="size-10 rounded-sm bg-primary/10 flex items-center justify-center">
             <Package className="size-5 text-primary" />
           </div>
           <div className="space-y-1">

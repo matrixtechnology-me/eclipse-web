@@ -3,8 +3,6 @@
 import { HTMLAttributes, useState } from "react";
 import { Nav } from "./nav";
 import { cn } from "@/lib/shadcn";
-import { Button } from "@/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Header } from "./header";
 import { Footer } from "./footer";
 import { ToggleCollapse } from "./toggle-collapse";
@@ -25,7 +23,7 @@ export const Sidebar = ({
       {...rest}
     >
       <ToggleCollapse collapsed={isCollapsed} onCollapse={setIsCollapsed} />
-      <Header />
+      <Header isCollapsed={isCollapsed} />
       <Nav isCollapsed={isCollapsed} />
       <Footer />
     </div>
