@@ -18,6 +18,7 @@ export type Product = {
   name: string;
   costPrice: number;
   salePrice: number;
+  availableQty: number;
 };
 
 export type ProductsWithPagination = {
@@ -75,6 +76,7 @@ export const getProducts: Action<
                 select: {
                   costPrice: true,
                   expiresAt: true,
+                  totalQty: true,
                 },
                 orderBy: {
                   expiresAt: "asc",
@@ -95,11 +97,14 @@ export const getProducts: Action<
       const sortedLots =
         strategy === EStockStrategy.Lifo ? [...lots].reverse() : lots;
 
+      const totalAvailable = lots.reduce((sum, lot) => sum + lot.totalQty, 0);
+
       return {
         id: product.id,
         name: product.name,
         costPrice: sortedLots[0]?.costPrice.toNumber() ?? 0,
         salePrice: product.salePrice.toNumber(),
+        availableQty: totalAvailable,
       };
     });
 

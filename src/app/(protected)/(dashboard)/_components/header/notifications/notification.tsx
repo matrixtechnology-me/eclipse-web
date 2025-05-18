@@ -52,11 +52,11 @@ export const Notification = ({
         router.push(href);
       }}
     >
-      <div className="relative size-9 rounded-full border bg-secondary flex items-center justify-center">
+      <div className="relative size-9 rounded-sm border bg-secondary flex items-center justify-center">
         <Icon className="size-4" />
-        <span className="absolute -bottom-0 -right-0 flex size-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/50 opacity-75"></span>
-          <span className="relative inline-flex size-2.5 rounded-full bg-primary"></span>
+        <span className="absolute -bottom-0.5 -right-0.5 flex size-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-xs bg-primary/50 opacity-75"></span>
+          <span className="relative inline-flex size-2.5 rounded-xs bg-primary"></span>
         </span>
       </div>
       <div className="flex-1 flex flex-col items-start">

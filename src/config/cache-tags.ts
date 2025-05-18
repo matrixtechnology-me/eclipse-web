@@ -24,6 +24,11 @@ export const CACHE_TAGS = {
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].products?page=${page}&limit=${limit}`,
       },
+      CATEGORIES: {
+        GENERAL: `tenant-[${tenantId}].products.categories`,
+        PAGINATED: (page: number, limit: number) =>
+          `tenant-[${tenantId}].products.categories?page=${page}&limit=${limit}`,
+      },
       PRODUCT: (productId: string) => ({
         INDEX: `tenant-[${tenantId}].product-[${productId}]`,
         SPECIFICATIONS: `tenant-[${tenantId}].product-[${productId}].specifications`,

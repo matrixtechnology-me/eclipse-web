@@ -23,7 +23,7 @@ export const History: FC<HistoryProps> = async ({ posId, tenantId }) => {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <div className="size-9 rounded-lg bg-secondary flex items-center justify-center">
+        <div className="size-9 rounded-sm bg-secondary flex items-center justify-center">
           <ClockIcon className="size-4" />
         </div>
         <div>

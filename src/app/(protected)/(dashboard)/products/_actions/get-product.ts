@@ -12,6 +12,7 @@ export type Product = {
   description: string;
   active: boolean;
   skuCode: string;
+  categoryId: string | null;
   salePrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +88,7 @@ export const getProduct: Action<{ id: string }, { product: Product }> = async ({
       active: product.active,
       skuCode: product.skuCode,
       salePrice: product.salePrice.toNumber(),
+      categoryId: product.categoryId,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,

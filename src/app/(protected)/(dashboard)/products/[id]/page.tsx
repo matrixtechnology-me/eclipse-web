@@ -18,6 +18,7 @@ import { Specifications } from "./_components/specifications";
 import { DeleteProduct } from "./_components/delete-product";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Category } from "./_components/category";
 
 type PageParams = {
   id: string;
@@ -90,6 +91,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <Name
             defaultValue={product.name}
+            productId={product.id}
+            tenantId={session.tenantId}
+          />
+          <Category
+            defaultValue={product.categoryId}
             productId={product.id}
             tenantId={session.tenantId}
           />

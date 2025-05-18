@@ -32,7 +32,7 @@ export const Stocks = async ({
 
   if (result.isFailure) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-lg p-8 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-sm p-8 text-center">
         <BlocksIcon className="size-8 text-muted-foreground" />
         <div>
           <p className="font-medium">Nenhum produto cadastrado</p>

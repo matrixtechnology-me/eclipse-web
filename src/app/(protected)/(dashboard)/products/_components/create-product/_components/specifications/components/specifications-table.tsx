@@ -22,7 +22,7 @@ export const SpecificationsTable = ({
   specificationsFieldArray,
 }: SpecificationsTableProps) => {
   return specificationsFieldArray.fields.length ? (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="w-full border rounded-sm overflow-x-auto">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
@@ -55,7 +55,7 @@ export const SpecificationsTable = ({
       </Table>
     </div>
   ) : (
-    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-lg">
+    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-sm">
       <p className="text-center text-sm text-muted-foreground">
         Nenhuma especificação adicionada ainda. Clique em "Adicionar
         especificação" para adicionar um.

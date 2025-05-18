@@ -12,6 +12,12 @@ import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { TrashIcon } from "lucide-react";
 import { UseFieldArrayReturn } from "react-hook-form";
 import { CreateSaleSchema } from "../../../_utils/validations/create-sale";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProductsTableProps {
   productsFieldArray: UseFieldArrayReturn<CreateSaleSchema, "products">;
@@ -19,13 +25,13 @@ interface ProductsTableProps {
 
 export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
   return productsFieldArray.fields.length ? (
-    <div className="w-full border rounded-lg overflow-x-auto">
+    <div className="max-w-[462px] relative overflow-x-auto hide-scrollbar border rounded-sm">
       <Table className="min-w-max">
         <TableHeader>
           <TableRow>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Unidades</TableHead>
-            <TableHead className="text-left">Preço de venda</TableHead>
+            <TableHead className="text-left">Preço</TableHead>
             <TableHead className="text-left">Subtotal</TableHead>
             <TableHead className="text-center">Ações</TableHead>
           </TableRow>
@@ -33,8 +39,23 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
         <TableBody>
           {productsFieldArray.fields.map((field) => (
             <TableRow key={field.id}>
-              <TableCell className="font-medium">
-                <span className="line-clamp-1">{field.name}</span>
+              <TableCell className="font-medium max-w-[150px]">
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="line-clamp-1 text-ellipsis overflow-hidden block">
+                        {field.name}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="start"
+                      className="max-w-[300px]"
+                    >
+                      <p className="text-sm">{field.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </TableCell>
               <TableCell>{field.quantity}</TableCell>
               <TableCell>{CurrencyFormatter.format(field.salePrice)}</TableCell>
@@ -76,7 +97,7 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
       </Table>
     </div>
   ) : (
-    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-lg">
+    <div className="w-full px-5 py-20 flex items-center justify-center border border-dashed rounded-sm">
       <p className="text-center">
         Nenhum produto adicionado ainda. Clique em "Adicionar produto" para
         adicionar um.
