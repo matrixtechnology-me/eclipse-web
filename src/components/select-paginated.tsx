@@ -67,49 +67,56 @@ export function SelectPaginated<T, IsMulti extends boolean = false>({
       classNames={{
         container: ({ isDisabled }) =>
           cn(`w-full ${isDisabled ? "opacity-50" : ""}`, containerClasses),
+
         control: ({ isFocused, menuIsOpen }) =>
           cn(
             "!h-9 border-2 px-3 py-2 !shadow-none !border-input !bg-background !ring-offset-background disabled:!cursor-not-allowed disabled:!opacity-50 [&>span]:!line-clamp-1",
             isFocused &&
               !menuIsOpen &&
               cn(
-                "border-violet-800 outline-none ring-2 ring-ring ring-offset-2",
+                "border-ring outline-none ring-2 ring-ring ring-offset-2",
                 focusedControlClasses
               ),
             controlClasses
           ),
-        valueContainer: () => "!p-0 !text-sm cursor-pointer !text-white",
-        singleValue: () => "!text-white !text-sm",
-        input: () => cn("!m-0 !p-0 !text-white", inputClasses),
-        placeholder: () => cn("!text-white truncate", placeholderClasses),
-        dropdownIndicator: () => "!p-0 !h-5 !w-4 !text-white opacity-40",
+
+        valueContainer: () => "!p-0 !text-sm cursor-pointer",
+
+        singleValue: () => "!text-sm !text-foreground",
+
+        input: () => cn("!m-0 !p-0 !text-foreground", inputClasses),
+
+        placeholder: () =>
+          cn("truncate !text-muted-foreground", placeholderClasses),
+
+        dropdownIndicator: () => "!p-0 !h-5 !w-4 text-muted-foreground",
+
         indicatorSeparator: () => "!hidden",
+
         menu: () =>
           cn(
-            "!bg-background p-[1px] !border-[1px] border-white !rounded-md",
+            "!bg-popover p-[1px] !border-[1px] border-border !rounded-md shadow-md",
             menuClasses
           ),
+
         menuList: () => "!overflow-x-hidden",
+
         option: ({ isFocused, isSelected }) =>
           cn(
-            `!mx-1 !px-2 py-1 !text-sm !rounded-sm
-                                ${
-                                  isSelected
-                                    ? isFocused
-                                      ? cn(
-                                          "!bg-accent",
-                                          focusedOptionClasses,
-                                          selectedOptionClasses
-                                        )
-                                      : "!bg-[unset]"
-                                    : isFocused
-                                    ? cn("!bg-accent", focusedOptionClasses)
-                                    : ""
-                                }`,
+            "!mx-1 !px-2 py-1 !text-sm !rounded-sm !overflow-hidden",
+            isFocused && "!bg-accent !text-accent-foreground",
+            isSelected && "!bg-secondary !text-secondary-foreground",
+            isSelected && isFocused && "!bg-secondary",
+            focusedOptionClasses,
+            isSelected ? selectedOptionClasses : "",
             optionClasses
           ),
-        noOptionsMessage: () => cn("py-2", noOptionClasses),
-        loadingMessage: () => cn("py-2", loadingMessageClasses),
+
+        noOptionsMessage: () =>
+          cn("py-2 !text-muted-foreground", noOptionClasses),
+
+        loadingMessage: () =>
+          cn("py-2 !text-muted-foreground", loadingMessageClasses),
       }}
       {...props}
     />
