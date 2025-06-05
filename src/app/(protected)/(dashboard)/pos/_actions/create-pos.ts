@@ -29,7 +29,7 @@ export const createPosAction: Action<
       },
     });
 
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.INDEX.ALL);
 
     return success({ posId: pos.id });
   } catch (error) {

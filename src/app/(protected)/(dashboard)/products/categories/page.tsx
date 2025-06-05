@@ -11,9 +11,10 @@ import { getServerSession } from "@/lib/session";
 import { Package } from "lucide-react";
 import { NextPage } from "next";
 import { Suspense } from "react";
-import { CreateProduct } from "./_components/create-product";
-import { Products } from "./_components/products";
+import { AddCategory } from "./_components/add-category";
+import { Categories } from "./_components/categories";
 import { Search } from "./_components/search";
+import { PATHS } from "@/config/paths";
 
 type PageSearchParams = {
   page?: string;
@@ -38,15 +39,25 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
         <div className="flex items-center gap-3">
           <Package className="size-6 text-primary sm:hidden" />
           <div>
-            <h1 className="text-xl font-semibold">Produtos</h1>
+            <h1 className="text-xl font-semibold">Categorias</h1>
             <Breadcrumb className="text-sm">
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Painel de Controle</BreadcrumbLink>
+                  <BreadcrumbLink href={PATHS.PROTECTED.DASHBOARD.HOMEPAGE}>
+                    Painel de Controle
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Produtos</BreadcrumbPage>
+                  <BreadcrumbLink
+                    href={PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX()}
+                  >
+                    Produtos
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Categorias</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -57,7 +68,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
           <Search query={query} tenantId={session.tenantId} />
           <div className="flex items-center gap-3">
-            <CreateProduct tenantId={session.tenantId} />
+            <AddCategory tenantId={session.tenantId} />
           </div>
         </div>
         <Suspense
@@ -68,7 +79,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
             </div>
           }
         >
-          <Products
+          <Categories
             page={Number(page)}
             pageSize={Number(limit)}
             query={query}

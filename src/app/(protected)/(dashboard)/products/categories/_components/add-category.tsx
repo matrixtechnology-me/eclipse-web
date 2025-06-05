@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createProductCategory } from "../../_actions/create-category";
+import { createCategoryAction } from "../_actions/create-category";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,7 +42,7 @@ export const AddCategory = ({ tenantId }: { tenantId: string }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const result = await createProductCategory({
+    const result = await createCategoryAction({
       name: values.name,
       description: values.description,
       tenantId,

@@ -29,7 +29,7 @@ export const updateProductCategoryAction: Action<
       },
     });
 
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL);
     revalidateTag(
       CACHE_TAGS.TENANT(tenantId).PRODUCTS.PRODUCT(productId).INDEX
     );

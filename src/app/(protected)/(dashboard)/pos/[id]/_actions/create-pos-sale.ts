@@ -191,7 +191,7 @@ export const createPosSaleAction: Action<
           },
         });
 
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
         revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
         revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
         revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX);
@@ -236,7 +236,7 @@ export const createPosSaleAction: Action<
           CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
             .NOTIFICATIONS
         );
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
       }
     }
 

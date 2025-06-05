@@ -28,6 +28,24 @@ export const PATHS = {
           VARIATION: (skuCode: string) =>
             `/products/${productId}/variations/${skuCode}`,
         }),
+        CATEGORIES: {
+          INDEX: (params?: Record<string, string | undefined>) => {
+            const queryParams = generateQueryParams({ ...params });
+            return `/products/categories${queryParams}`;
+          },
+          CATEGORY: (categoryId: string) => ({
+            INDEX: `/products/categories/${categoryId}`,
+          }),
+        },
+        SUBCATEGORIES: {
+          INDEX: (params?: Record<string, string | undefined>) => {
+            const queryParams = generateQueryParams({ ...params });
+            return `/products/subcategories${queryParams}`;
+          },
+          SUBCATEGORY: (subcategoryId: string) => ({
+            INDEX: `/products/subcategories/${subcategoryId}`,
+          }),
+        },
       },
       POS: {
         INDEX: (params?: Record<string, string | undefined>) => {

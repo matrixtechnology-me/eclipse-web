@@ -1,18 +1,18 @@
 import { getServerSession } from "@/lib/session";
 import { PackageIcon } from "lucide-react";
 import { FC } from "react";
-import { getProductsAction } from "../../_actions/get-products";
-import { CreateProduct } from "../create-product";
+import { getCategoriesAction } from "../../_actions/get-categories";
+import { AddCategory } from "../add-category";
 import { List } from "./list";
 import { Table } from "./table";
 
-type ProductsProps = {
+type CategoriesProps = {
   page: number;
   pageSize: number;
   query: string;
 };
 
-export const Products: FC<ProductsProps> = async ({
+export const Categories: FC<CategoriesProps> = async ({
   page,
   pageSize,
   query,
@@ -21,35 +21,35 @@ export const Products: FC<ProductsProps> = async ({
 
   if (!session) throw new Error("Session not found");
 
-  const result = await getProductsAction({
+  const result = await getCategoriesAction({
     tenantId: session.tenantId,
     page,
     pageSize,
     query,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 border-dashed rounded-sm p-8 text-center">
         <PackageIcon className="size-8 text-muted-foreground" />
         <div>
-          <p className="font-medium">Nenhum produto cadastrado</p>
+          <p className="font-medium">Nenhuma categoria cadastrado</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Cadastre seu primeiro produto para começar
+            Cadastre seu primeira categoria para começar
           </p>
         </div>
-        <CreateProduct tenantId={session.id} />
+        <AddCategory tenantId={session.id} />
       </div>
     );
   }
 
-  const { products } = result.value;
+  const { categories } = result.value;
 
   return (
     <>
-      <List data={products} tenantId={session.tenantId} />
+      <List data={categories} tenantId={session.tenantId} />
       <Table
-        data={products}
+        data={categories}
         pagination={{ initialPage: page, initialPageSize: pageSize }}
         tenantId={session.tenantId}
       />
