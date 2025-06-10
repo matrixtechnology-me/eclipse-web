@@ -8,7 +8,7 @@ export const CACHE_TAGS = {
   TENANT: (tenantId: string) => ({
     CUSTOMERS: {
       INDEX: {
-        GENERAL: `tenant-[${tenantId}].customers`,
+        ALL: `tenant-[${tenantId}].customers`,
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].customers?page=${page}&limit=${limit}`,
       },
@@ -20,14 +20,23 @@ export const CACHE_TAGS = {
     },
     PRODUCTS: {
       INDEX: {
-        GENERAL: `tenant-[${tenantId}].products`,
+        ALL: `tenant-[${tenantId}].products`,
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].products?page=${page}&limit=${limit}`,
       },
       CATEGORIES: {
-        GENERAL: `tenant-[${tenantId}].products.categories`,
-        PAGINATED: (page: number, limit: number) =>
-          `tenant-[${tenantId}].products.categories?page=${page}&limit=${limit}`,
+        INDEX: {
+          ALL: `tenant-[${tenantId}].products.categories`,
+          PAGINATED: (page: number, limit: number) =>
+            `tenant-[${tenantId}].products.categories?page=${page}&limit=${limit}`,
+        },
+      },
+      SUBCATEGORIES: {
+        INDEX: {
+          ALL: `tenant-[${tenantId}].products.subcategories`,
+          PAGINATED: (page: number, limit: number) =>
+            `tenant-[${tenantId}].products.subcategories?page=${page}&limit=${limit}`,
+        },
       },
       PRODUCT: (productId: string) => ({
         INDEX: `tenant-[${tenantId}].product-[${productId}]`,
@@ -36,7 +45,7 @@ export const CACHE_TAGS = {
     },
     STOCKS: {
       INDEX: {
-        GENERAL: `tenant-[${tenantId}].stocks`,
+        ALL: `tenant-[${tenantId}].stocks`,
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].stocks?page=${page}&limit=${limit}`,
       },
@@ -48,7 +57,7 @@ export const CACHE_TAGS = {
     },
     POS: {
       INDEX: {
-        GENERAL: `tenant-[${tenantId}].pos`,
+        ALL: `tenant-[${tenantId}].pos`,
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].pos?page=${page}&limit=${limit}`,
       },
@@ -58,7 +67,7 @@ export const CACHE_TAGS = {
     },
     SALES: {
       INDEX: {
-        GENERAL: `tenant-[${tenantId}].sales`,
+        ALL: `tenant-[${tenantId}].sales`,
         PAGINATED: (page: number, limit: number) =>
           `tenant-[${tenantId}].sales?page=${page}&limit=${limit}`,
       },

@@ -71,8 +71,8 @@ export const deletePosAction: Action<DeletePosActionPayload> = async ({
     });
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.INDEX.GENERAL);
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.INDEX.ALL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
 
     return success({});
   } catch (error) {

@@ -13,7 +13,7 @@ export const TenantSwicther = async () => {
     userId: session.id,
   });
 
-  if ("error" in result) {
+  if (result.isFailure) {
     return <div>Nenhuma tenant encontrada</div>;
   }
 

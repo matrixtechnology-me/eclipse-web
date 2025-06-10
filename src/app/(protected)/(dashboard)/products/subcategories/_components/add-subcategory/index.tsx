@@ -21,19 +21,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createProductCategory } from "../../_actions/create-category";
+import { createSubcategoryAction } from "../../_actions/create-subcategory";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Category } from "./category";
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "O nome da categoria deve ter pelo menos 2 caracteres.",
+    message: "O nome da sub-categoria deve ter pelo menos 2 caracteres.",
   }),
   description: z.string().default(""),
+  categoryId: z.string({
+    required_error: "A sub-categoria é obrigatória.",
+  }),
 });
 
+export type FormSchema = z.infer<typeof formSchema>;
+
 export const AddCategory = ({ tenantId }: { tenantId: string }) => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -41,21 +47,24 @@ export const AddCategory = ({ tenantId }: { tenantId: string }) => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const result = await createProductCategory({
+  const onSubmit = async (values: FormSchema) => {
+    console.log(values);
+
+    const result = await createSubcategoryAction({
       name: values.name,
       description: values.description,
       tenantId,
+      categoryId: values.categoryId,
     });
 
     if (result.isFailure) {
       return toast("Erro", {
-        description: "Não foi possível criar uma nova categoria",
+        description: "Não foi possível criar uma nova sub-categoria",
       });
     }
 
     toast("Sucesso", {
-      description: "Categoria criada com sucesso",
+      description: "Sub-categoria criada com sucesso",
     });
 
     form.reset();
@@ -64,13 +73,13 @@ export const AddCategory = ({ tenantId }: { tenantId: string }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Nova categoria</Button>
+        <Button variant="outline">Nova sub-categoria</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Nova categoria</DialogTitle>
+          <DialogTitle>Nova sub-categoria</DialogTitle>
           <DialogDescription>
-            Adicione uma nova categoria de produtos.
+            Adicione uma nova sub-categoria de produtos.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -83,7 +92,7 @@ export const AddCategory = ({ tenantId }: { tenantId: string }) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome da categoria</FormLabel>
+                  <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -105,6 +114,8 @@ export const AddCategory = ({ tenantId }: { tenantId: string }) => {
                 </FormItem>
               )}
             />
+
+            <Category form={form} tenantId={tenantId} />
 
             <Button type="submit">Salvar</Button>
           </form>

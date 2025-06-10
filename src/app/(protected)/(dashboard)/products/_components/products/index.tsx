@@ -1,13 +1,10 @@
-import Link from "next/link";
-import { getProductsAction } from "../../_actions/get-products";
-import { PATHS } from "@/config/paths";
-import { PackageIcon, PlusIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getServerSession } from "@/lib/session";
-import { List } from "./list";
+import { PackageIcon } from "lucide-react";
 import { FC } from "react";
-import { Table } from "./table";
+import { getProductsAction } from "../../_actions/get-products";
 import { CreateProduct } from "../create-product";
+import { List } from "./list";
+import { Table } from "./table";
 
 type ProductsProps = {
   page: number;

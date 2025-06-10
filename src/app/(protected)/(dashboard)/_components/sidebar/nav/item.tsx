@@ -2,15 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/shadcn";
-import { LucideIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { FC, HTMLAttributes } from "react";
+import { FC, HTMLAttributes, useState } from "react";
 
 type ItemProps = {
   label: string;
   icon: LucideIcon;
-  path: string;
+  path?: string;
   isCollapsed: boolean;
+  level?: number;
+  items?: any[];
 } & HTMLAttributes<HTMLButtonElement>;
 
 export const Item: FC<ItemProps> = ({
@@ -19,32 +21,81 @@ export const Item: FC<ItemProps> = ({
   path,
   className,
   isCollapsed,
+  level = 0,
+  items: subItems,
   ...rest
 }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const hasSubItems = subItems && subItems.length > 0;
+  const isActive = path ? new RegExp(`^${path}(\/|$)`).test(pathname) : false;
 
-  const regex = new RegExp(`^${path}(\/|$)`);
+  const handleMainClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (path) {
+      router.push(path);
+    }
+  };
+
+  const handleArrowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
 
   return (
-    <Button
-      variant="ghost"
-      size={isCollapsed ? "icon" : "default"}
-      className={cn(
-        "rounded-sm",
-        isCollapsed ? "size-9" : "w-full h-9 flex flex-1 justify-between gap-2",
-        regex.test(pathname) && "bg-secondary/25",
-        className
-      )}
-      onClick={() => {
-        router.push(path);
-      }}
-      {...rest}
-    >
-      <div className="flex items-center gap-3">
-        <Icon className="size-4" />
-        {!isCollapsed && <span>{label}</span>}
+    <div className="flex flex-col">
+      <div className="relative flex">
+        <Button
+          variant="ghost"
+          size={isCollapsed ? "icon" : "default"}
+          className={cn(
+            "rounded-sm flex items-center",
+            isCollapsed ? "size-9" : "w-full h-9 justify-between gap-2",
+            isActive && "bg-secondary/25",
+            level > 0 && !isCollapsed && "pl-8",
+            className,
+            hasSubItems && !isCollapsed && "pr-8"
+          )}
+          onClick={handleMainClick}
+          {...rest}
+        >
+          <div className="flex items-center gap-3">
+            <Icon className="size-4" />
+            {!isCollapsed && <span>{label}</span>}
+          </div>
+        </Button>
+
+        {hasSubItems && !isCollapsed && (
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-secondary/25"
+            onClick={handleArrowClick}
+          >
+            {isOpen ? (
+              <ChevronDownIcon className="size-4" />
+            ) : (
+              <ChevronRightIcon className="size-4" />
+            )}
+          </button>
+        )}
       </div>
-    </Button>
+
+      {hasSubItems && isOpen && !isCollapsed && (
+        <div className="flex flex-col">
+          {subItems?.map((subItem) => (
+            <Item
+              key={subItem.path || subItem.label}
+              icon={subItem.icon}
+              label={subItem.label}
+              path={subItem.path}
+              isCollapsed={isCollapsed}
+              level={level + 1}
+              items={subItem.items}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };

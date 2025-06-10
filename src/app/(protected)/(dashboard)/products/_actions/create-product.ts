@@ -108,8 +108,8 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
       }
     });
 
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.GENERAL);
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
 
     return success(undefined);
   } catch (error: unknown) {

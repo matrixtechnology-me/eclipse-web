@@ -44,7 +44,7 @@ export const createCustomer: Action<
       },
     });
 
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.GENERAL);
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.ALL);
 
     return success(undefined);
   } catch (error: unknown) {
