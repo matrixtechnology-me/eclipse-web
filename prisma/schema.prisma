@@ -357,7 +357,8 @@ model ProductCategory {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  products Product[]
+  products      Product[]
+  subcategories ProductSubcategory[]
 
   @@map("product_categories")
 }
@@ -366,10 +367,12 @@ model ProductSubcategory {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
+  categoryId  String   @map("category_id") @db.Uuid
   tenantId    String   @map("tenant_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  category ProductCategory @relation(fields: [categoryId], references: [id])
   products Product[]
 
   @@map("product_subcategories")
