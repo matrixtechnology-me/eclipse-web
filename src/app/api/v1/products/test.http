@@ -1,0 +1,6 @@
+POST http://localhost:3000/api/v1/products HTTP/1.1
+Authorization: Basic MWE2YjFlNjAtYWFhZS00YmEyLTliMGYtZjY3NTI5MDQ5OTAwOkdWR3h5MXd0cmdQZ3R5bnk2R3pUWnNHR0IxaGhMTVBhOE1UM2U1Nlc5VHZCajhOQ3Vv
+
+{
+  "tenantId": "1a6b1e60-aaae-4ba2-9b0f-f67529049900"
+}
