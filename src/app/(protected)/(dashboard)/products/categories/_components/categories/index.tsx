@@ -38,7 +38,7 @@ export const Categories: FC<CategoriesProps> = async ({
             Cadastre seu primeira categoria para começar
           </p>
         </div>
-        <AddCategory tenantId={session.id} />
+        <AddCategory tenantId={session.tenantId} />
       </div>
     );
   }
