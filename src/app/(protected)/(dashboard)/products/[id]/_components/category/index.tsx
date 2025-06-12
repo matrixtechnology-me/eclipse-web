@@ -1,12 +1,17 @@
 "use client";
 
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PencilIcon,
+  XIcon,
+} from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { CheckIcon, CopyIcon, PencilIcon, XIcon } from "lucide-react";
 
-import { updateProductNameAction } from "../../_actions/update-product-name";
-
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,7 +19,6 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,10 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { updateProductCategoryAction } from "../../_actions/update-product-category";
-import { getCategoriesAction } from "../../../_actions/get-categories";
+import { getCategoriesAction } from "../../../categories/_actions/get-categories";
 
 type RenderMode = "VIEW" | "EDIT";
 
@@ -39,12 +42,20 @@ type FormValues = {
   value: string | null;
 };
 
+const PAGE_SIZE = 10;
+
 export const Category: FC<CategoryProps> = ({
   defaultValue = null,
   productId,
   tenantId,
 }) => {
   const [renderMode, setRenderMode] = useState<RenderMode>("VIEW");
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleRenderMode = () =>
     setRenderMode(renderMode === "VIEW" ? "EDIT" : "VIEW");
@@ -63,60 +74,56 @@ export const Category: FC<CategoryProps> = ({
     formState: { isDirty },
     watch,
   } = form;
-
   const watchedValue = watch("value");
 
-  const onSubmit = async (data: FormValues) => {
-    const promises = [];
-
-    if (data.value !== defaultValue) {
-      promises.push(
-        updateProductCategoryAction({
-          productId,
-          tenantId,
-          categoryId: data.value === "none" ? null : data.value,
-        })
-      );
-    }
-
-    const results = await Promise.all(promises);
-
-    const hasError = results.some((res) => "error" in res);
-
-    if (hasError) {
-      toast.error("Falha na atualização", {
-        description:
-          "Não foi possível atualizar o produto. Por favor, tente novamente.",
-      });
-      return;
-    }
-
-    toast.success("Produto atualizado", {
-      description: "Nome e/ou categoria atualizados com sucesso.",
+  const loadCategories = async (page: number = 1) => {
+    setIsLoading(true);
+    const result = await getCategoriesAction({
+      tenantId,
+      page,
+      pageSize: PAGE_SIZE,
     });
 
-    toggleRenderMode();
-  };
-
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  );
-
-  const loadCategories = async () => {
-    const result = await getCategoriesAction({ tenantId });
-
     if (result.isFailure) {
+      setIsLoading(false);
       return;
     }
 
-    const { categories } = result.value;
-
+    const { categories, pagination } = result.value;
     setCategories(categories);
+    setTotalPages(pagination.totalPages);
+    setCurrentPage(pagination.currentPage);
+    setIsLoading(false);
   };
 
   useEffect(() => {
-    loadCategories();
-  }, []);
+    if (renderMode === "EDIT") {
+      loadCategories();
+    }
+  }, [renderMode]);
+
+  const onSubmit = async (data: FormValues) => {
+    if (data.value !== defaultValue) {
+      const result = await updateProductCategoryAction({
+        productId,
+        tenantId,
+        categoryId: data.value === "none" ? null : data.value,
+      });
+
+      if ("error" in result) {
+        toast.error("Falha na atualização", {
+          description: "Não foi possível atualizar a categoria do produto.",
+        });
+        return;
+      }
+
+      toast.success("Produto atualizado", {
+        description: "Categoria atualizada com sucesso.",
+      });
+    }
+
+    toggleRenderMode();
+  };
 
   return (
     <Form {...form}>
@@ -124,10 +131,9 @@ export const Category: FC<CategoryProps> = ({
         onSubmit={handleSubmit(onSubmit)}
         className="w-full flex flex-col gap-2"
       >
-        <p className="font-bold text-sm">Nome do produto</p>
+        <p className="font-bold text-sm">Categoria</p>
         {renderMode === "EDIT" ? (
           <div className="relative space-y-2">
-            {/* Categoria */}
             <FormField
               control={control}
               name="value"
@@ -148,6 +154,29 @@ export const Category: FC<CategoryProps> = ({
                             {c.name}
                           </SelectItem>
                         ))}
+                        <div className="flex justify-between items-center px-2 py-1 border-t">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={currentPage <= 1 || isLoading}
+                            onClick={() => loadCategories(currentPage - 1)}
+                          >
+                            <ChevronUpIcon className="size-4" />
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            Página {currentPage} de {totalPages}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={currentPage >= totalPages || isLoading}
+                            onClick={() => loadCategories(currentPage + 1)}
+                          >
+                            <ChevronDownIcon className="size-4" />
+                          </Button>
+                        </div>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -156,7 +185,6 @@ export const Category: FC<CategoryProps> = ({
               )}
             />
 
-            {/* Botões */}
             <div className="absolute top-2 right-2 flex items-center justify-center gap-1">
               <Button
                 type="button"
@@ -165,9 +193,6 @@ export const Category: FC<CategoryProps> = ({
                 onClick={() => {
                   reset();
                   toggleRenderMode();
-                  toast.info("Edição cancelada", {
-                    description: "As alterações não foram salvas.",
-                  });
                 }}
                 className="size-7"
               >
@@ -190,16 +215,14 @@ export const Category: FC<CategoryProps> = ({
               {categories.find((c) => c.id === watchedValue)?.name ??
                 "Sem categoria"}
             </span>
-            <div className="flex items-center gap-1">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-7"
-                onClick={toggleRenderMode}
-              >
-                <PencilIcon className="size-4" />
-              </Button>
-            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-7"
+              onClick={toggleRenderMode}
+            >
+              <PencilIcon className="size-4" />
+            </Button>
           </div>
         )}
       </form>

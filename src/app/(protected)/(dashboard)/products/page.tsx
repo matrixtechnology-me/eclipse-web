@@ -14,7 +14,6 @@ import { Suspense } from "react";
 import { CreateProduct } from "./_components/create-product";
 import { Products } from "./_components/products";
 import { Search } from "./_components/search";
-import { Categories } from "./_components/categories";
 
 type PageSearchParams = {
   page?: string;
@@ -58,7 +57,6 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
           <Search query={query} tenantId={session.tenantId} />
           <div className="flex items-center gap-3">
-            <Categories tenantId={session.tenantId} />
             <CreateProduct tenantId={session.tenantId} />
           </div>
         </div>

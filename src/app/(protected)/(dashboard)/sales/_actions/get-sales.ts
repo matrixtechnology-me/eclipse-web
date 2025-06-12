@@ -49,7 +49,7 @@ export const getSalesAction: Action<
 > = async ({ tenantId, page, pageSize, query, startDate, endDate, status }) => {
   "use cache";
   cacheTag(
-    CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL,
+    CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL,
     CACHE_TAGS.TENANT(tenantId).SALES.INDEX.PAGINATED(page, pageSize)
   );
 

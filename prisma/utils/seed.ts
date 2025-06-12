@@ -52,6 +52,7 @@ async function main() {
 
   const tenant = await prisma.tenant.create({
     data: {
+      id: "1a6b1e60-aaae-4ba2-9b0f-f67529049900",
       name: "Matrix Store",
       description: "Loja para testes internos durante o desenvolvimento",
       memberships: {

@@ -127,7 +127,7 @@ export const cancelPosEventAction: Action<
               },
             });
 
-            revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+            revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
 
             revalidateTag(
               CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
@@ -185,8 +185,8 @@ export const cancelPosEventAction: Action<
         }
       }
 
-      revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.GENERAL);
-      revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.GENERAL);
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
 
       revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
     });

@@ -5,13 +5,13 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: db_development
+      POSTGRES_DB: db_eclipse_local
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d db_development"]
+      test: ["CMD-SHELL", "pg_isready -U root -d db_eclipse_local"]
       interval: 20s
       timeout: 5s
       retries: 10

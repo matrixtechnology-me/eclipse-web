@@ -12,9 +12,8 @@ type HeaderProps = {
 export const Header: FC<HeaderProps> = ({ tenantId, userId, doNotDisturb }) => {
   return (
     <div className="w-full h-16 border-b px-5 flex items-center justify-between">
-      <div />
+      <TenantSwicther />
       <div className="flex gap-2">
-        <TenantSwicther />
         <Notifications
           tenantId={tenantId}
           userId={userId}
