@@ -22,44 +22,38 @@ export const POST = async (request: NextRequest) => {
 
   const skip = (page - 1) * pageSize;
 
-  const whereCondition: Prisma.ProductWhereInput = {
+  const whereCondition: Prisma.ProductCategoryWhereInput = {
     tenantId: tenantId,
-    active: true,
-    deletedAt: null,
     OR: [
       { name: { contains: query, mode: "insensitive" } },
-      { barCode: { contains: query, mode: "insensitive" } },
-      { internalCode: { contains: query, mode: "insensitive" } },
+      { description: { contains: query, mode: "insensitive" } },
     ],
   };
 
-  const [products, totalCount] = await Promise.all([
-    prisma.product.findMany({
+  const [productCategories, totalCount] = await Promise.all([
+    prisma.productCategory.findMany({
       where: whereCondition,
       skip,
       take: pageSize,
       orderBy: { name: "asc" },
     }),
-    prisma.product.count({ where: whereCondition }),
+    prisma.productCategory.count({ where: whereCondition }),
   ]);
 
-  if (!products.length) {
+  if (!productCategories.length) {
     return Response.json(
-      { message: "No active products found" },
+      { message: "No product categories found" },
       { status: 409 }
     );
   }
 
   return Response.json({
-    products: products.map((product) => ({
-      id: product.id,
-      name: product.name,
-      barCode: product.barCode,
-      internalCode: product.internalCode,
-      active: product.active,
-      salePrice: product.salePrice.toNumber(),
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
+    productsCategories: productCategories.map((category) => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
     })),
     pagination: {
       currentPage: page,
