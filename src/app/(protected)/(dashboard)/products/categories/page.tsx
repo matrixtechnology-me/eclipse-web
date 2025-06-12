@@ -34,7 +34,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
   if (!session) throw new Error("session not found");
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-5">
+    <div className="flex flex-col gap-5 p-4 sm:p-5 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Package className="size-6 text-primary sm:hidden" />
