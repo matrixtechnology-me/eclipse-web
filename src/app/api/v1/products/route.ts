@@ -1,37 +1,19 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
+import { getRequestSession } from "../utils/get-request-session";
 
 export const POST = async (request: NextRequest) => {
-  const headers = request.headers;
-  const authorization = headers.get("authorization");
+  const sessionResult = getRequestSession(request);
 
-  if (!authorization) {
+  if (sessionResult.session == null) {
     return Response.json(
-      { message: "Authorization header missing" },
-      { status: 401 }
+      { message: sessionResult.errorMessage },
+      { status: 401 },
     );
   }
 
-  const [authType, authToken] = authorization.split(" ");
-
-  if (authType !== "Basic") {
-    return Response.json(
-      { message: "Invalid auth type. Use Basic Auth" },
-      { status: 401 }
-    );
-  }
-
-  const decodedToken = Buffer.from(authToken, "base64").toString("utf-8");
-
-  const [tenantId, apiKey] = decodedToken.split(":");
-
-  const isValidKey = apiKey === process.env.API_KEY;
-
-  if (!isValidKey) {
-    return Response.json({ message: "Invalid API Key" }, { status: 401 });
-  }
-
+  const { tenantId } = sessionResult.session;
   const searchParams = request.nextUrl.searchParams;
 
   const query = searchParams.get("query") ?? "";
