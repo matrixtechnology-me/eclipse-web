@@ -9,7 +9,7 @@ export const POST = async (request: NextRequest) => {
   if (sessionResult.session == null) {
     return Response.json(
       { message: sessionResult.errorMessage },
-      { status: 401 },
+      { status: 401 }
     );
   }
 

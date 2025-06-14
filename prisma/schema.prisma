@@ -321,6 +321,37 @@ model PosEventSaleProduct {
   @@map("pos_event_sale_products")
 }
 
+model Folder {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  key         String   @unique
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  files File[]
+
+  @@map("folders")
+}
+
+model File {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  size        BigInt
+  mimeType    String   @map(name: "mime_type")
+  key         String   @unique
+  url         String
+  folderId    String?  @map(name: "folder_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  folder            Folder?             @relation(fields: [folderId], references: [id])
+  ProductAttachment ProductAttachment[]
+
+  @@map("files")
+}
+
 model Product {
   id            String    @id @default(uuid()) @db.Uuid
   name          String
@@ -342,11 +373,26 @@ model Product {
   category    ProductCategory?    @relation(fields: [categoryId], references: [id])
   subcategory ProductSubcategory? @relation(fields: [subcategoryId], references: [id])
 
-  saleProducts        SaleProduct[]
-  specifications      ProductSpecification[]
-  PosEventSaleProduct PosEventSaleProduct[]
+  saleProducts         SaleProduct[]
+  specifications       ProductSpecification[]
+  posEventSaleProducts PosEventSaleProduct[]
+  productAttachments   ProductAttachment[]
 
   @@map("products")
+}
+
+model ProductAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @map(name: "product_id") @db.Uuid
+  fileId    String   @map(name: "file_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id])
+  file    File    @relation(fields: [fileId], references: [id])
+
+  @@unique([productId, fileId])
+  @@map("product_attachments")
 }
 
 model ProductCategory {

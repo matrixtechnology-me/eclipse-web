@@ -36,6 +36,13 @@ export type Product = {
       updatedAt: Date;
     }>;
   };
+  attachments: {
+    id: string;
+    name: string;
+    size: bigint;
+    type: string;
+    url: string;
+  }[];
 };
 
 export const getProduct: Action<{ id: string }, { product: Product }> = async ({
@@ -45,6 +52,12 @@ export const getProduct: Action<{ id: string }, { product: Product }> = async ({
     const product = await prisma.product.findUnique({
       where: { id, deletedAt: null },
       include: {
+        productAttachments: {
+          select: {
+            id: true,
+            file: true,
+          },
+        },
         specifications: {
           select: {
             id: true,
@@ -107,6 +120,13 @@ export const getProduct: Action<{ id: string }, { product: Product }> = async ({
           updatedAt: lot.updatedAt,
         })),
       },
+      attachments: product.productAttachments.map((attachment) => ({
+        id: attachment.id,
+        name: attachment.file.name,
+        size: attachment.file.size,
+        type: attachment.file.mimeType,
+        url: attachment.file.url,
+      })),
     };
 
     return success({ product: productDetails });

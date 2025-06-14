@@ -19,6 +19,8 @@ import { DeleteProduct } from "./_components/delete-product";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Category } from "./_components/category";
+import { FileUploader } from "./_components/attachments/file-uploader";
+import { Attachments } from "./_components/attachments";
 
 type PageParams = {
   id: string;
@@ -115,6 +117,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
             tenantId={session.tenantId}
           />
         </div>
+        <Attachments productId={product.id} attachments={product.attachments} />
         <Specifications productId={product.id} tenantId={session.tenantId} />
       </div>
     </div>
