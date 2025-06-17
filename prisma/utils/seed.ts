@@ -1,4 +1,5 @@
-import { EMembershipRole, PrismaClient } from "@prisma/client";
+import { EMembershipRole, EStockStrategy, PrismaClient } from "@prisma/client";
+import { seedProductModule } from "./seed/products";
 
 async function main() {
   const prisma = new PrismaClient();
@@ -76,55 +77,7 @@ async function main() {
     },
   });
 
-  await prisma.productCategory.create({
-    data: {
-      id: "85376591-0e1e-4770-b640-25ee7aedccbf",
-      name: "Vestuário",
-      tenantId: tenant.id,
-      description: "Peças de roupa como camisetas, calças, vestidos, casacos, entre outros itens para uso cotidiano ou ocasiões especiais.",
-      subcategories: {
-        createMany: {
-          data: [
-            {
-              name: "Infantil",
-              description: "Roupas confortáveis e resistentes para crianças, com modelos que acompanham o crescimento e o dia a dia dos pequenos.",
-              tenantId: tenant.id,
-            },
-            {
-              name: "Calçados",
-              description: "Tênis, sandálias, botas e outros tipos de calçados para todas as idades e estilos, ideais para complementar qualquer look.",
-              tenantId: tenant.id,
-            },
-          ]
-        }
-      }
-    }
-  });
-
-  await prisma.productCategory.create({
-    data: {
-      id: "61b93de2-afaf-4cfb-9abb-f0bcb60c43be",
-      name: "Brinquedos",
-      tenantId: tenant.id,
-      description: "Jogos, bonecos, blocos de montar, pelúcias e outros produtos voltados para lazer e entretenimento infantil.",
-      subcategories: {
-        createMany: {
-          data: [
-            {
-              name: "Educativos",
-              description: "Brinquedos que estimulam o raciocínio, coordenação motora e criatividade, como jogos de lógica, quebra-cabeças e blocos de montar.",
-              tenantId: tenant.id,
-            },
-            {
-              name: "Ao ar livre",
-              description: "Itens para brincadeiras em ambientes externos, como bolas, bicicletas, patinetes, escorregadores e kits de praia.",
-              tenantId: tenant.id,
-            },
-          ]
-        }
-      }
-    }
-  })
+  await seedProductModule(tenant.id, prisma);
 
   console.log("✅ Seed concluído com sucesso!");
 }
