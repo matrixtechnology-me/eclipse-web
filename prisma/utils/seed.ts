@@ -1,4 +1,5 @@
-import { EMembershipRole, PrismaClient } from "@prisma/client";
+import { EMembershipRole, EStockStrategy, PrismaClient } from "@prisma/client";
+import { seedProductModule } from "./seed/products";
 
 async function main() {
   const prisma = new PrismaClient();
@@ -75,6 +76,8 @@ async function main() {
       userId: user.id,
     },
   });
+
+  await seedProductModule(tenant.id, prisma);
 
   console.log("✅ Seed concluído com sucesso!");
 }

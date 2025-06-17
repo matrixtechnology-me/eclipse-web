@@ -15,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { FC } from "react";
 import { Pagination } from "../pagination";
 import Link from "next/link";
-import { SquareArrowOutUpRightIcon } from "lucide-react";
 
 type TableProps = {
   data: {
@@ -39,9 +38,10 @@ type TableProps = {
 export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
   const router = useRouter();
 
-  const handleRedirectToCategory = (categoryId: string) => {
+  const handleRedirect = (categoryId: string) => {
     router.push(
-      PATHS.PROTECTED.DASHBOARD.PRODUCTS.CATEGORIES.CATEGORY(categoryId).INDEX
+      PATHS.PROTECTED.DASHBOARD.PRODUCTS.SUBCATEGORIES
+        .SUBCATEGORY(categoryId).INDEX
     );
   };
 
@@ -63,11 +63,11 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
             <TableRow
               key={item.id}
               className="h-12 hover:cursor-pointer hover:bg-secondary/25"
-              onClick={() => handleRedirectToCategory(item.id)}
+              onClick={() => handleRedirect(item.id)}
             >
               <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
               <TableCell className="font-medium">{item.name}</TableCell>
-              <TableCell>
+              <TableCell className="max-w-2xl truncate">
                 {item.description || (
                   <span className="text-muted-foreground">Sem descrição</span>
                 )}

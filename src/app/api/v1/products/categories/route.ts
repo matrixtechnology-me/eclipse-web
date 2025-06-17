@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { getRequestSession } from "../utils/get-request-session";
+import { getRequestSession } from "../../utils/get-request-session";
 
 export const POST = async (request: NextRequest) => {
   const sessionResult = getRequestSession(request);
