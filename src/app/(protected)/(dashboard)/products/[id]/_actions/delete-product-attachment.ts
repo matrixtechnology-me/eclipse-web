@@ -38,7 +38,11 @@ export const deleteProductAttachment: Action<
     await r2Service.delete({
       path: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
         attachment.productId
-      ).ATTACHMENTS.ATTACHMENT(attachment.file.id, uploadFileExtension).PATH,
+      ).ATTACHMENTS.ATTACHMENT(
+        attachment.id,
+        attachment.file.id,
+        uploadFileExtension
+      ).PATH,
     });
 
     await prisma.productAttachment.delete({

@@ -1,13 +1,10 @@
 "use client";
 
-import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react";
-import {
-  FileMetadata,
-  FileWithPreview,
-  useFileUpload,
-} from "@/hooks/use-file-upload";
 import { Button } from "@/components/ui/button";
-import { FC } from "react";
+import { FileMetadata, useFileUpload } from "@/hooks/use-file-upload";
+import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react";
+import { ChangeEvent, DragEvent, FC } from "react";
+import { toast } from "sonner";
 import { createProductAttachment } from "../../_actions/create-product-attachment";
 import { deleteProductAttachment } from "../../_actions/delete-product-attachment";
 
@@ -24,15 +21,6 @@ export const FileUploader: FC<FileUploaderProps> = ({
   productId,
   initialFiles = [],
 }) => {
-  const handleOnFilesAdded = async (addedFiles: FileWithPreview[]) => {
-    const addedFile = addedFiles[0];
-
-    await createProductAttachment({
-      productId,
-      uploadFile: addedFile.file as File,
-    });
-  };
-
   const [
     { files, isDragging, errors },
     {
@@ -43,6 +31,7 @@ export const FileUploader: FC<FileUploaderProps> = ({
       openFileDialog,
       removeFile,
       getInputProps,
+      addFiles,
     },
   ] = useFileUpload({
     accept: "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
@@ -50,8 +39,74 @@ export const FileUploader: FC<FileUploaderProps> = ({
     multiple: true,
     maxFiles: MAX_FILES,
     initialFiles,
-    onFilesAdded: handleOnFilesAdded,
   });
+
+  const handleFileChangeCustom = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const addedFile = e.target.files[0];
+
+      const result = await createProductAttachment({
+        productId,
+        uploadFile: addedFile as File,
+      });
+
+      if (result.isFailure) {
+        return toast("Upload falhou", {
+          description:
+            "Ocorreu um erro inesperado. Tente novamente em instantes.",
+        });
+      }
+
+      const { attachmentId, fileUrl } = result.value;
+
+      const fileMetadata: FileMetadata = {
+        name: addedFile.name,
+        size: BigInt(addedFile.size),
+        type: addedFile.type,
+        url: fileUrl,
+        id: attachmentId,
+      };
+
+      console.log(fileMetadata);
+
+      addFiles([fileMetadata]);
+    }
+  };
+
+  const handleDropCustom = async (e: DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const addedFile = e.dataTransfer.files[0];
+
+      const result = await createProductAttachment({
+        productId,
+        uploadFile: addedFile as File,
+      });
+
+      if (result.isFailure) {
+        return toast("Upload falhou", {
+          description:
+            "Ocorreu um erro inesperado. Tente novamente em instantes.",
+        });
+      }
+
+      const { attachmentId, fileUrl } = result.value;
+
+      const fileMetadata: FileMetadata = {
+        name: addedFile.name,
+        size: BigInt(addedFile.size),
+        type: addedFile.type,
+        url: fileUrl,
+        id: attachmentId,
+      };
+
+      console.log(fileMetadata);
+
+      addFiles([fileMetadata]);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -59,19 +114,21 @@ export const FileUploader: FC<FileUploaderProps> = ({
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onDrop={handleDropCustom}
         data-dragging={isDragging || undefined}
         data-files={files.length > 0 || undefined}
-        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]"
+        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]"
       >
         <input
           {...getInputProps()}
+          onChange={handleFileChangeCustom}
           className="sr-only"
           aria-label="Enviar arquivo de imagem"
         />
         {files.length > 0 ? (
           <div className="flex w-full flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 border-b h-12 px-4">
               <h3 className="truncate text-sm font-medium">
                 Imagens enviadas ({files.length})
               </h3>
@@ -88,8 +145,8 @@ export const FileUploader: FC<FileUploaderProps> = ({
                 Adicionar mais
               </Button>
             </div>
-
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-12">
+            {/* Files */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-12 p-4">
               {files.map((file) => (
                 <div
                   key={file.id}

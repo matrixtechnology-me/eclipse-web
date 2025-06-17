@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   experimental: {
     useCache: true,
     dynamicIO: true,
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
   },
 };
 

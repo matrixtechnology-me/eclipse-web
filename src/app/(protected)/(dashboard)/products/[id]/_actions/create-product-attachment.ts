@@ -13,7 +13,8 @@ type CreateProductAttachmentActionPayload = {
 };
 
 type CreateProductAttachmentActionResult = {
-  url: string;
+  attachmentId: string;
+  fileUrl: string;
 };
 
 export const createProductAttachment: Action<
@@ -33,6 +34,7 @@ export const createProductAttachment: Action<
 
     const uploadFileBuffer = Buffer.from(await uploadFile.arrayBuffer());
 
+    const randomAttachmentId = randomUUID();
     const randomFileId = randomUUID();
 
     const uploadFileExtension = uploadFile.name.split(".").pop()?.toLowerCase();
@@ -43,7 +45,11 @@ export const createProductAttachment: Action<
     const upload = await r2Service.upload({
       path: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
         product.id
-      ).ATTACHMENTS.ATTACHMENT(randomFileId, uploadFileExtension).PATH,
+      ).ATTACHMENTS.ATTACHMENT(
+        randomAttachmentId,
+        randomFileId,
+        uploadFileExtension
+      ).PATH,
       body: uploadFileBuffer,
       fileType: uploadFile.type,
     });
@@ -62,7 +68,11 @@ export const createProductAttachment: Action<
         name: uploadFile.name,
         key: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
           product.id
-        ).ATTACHMENTS.ATTACHMENT(randomFileId, uploadFileExtension).KEY,
+        ).ATTACHMENTS.ATTACHMENT(
+          randomAttachmentId,
+          randomFileId,
+          uploadFileExtension
+        ).KEY,
         mimeType: uploadFile.type,
         size: uploadFile.size,
         url: upload.url,
@@ -70,14 +80,15 @@ export const createProductAttachment: Action<
       },
     });
 
-    await prisma.productAttachment.create({
+    const attachment = await prisma.productAttachment.create({
       data: {
+        id: randomAttachmentId,
         fileId: file.id,
         productId: product.id,
       },
     });
 
-    return success({ url: file.id });
+    return success({ attachmentId: attachment.id, fileUrl: file.url });
   } catch (error) {
     console.error(error);
     return failure(new InternalServerError());
