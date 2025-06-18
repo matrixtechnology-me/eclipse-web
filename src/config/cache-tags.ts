@@ -41,6 +41,7 @@ export const CACHE_TAGS = {
       PRODUCT: (productId: string) => ({
         INDEX: `tenant-[${tenantId}].product-[${productId}]`,
         SPECIFICATIONS: `tenant-[${tenantId}].product-[${productId}].specifications`,
+        COMPOSITIONS: `tenant-[${tenantId}].product-[${productId}].compositions`,
       }),
     },
     STOCKS: {

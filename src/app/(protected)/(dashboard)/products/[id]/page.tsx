@@ -21,6 +21,7 @@ import Link from "next/link";
 import { Category } from "./_components/category";
 import { FileUploader } from "./_components/attachments/file-uploader";
 import { Attachments } from "./_components/attachments";
+import { Compositions } from "./_components/compositions";
 
 type PageParams = {
   id: string;
@@ -52,7 +53,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
   const { product } = result.value;
 
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
         <div>
           <h1>Produtos</h1>
@@ -119,6 +120,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
         </div>
         <Attachments productId={product.id} attachments={product.attachments} />
         <Specifications productId={product.id} tenantId={session.tenantId} />
+        <Compositions productId={product.id} tenantId={session.tenantId} />
       </div>
     </div>
   );

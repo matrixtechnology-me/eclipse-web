@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { getRequestSession } from "../../../../utils/get-request-session";
 
 type Params = {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 };
 
 export const POST = async (request: NextRequest, { params }: Params) => {
@@ -13,7 +13,7 @@ export const POST = async (request: NextRequest, { params }: Params) => {
   if (sessionResult.session == null) {
     return Response.json(
       { message: sessionResult.errorMessage },
-      { status: 401 },
+      { status: 401 }
     );
   }
 

@@ -30,7 +30,7 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
   if (!session) throw new Error("session not found");
 
   return (
-    <div className="flex flex-col h-full flex-1">
+    <div className="e-full max-w-7xl mx-auto flex flex-col h-full flex-1">
       <div className="flex flex-col gap-5 p-5 h-[calc(100%-64px)]">
         <div className="w-full">
           <h1>Estoques</h1>

@@ -10,14 +10,12 @@ import {
   DollarSignIcon,
   ShoppingBasketIcon,
   UsersIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   type LucideIcon,
   TagIcon,
   TagsIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { FC, useState } from "react";
+import { FC } from "react";
 
 type NavProps = {
   isCollapsed: boolean;
@@ -45,18 +43,6 @@ const NAV_ITEMS: NavItem[] = [
     icon: BoxIcon,
     label: "Produtos",
     path: PATHS.PROTECTED.DASHBOARD.PRODUCTS.INDEX(),
-    items: [
-      {
-        icon: TagIcon,
-        label: "Categorias",
-        path: PATHS.PROTECTED.DASHBOARD.PRODUCTS.CATEGORIES.INDEX(),
-      },
-      {
-        icon: TagsIcon,
-        label: "Subcategorias",
-        path: PATHS.PROTECTED.DASHBOARD.PRODUCTS.SUBCATEGORIES.INDEX(),
-      },
-    ],
   },
   {
     icon: BlocksIcon,
@@ -84,7 +70,6 @@ type ItemProps = {
 const Item = ({ item, isCollapsed, level = 0 }: ItemProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
   const hasSubItems = item.items && item.items.length > 0;
   const isActive = item.path
     ? new RegExp(`^${item.path}(\/|$)`).test(pathname)
@@ -96,14 +81,9 @@ const Item = ({ item, isCollapsed, level = 0 }: ItemProps) => {
     }
   };
 
-  const handleArrowClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
   return (
-    <div className="flex flex-col px-2">
-      <div className="relative flex">
+    <div className="w-full flex flex-col items-center justify-center px-2">
+      <div className="w-full relative flex items-center justify-center">
         <Button
           variant="ghost"
           size={isCollapsed ? "icon" : "default"}
@@ -111,8 +91,7 @@ const Item = ({ item, isCollapsed, level = 0 }: ItemProps) => {
             "rounded-sm flex items-center",
             isCollapsed ? "size-9" : "w-full h-9 justify-between gap-2",
             isActive && "bg-secondary/25",
-            level > 0 && !isCollapsed && "pl-8",
-            hasSubItems && !isCollapsed && "pr-8"
+            level > 0 && !isCollapsed && "pl-8"
           )}
           onClick={handleMainClick}
         >
@@ -121,22 +100,9 @@ const Item = ({ item, isCollapsed, level = 0 }: ItemProps) => {
             {!isCollapsed && <span>{item.label}</span>}
           </div>
         </Button>
-
-        {hasSubItems && !isCollapsed && (
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-secondary/25"
-            onClick={handleArrowClick}
-          >
-            {isOpen ? (
-              <ChevronDownIcon className="size-4" />
-            ) : (
-              <ChevronRightIcon className="size-4" />
-            )}
-          </button>
-        )}
       </div>
 
-      {hasSubItems && isOpen && !isCollapsed && (
+      {hasSubItems && !isCollapsed && (
         <div className="flex flex-col">
           {item.items?.map((subItem) => (
             <Item
@@ -157,7 +123,10 @@ export const Nav: FC<NavProps> = ({ isCollapsed }) => {
     <nav className="w-full flex-1 py-5">
       <ul className="flex flex-col gap-3 w-full">
         {NAV_ITEMS.map((item) => (
-          <li key={item.path || item.label}>
+          <li
+            key={item.path || item.label}
+            className="w-full flex items-center justify-center"
+          >
             <Item item={item} isCollapsed={isCollapsed} />
           </li>
         ))}

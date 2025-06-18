@@ -16,7 +16,7 @@ export const Sidebar = ({
   return (
     <div
       className={cn(
-        "relative h-full flex-col items-center justify-between border-r hidden duration-150 ease-in-out md:flex",
+        "relative h-full flex-col items-center justify-between border-r hidden duration-150 ease-in-out md:flex bg-secondary/25",
         isCollapsed ? "w-16" : "w-64",
         className
       )}
