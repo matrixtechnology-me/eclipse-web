@@ -8,6 +8,7 @@ import { EMembershipRole } from "@prisma/client";
 type GetTenantsActionPayload = {
   userId: string;
   tenantId: string;
+  productId: string;
 };
 
 type GetTenantsActionResult = {
@@ -20,7 +21,7 @@ type GetTenantsActionResult = {
 export const getTenants: Action<
   GetTenantsActionPayload,
   GetTenantsActionResult
-> = async ({ tenantId, userId }) => {
+> = async ({ tenantId, userId, productId }) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -29,6 +30,14 @@ export const getTenants: Action<
     });
 
     if (!user) return failure(new BadRequestError("User not found"));
+
+    const product = await prisma.product.findUnique({
+      where: {
+        id: productId,
+      },
+    });
+
+    if (!product) return failure(new BadRequestError("Product not found"));
 
     const currentTenant = await prisma.tenant.findUnique({
       where: {
@@ -75,6 +84,11 @@ export const getTenants: Action<
               userId: currentTenantOwner.membership.id,
               role: currentTenantOwner.membership.role,
             },
+          },
+        },
+        products: {
+          some: {
+            barCode: product.barCode,
           },
         },
       },

@@ -48,6 +48,11 @@ export const getNotificationsAction: Action<
           },
         },
       },
+      orderBy: {
+        notification: {
+          createdAt: "desc",
+        },
+      },
     });
 
     const mappedNotifications = notifications.map((n) => n.notification);

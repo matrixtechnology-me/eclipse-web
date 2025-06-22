@@ -1,10 +1,10 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-
+import {
+  DefaultOptionType,
+  SelectPaginated,
+} from "@/components/select-paginated";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,64 +14,68 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { Form, FormMessage } from "@/components/ui/form";
-
-import {
-  DefaultOptionType,
-  SelectPaginated,
-} from "@/components/select-paginated";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
-import { toast } from "sonner";
-import { createProductCompositionAction } from "../../_actions/create-product-composition";
+import { z } from "zod";
 import { getProducts, Product } from "../../_actions/get-products";
+import { toast } from "sonner";
 
-const formSchema = z.object({
-  childId: z.string().min(1, "Campo obrigatório"),
-  totalQty: z.number().min(1, "Campo obrigatório"),
+interface IProps {
+  tenantId: string;
+}
+
+const productSchema = z.object({
+  id: z.string().min(1, { message: "Seleção do item é obrigatória." }),
+  name: z.string().min(1, { message: "Seleção do item é obrigatória." }),
+  quantity: z
+    .string({ required_error: "Quantidade do item é obrigatória." })
+    .refine((arg) => !isNaN(Number(arg)) && Number(arg) > 0, {
+      message: "Quantidade inválida. Informe um valor numérico maior que zero.",
+    }),
 });
 
-type AddCompositionProps = {
-  productId: string;
-  tenantId: string;
+type OrderItemFormType = z.infer<typeof productSchema>;
+
+const formDefaultValues: OrderItemFormType = {
+  id: "",
+  name: "",
+  quantity: "1",
 };
 
-export const AddComposition = ({
-  productId,
-  tenantId,
-}: AddCompositionProps) => {
+export const AddTransfer = ({ tenantId }: IProps) => {
   const [open, setOpen] = useState(false);
+  const [maxQuantity, setMaxQuantity] = useState<number | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      childId: "",
-      totalQty: 1,
-    },
+  const form = useForm<OrderItemFormType>({
+    defaultValues: formDefaultValues,
+    resolver: zodResolver(productSchema),
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const result = await createProductCompositionAction({
-      childId: values.childId,
-      totalQty: values.totalQty,
-      parentId: productId,
-      tenantId,
-    });
+  const onSubmit = () => {
+    const submissionFn = form.handleSubmit(
+      (formData) => {
+        const qty = Number(formData.quantity);
+        if (maxQuantity !== null && qty > maxQuantity) {
+          toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
+          return;
+        }
 
-    if (result.isFailure) {
-      return toast.error("Erro ao adicionar especificação", {
-        description: "Não foi possível criar uma nova especificação.",
-      });
-    }
-
-    toast.success("Especificação adicionada");
-    setOpen(false);
-    form.reset();
+        setOpen(false);
+        form.reset(formDefaultValues);
+        setMaxQuantity(null);
+      },
+      (errors) => console.log(errors)
+    );
+    submissionFn();
   };
 
   const onErrors = (errors: Record<string, { message?: string }>) => {
@@ -88,7 +92,7 @@ export const AddComposition = ({
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
-      form.setError("childId", { message: "mínimo de 3 caracteres." });
+      form.setError("id", { message: "mínimo de 3 caracteres." });
       return { options: [], additional, hasMore: true };
     }
 
@@ -101,7 +105,6 @@ export const AddComposition = ({
       limit: pageSize,
       page: curPage,
       tenantId,
-      productId,
     });
 
     if (result.isFailure) {
@@ -125,11 +128,14 @@ export const AddComposition = ({
     };
   };
 
+  const { quantity } = form.watch();
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
-          Nova composição
+          <PlusIcon className="size-4" />
+          Adicionar produto
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -146,7 +152,7 @@ export const AddComposition = ({
               <Label>Produto*</Label>
               <Controller
                 control={form.control}
-                name="childId"
+                name="id"
                 render={({ field }) => (
                   <SelectPaginated<Product>
                     className="text-sm"
@@ -154,10 +160,12 @@ export const AddComposition = ({
                     menuPlacement="bottom"
                     loadOptions={loadPaginatedSearchProducts}
                     debounceTimeout={1000}
-                    onInputChange={() => form.clearErrors("childId")}
+                    onInputChange={() => form.clearErrors("id")}
                     onChange={(option) => {
                       const product = option!.value;
                       field.onChange(product.id);
+                      form.setValue("name", option!.label);
+                      setMaxQuantity(product.availableQty);
                     }}
                     additional={{
                       page: 1,
@@ -166,31 +174,38 @@ export const AddComposition = ({
                   />
                 )}
               />
-              <FormMessage>
-                {form.formState.errors.childId?.message}
-              </FormMessage>
+              <FormMessage>{form.formState.errors.id?.message}</FormMessage>
             </div>
 
             <div className="space-y-2">
               <Label>Quantidade*</Label>
               <Controller
                 control={form.control}
-                name="totalQty"
+                name="quantity"
                 render={({ field }) => (
                   <NumericFormat
                     customInput={Input}
                     placeholder="Quantidade"
                     value={field.value}
                     onValueChange={(values) => {
-                      const parsedValue = Number(values.value);
-                      field.onChange(parsedValue);
+                      const value = Number(values.value);
+                      if (maxQuantity !== null && value > maxQuantity) {
+                        toast.warning(
+                          `Quantidade máxima disponível: ${maxQuantity}`
+                        );
+                      }
+                      field.onChange(values.value);
                     }}
                     allowNegative={false}
+                    isAllowed={(values) => {
+                      const value = Number(values.value);
+                      return maxQuantity === null || value <= maxQuantity;
+                    }}
                   />
                 )}
               />
               <FormMessage>
-                {form.formState.errors.totalQty?.message}
+                {form.formState.errors.quantity?.message}
               </FormMessage>
             </div>
           </form>

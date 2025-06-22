@@ -67,8 +67,6 @@ export const FileUploader: FC<FileUploaderProps> = ({
         id: attachmentId,
       };
 
-      console.log(fileMetadata);
-
       addFiles([fileMetadata]);
     }
   };
@@ -101,8 +99,6 @@ export const FileUploader: FC<FileUploaderProps> = ({
         url: fileUrl,
         id: attachmentId,
       };
-
-      console.log(fileMetadata);
 
       addFiles([fileMetadata]);
     }
