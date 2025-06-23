@@ -8,7 +8,7 @@ export const seedStockModule = async (
     data: {
       id: "0dfba8bf-d07d-4c65-b7d5-09df495161ee",
       strategy: EStockStrategy.Fifo,
-      availableQty: 0, // future feature
+      availableQty: 100,
       totalQty: 100,
       productId: "b3ff3d0c-67d0-4f24-b5f7-b796017f7ba2",
       tenantId,
