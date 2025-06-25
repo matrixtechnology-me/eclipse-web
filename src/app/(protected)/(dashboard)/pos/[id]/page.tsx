@@ -8,6 +8,7 @@ import { UpdateStatus } from "./_components/update-status";
 import { getServerSession } from "@/lib/session";
 import { getPosAction } from "./_actions/get-pos";
 import { DeletePos } from "./_components/delete-pos";
+import { AddPayment } from "./_components/add-payment";
 
 type PageParams = {
   id: string;
@@ -51,6 +52,7 @@ const Page: FC<PageProps> = async ({ params }) => {
           <AddEntry posStatus={pos.status} {...commonProps} />
           <AddOutput posStatus={pos.status} {...commonProps} />
           <AddSale posStatus={pos.status} {...commonProps} />
+          <AddPayment posStatus={pos.status} {...commonProps} />
         </div>
         <div className="flex items-end gap-3">
           <UpdateStatus value={pos.status} {...commonProps} />

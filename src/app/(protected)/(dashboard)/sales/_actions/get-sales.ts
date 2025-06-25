@@ -14,6 +14,7 @@ export type SaleItem = {
   updatedAt: Date;
   costPrice: number;
   salePrice: number;
+  paidTotal: number;
   totalItems: number;
   status: ESaleStatus;
   customer: {
@@ -71,19 +72,19 @@ export const getSalesAction: Action<
       customer: {
         OR: query
           ? [
-              {
-                name: {
-                  contains: query,
-                  mode: "insensitive",
-                },
+            {
+              name: {
+                contains: query,
+                mode: "insensitive",
               },
-              {
-                phoneNumber: {
-                  contains: query,
-                  mode: "insensitive",
-                },
+            },
+            {
+              phoneNumber: {
+                contains: query,
+                mode: "insensitive",
               },
-            ]
+            },
+          ]
           : undefined,
       },
     };
@@ -115,6 +116,7 @@ export const getSalesAction: Action<
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
       status: sale.status,
+      paidTotal: sale.paidTotal.toNumber(),
       customer: {
         ...sale.customer,
         phoneNumber: sale.customer.phoneNumber ?? "00000000000",

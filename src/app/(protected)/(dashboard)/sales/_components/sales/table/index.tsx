@@ -24,6 +24,7 @@ type TableProps = {
     updatedAt: Date;
     costPrice: number;
     salePrice: number;
+    paidTotal: number;
     totalItems: number;
     status: ESaleStatus;
     customer: {
@@ -79,6 +80,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
             <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-left">Itens</TableHead>
             <TableHead className="text-left">Custo</TableHead>
+            <TableHead className="text-left">Pago</TableHead>
             <TableHead className="text-left">Venda</TableHead>
             <TableHead className="text-left">Criado em</TableHead>
           </TableRow>
@@ -95,6 +97,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
               <TableCell>{getStatusBadge(item.status)}</TableCell>
               <TableCell>{item.totalItems}</TableCell>
               <TableCell>{formatCurrency(item.costPrice)}</TableCell>
+              <TableCell>{formatCurrency(item.paidTotal)}</TableCell>
               <TableCell>{formatCurrency(item.salePrice)}</TableCell>
               <TableCell>
                 {moment(item.createdAt).format("DD/MM/YYYY")}
@@ -104,7 +107,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
         </TableBody>
         <TableFooter className="h-12">
           <TableRow className="h-12">
-            <TableCell colSpan={7}>
+            <TableCell colSpan={8}>
               <Pagination
                 initialPage={pagination.initialPage}
                 initialPageSize={pagination.initialPageSize}

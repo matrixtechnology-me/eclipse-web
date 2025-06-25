@@ -1,5 +1,10 @@
-import { EMembershipRole, EStockStrategy, PrismaClient } from "@prisma/client";
+import { EMembershipRole, PrismaClient } from "@prisma/client";
 import { seedProductModule } from "./seed/products";
+import { seedStockModule } from "./seed/stocks";
+import { seedCustomerModule } from "./seed/customers";
+import { seedSaleModule } from "./seed/sales";
+import { seedPosModule } from "./seed/pos";
+import { seedPosSaleModule } from "./seed/pos-sale";
 
 async function main() {
   const prisma = new PrismaClient();
@@ -77,7 +82,13 @@ async function main() {
     },
   });
 
+  // Seed order matters for database constraints.
   await seedProductModule(tenant.id, prisma);
+  await seedStockModule(tenant.id, prisma);
+  await seedCustomerModule(tenant.id, prisma);
+  await seedSaleModule(tenant.id, prisma);
+  await seedPosModule(tenant.id, prisma);
+  await seedPosSaleModule(tenant.id, prisma);
 
   console.log("✅ Seed concluído com sucesso!");
 }
