@@ -15,6 +15,7 @@ export type SaleItem = {
   costPrice: number;
   salePrice: number;
   totalItems: number;
+  paidTotal: number;
   status: ESaleStatus;
 };
 
@@ -23,9 +24,6 @@ type GetCustomerSalesActionPayload = {
   pageSize: number;
   customerId: string;
   tenantId: string;
-  // query?: string;
-  // startDate?: Date;
-  // endDate?: Date;
   status?: ESaleStatus;
 };
 
@@ -85,6 +83,7 @@ export const getCustomerSalesAction: Action<
       createdAt: sale.createdAt,
       updatedAt: sale.updatedAt,
       status: sale.status,
+      paidTotal: sale.paidTotal.toNumber(),
       costPrice: sale.products.reduce(
         (acc, p) => acc + (p.costPrice.toNumber() * p.totalQty),
         0

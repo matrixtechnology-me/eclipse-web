@@ -27,6 +27,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEntityTable } from "@/components/entity-table/hook";
 import { usePagination } from "@/hooks/use-pagination";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
 import moment from "moment";
 
 type CustomerSaleProps = {
@@ -97,6 +98,30 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
         ),
       },
       {
+        id: "paidTotal",
+        accessorFn: (sale) => sale.paidTotal,
+        header: ({ column }) => (
+          <EntityTableColumnHeader title="Pago" column={column} />
+        ),
+        cell: ({ row }) => (
+          <p className="flex-1 text-sm line-clamp-2">
+            {CurrencyFormatter.format(row.original.paidTotal)}
+          </p>
+        ),
+      },
+      {
+        id: "salePrice",
+        accessorFn: (sale) => sale.salePrice,
+        header: ({ column }) => (
+          <EntityTableColumnHeader title="Total" column={column} />
+        ),
+        cell: ({ row }) => (
+          <p className="flex-1 text-sm line-clamp-2">
+            {CurrencyFormatter.format(row.original.salePrice)}
+          </p>
+        ),
+      },
+      {
         id: "createdAt",
         accessorKey: "createdAt",
         header: ({ column }) => (
@@ -156,20 +181,22 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
       render={() => (
         <FormItem>
           <FormLabel>Venda</FormLabel>
-          <FormControl>
-            <EntityTable>
-              <EntityTableContainer>
-                <EntityTableHeader table={table} />
+          <div className="w-full overflow-x-auto">
+            <FormControl>
+              <EntityTable>
+                <EntityTableContainer>
+                  <EntityTableHeader table={table} />
 
-                <EntityTableBody table={table} />
-              </EntityTableContainer>
+                  <EntityTableBody table={table} />
+                </EntityTableContainer>
 
-              {/* 
-                No pagination required with PAGE_SIZE=99
-                <EntityTablePagination table={table} /> 
-              */}
-            </EntityTable>
-          </FormControl>
+                {/* 
+                  No pagination required with PAGE_SIZE=99
+                  <EntityTablePagination table={table} /> 
+                */}
+              </EntityTable>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
