@@ -35,6 +35,8 @@ import { EPaymentMethod, EPosStatus } from "@prisma/client";
 import { Customer } from "./_components/customer";
 import { CustomerSale } from "./_components/sale";
 import { PaymentMethodPresenter } from "@/utils/presenters/payment-method";
+import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
+import { revalidate } from "./_actions/revalidate";
 
 const formSchema = z.object({
   customerId: z
@@ -76,23 +78,22 @@ export const AddPayment: FC<AddPaymentProps> = ({
   });
 
   const onSubmit = async (formData: FormSchema) => {
-    console.log(formData);
-    // const result = await createPosPaymentAction({
-    //   amount: values.amount,
-    //   description: values.description,
-    //   posId,
-    //   tenantId,
-    // });
+    const result = await createPosSalePaymentAction({
+      ...formData,
+      tenantId,
+    });
 
-    // if (result.isFailure) {
-    //   return toast("Erro", {
-    //     description: "Não foi possível criar um novo ponto de venda",
-    //   });
-    // }
+    if (result.isFailure) {
+      return toast("Erro", {
+        description: "Não foi possível criar um novo ponto de venda",
+      });
+    }
 
-    // setOpen(false);
-    // form.reset();
-    // toast("Entrada criada com sucesso");
+    revalidate({ posId, tenantId });
+
+    setOpen(false);
+    form.reset();
+    toast("Pagamento criado com sucesso");
   };
 
   const handleCancel = () => {
