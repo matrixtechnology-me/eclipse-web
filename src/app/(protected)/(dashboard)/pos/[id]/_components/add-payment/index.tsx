@@ -33,7 +33,7 @@ import { FC, useState } from "react";
 import { NumericFormat } from "react-number-format";
 import { EPaymentMethod, EPosStatus } from "@prisma/client";
 import { Customer } from "./_components/customer";
-// import { CustomerSale } from "./_components/sale";
+import { CustomerSale } from "./_components/sale";
 import { PaymentMethodPresenter } from "@/utils/presenters/payment-method";
 
 const formSchema = z.object({
@@ -123,7 +123,7 @@ export const AddPayment: FC<AddPaymentProps> = ({
           >
             <Customer tenantId={tenantId} />
 
-            {/* <CustomerSale tenantId={tenantId} /> */}
+            <CustomerSale tenantId={tenantId} />
 
             <FormField
               control={form.control}
