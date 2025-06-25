@@ -1,9 +1,11 @@
 "use server";
 
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { InternalServerError } from "@/errors";
 import { Action, failure, success } from "@/lib/action";
 import prisma from "@/lib/prisma";
 import { ESaleStatus } from "@prisma/client";
+import { unstable_cacheTag as cacheTag } from "next/cache";
 
 type GetCustomersActionPayload = {
   tenantId: string;
@@ -20,10 +22,19 @@ type GetCustomersActionResult = {
   customers: Customer[];
 };
 
+const page = 1;
+const pageSize = 10;
+
 export const getCustomersAction: Action<
   GetCustomersActionPayload,
   GetCustomersActionResult
 > = async ({ tenantId }) => {
+  "use cache";
+  cacheTag(
+    CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.ALL,
+    CACHE_TAGS.TENANT(tenantId).CUSTOMERS.INDEX.PAGINATED(page, pageSize),
+  );
+
   try {
     const customers = await prisma.sale.groupBy({
       by: ["customerId"],
@@ -39,7 +50,8 @@ export const getCustomersAction: Action<
           paidTotal: "desc",
         },
       },
-      take: 10,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
     const customerIds = customers.map((c) => c.customerId as string);
