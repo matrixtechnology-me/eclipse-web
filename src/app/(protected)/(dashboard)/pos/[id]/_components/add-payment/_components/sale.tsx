@@ -55,6 +55,10 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
     });
   }
 
+  const handleUnselect = () => {
+    form.resetField("saleId");
+  }
+
   const columns: ColumnDef<SaleItem>[] = useMemo(
     () => [
       {
@@ -66,7 +70,8 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
             onCheckedChange={(value) => {
               if (typeof value !== "boolean") return;
               row.toggleSelected(value);
-              handleSelect(row.original);
+
+              value ? handleSelect(row.original) : handleUnselect();
             }}
             aria-label="Select row"
             className="translate-y-[2px]"
