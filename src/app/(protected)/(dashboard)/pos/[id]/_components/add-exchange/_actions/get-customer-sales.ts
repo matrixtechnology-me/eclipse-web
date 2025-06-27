@@ -37,6 +37,7 @@ export type SaleItem = {
     name: string;
     salePrice: number;
     totalQty: number;
+    productId: string;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -105,11 +106,12 @@ export const getCustomerPendingSalesAction: Action<
       id: sale.id,
       paidTotal: sale.paidTotal.toNumber(),
       estimatedTotal: sale.estimatedTotal.toNumber(),
-      products: sale.products.map(p => ({
-        id: p.id,
-        name: p.name,
-        salePrice: p.salePrice.toNumber(),
-        totalQty: p.totalQty,
+      products: sale.products.map(saleItem => ({
+        id: saleItem.id,
+        name: saleItem.name,
+        salePrice: saleItem.salePrice.toNumber(),
+        totalQty: saleItem.totalQty,
+        productId: saleItem.productId,
       })),
       totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
       createdAt: sale.createdAt,

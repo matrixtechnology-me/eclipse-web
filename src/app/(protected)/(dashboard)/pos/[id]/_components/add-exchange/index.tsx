@@ -29,6 +29,8 @@ import { ExchangeReturnedProducts } from "./_components/products/returned";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
+// This data will be used to data collection and rendering.
+// Not all this structure is used for the mutation.
 const formSchema = z.object({
   customerId: z
     .string({ required_error: "Campo obrigatório." })
@@ -45,24 +47,26 @@ const formSchema = z.object({
           name: z.string(),
           salePrice: z.number().gt(0.0),
           totalQty: z.number().gt(0.0),
+          productId: z.string(),
         }),
       ),
     }, { required_error: "Campo obrigatório." }),
   products: z.object({
     returned: z.array(
       z.object({
-        itemId: z.string(), // array itens with zod have 'id' prop
+        productId: z.string(),
         salePrice: z.number().gt(0.0),
         totalQty: z.number().gt(0.0),
       }),
-    ),
+    ).min(1, "Mínimo de um item."),
     replacement: z.array(
       z.object({
-        itemId: z.string(), // array itens with zod have 'id' prop
+        productId: z.string(),
+        name: z.string(),
         salePrice: z.number().gt(0.0),
-        totalQty: z.number().gt(0.0),
+        quantity: z.number().gt(0.0),
       }),
-    ),
+    ).min(1, "Mínimo de um item."),
   }),
 });
 
@@ -90,6 +94,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
   });
 
   const onSubmit = async (formData: FormSchema) => {
+    console.log(formData);
     // const result = await createPosSalePaymentAction({
     //   ...formData,
     //   tenantId,
@@ -123,7 +128,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
           Nova Troca
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[500px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar troca</DialogTitle>
           <DialogDescription />

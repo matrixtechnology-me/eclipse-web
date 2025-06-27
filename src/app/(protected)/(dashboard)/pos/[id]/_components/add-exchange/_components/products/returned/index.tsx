@@ -29,16 +29,16 @@ export const ExchangeReturnedProducts: FC = () => {
     control: form.control,
   });
 
-  const products = useWatch<FormSchema, "sale.products">({
+  const saleItems = useWatch<FormSchema, "sale.products">({
     name: "sale.products",
     control: form.control,
   });
 
   useEffect(() => {
     fieldArray.remove(); // clear
-  }, [products]);
+  }, [saleItems]);
 
-  if (products == undefined) return <React.Fragment />;
+  if (saleItems == undefined) return <React.Fragment />;
 
   return (
     <FormField
@@ -63,16 +63,16 @@ export const ExchangeReturnedProducts: FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => {
+                    {saleItems.map((saleItem) => {
                       // Checks if is beeing returnded in some quantity.
                       const relatedField = fieldArray.fields.find(
-                        field => field.itemId === product.itemId,
+                        field => field.productId === saleItem.productId,
                       );
 
                       const handleAdd = (qty: number) => {
                         const payload = {
-                          itemId: product.itemId,
-                          salePrice: product.salePrice,
+                          productId: saleItem.productId,
+                          salePrice: saleItem.salePrice,
                           totalQty: qty,
                         };
 
@@ -88,11 +88,11 @@ export const ExchangeReturnedProducts: FC = () => {
                       };
 
                       return (
-                        <Fragment key={product.itemId}>
+                        <Fragment key={saleItem.itemId}>
                           <TableRow>
                             <TableCell className="font-medium">
                               <div className="flex flex-col justify-center">
-                                {product.name}
+                                {saleItem.name}
 
                                 {!!relatedField && (
                                   <span className="text-[13px] text-muted-foreground">
@@ -103,23 +103,23 @@ export const ExchangeReturnedProducts: FC = () => {
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {product.totalQty}
+                              {saleItem.totalQty}
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {CurrencyFormatter.format(product.salePrice)}
+                              {CurrencyFormatter.format(saleItem.salePrice)}
                             </TableCell>
 
                             <TableCell className="font-medium">
                               {CurrencyFormatter.format(
-                                product.salePrice * product.totalQty
+                                saleItem.salePrice * saleItem.totalQty
                               )}
                             </TableCell>
 
                             <TableCell className="text-center">
                               <div className="flex items-center justify-center gap-2 px-1">
                                 <AddReturnedProduct
-                                  originalQty={product.totalQty}
+                                  originalQty={saleItem.totalQty}
                                   currentQty={relatedField?.totalQty || 0}
                                   onSubmit={handleAdd}
                                 />

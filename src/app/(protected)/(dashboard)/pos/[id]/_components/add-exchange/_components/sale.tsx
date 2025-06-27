@@ -49,9 +49,9 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
   const handleSelect = (sale: SaleItem) => {
     const payload: FormSchema["sale"] = {
       ...sale,
-      products: sale.products.map(p => ({
-        ...p,
-        itemId: p.id,
+      products: sale.products.map(saleItem => ({
+        ...saleItem,
+        itemId: saleItem.id,
       })),
     }
 
