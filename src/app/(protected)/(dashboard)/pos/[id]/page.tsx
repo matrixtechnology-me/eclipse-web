@@ -9,6 +9,7 @@ import { getServerSession } from "@/lib/session";
 import { getPosAction } from "./_actions/get-pos";
 import { DeletePos } from "./_components/delete-pos";
 import { AddPayment } from "./_components/add-payment";
+import { AddExchange } from "./_components/add-exchange";
 
 type PageParams = {
   id: string;
@@ -41,6 +42,7 @@ const Page: FC<PageProps> = async ({ params }) => {
   const { pos } = result.value;
 
   const commonProps = {
+    posStatus: pos.status,
     posId: pos.id,
     tenantId: session.tenantId,
   };
@@ -49,10 +51,11 @@ const Page: FC<PageProps> = async ({ params }) => {
     <div className="flex flex-col gap-8 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <AddEntry posStatus={pos.status} {...commonProps} />
-          <AddOutput posStatus={pos.status} {...commonProps} />
-          <AddSale posStatus={pos.status} {...commonProps} />
-          <AddPayment posStatus={pos.status} {...commonProps} />
+          <AddEntry {...commonProps} />
+          <AddOutput {...commonProps} />
+          <AddSale {...commonProps} />
+          <AddPayment {...commonProps} />
+          <AddExchange {...commonProps} />
         </div>
         <div className="flex items-end gap-3">
           <UpdateStatus value={pos.status} {...commonProps} />
