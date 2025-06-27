@@ -26,6 +26,7 @@ import { EPosStatus } from "@prisma/client";
 import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async-select";
 import { CustomerSale } from "./_components/sale";
 import { ExchangeReturnedProducts } from "./_components/products/returned";
+import { ExchangeReplacementProducts } from "./_components/products/replacement";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
@@ -161,6 +162,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
 
             <ExchangeReturnedProducts />
 
+            <ExchangeReplacementProducts tenantId={tenantId} />
             {/* <FormField
               control={form.control}
               name="paymentMethod"
