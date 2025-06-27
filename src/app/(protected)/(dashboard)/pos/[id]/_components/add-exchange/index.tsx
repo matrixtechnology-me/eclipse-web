@@ -25,7 +25,7 @@ import { FC, useState } from "react";
 import { EPosStatus } from "@prisma/client";
 import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async-select";
 import { CustomerSale } from "./_components/sale";
-// import { ExchangeReturnedProducts } from "./_components/products/returned";
+import { ExchangeReturnedProducts } from "./_components/products/returned";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
@@ -154,7 +154,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
 
             <CustomerSale tenantId={tenantId} />
 
-            {/* <ExchangeReturnedProducts /> */}
+            <ExchangeReturnedProducts />
 
             {/* <FormField
               control={form.control}
