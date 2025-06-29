@@ -45,7 +45,11 @@ export const createSubcategoryAction: Action<
         name,
         description,
         tenantId,
-        categoryId,
+        productCategorySubcategory: {
+          create: {
+            categoryId,
+          },
+        },
       },
     });
 

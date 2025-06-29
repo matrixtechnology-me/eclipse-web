@@ -5,6 +5,7 @@ export * from "./http/not-found.error";
 export * from "./http/conflict.error";
 export * from "./http/too-many-requests.error";
 export * from "./http/internal-server.error";
+export * from "./http/unprocessable-entity.error";
 
 export * from "./auth/invalid-credentials.error";
 export * from "./auth/account-locked.error";

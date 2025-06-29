@@ -30,7 +30,11 @@ export const POST = async (request: NextRequest, { params }: Params) => {
 
   const whereCondition: Prisma.ProductSubcategoryWhereInput = {
     tenantId,
-    categoryId,
+    productCategorySubcategory: {
+      some: {
+        categoryId,
+      },
+    },
     OR: [
       { name: { contains: query, mode: "insensitive" } },
       { description: { contains: query, mode: "insensitive" } },
@@ -59,7 +63,6 @@ export const POST = async (request: NextRequest, { params }: Params) => {
       id: subcategory.id,
       name: subcategory.name,
       description: subcategory.description,
-      categoryId: subcategory.categoryId,
       createdAt: subcategory.createdAt,
       updatedAt: subcategory.updatedAt,
     })),

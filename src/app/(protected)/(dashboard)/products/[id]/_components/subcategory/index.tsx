@@ -27,16 +27,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { updateProductCategoryAction } from "../../_actions/update-product-category";
-import { getCategoriesAction } from "../../../categories/_actions/get-categories";
-import { ProductCategory } from "../../../_actions/get-product";
+import { updateProductSubcategoryAction } from "../../_actions/update-product-subcategory";
+import { getSubcategoriesAction } from "../../../subcategories/_actions/get-subcategories";
+import { ProductSubcategory } from "../../../_actions/get-product";
 
 type RenderMode = "VIEW" | "EDIT";
 
-type CategoryProps = {
+type SubcategoryProps = {
   productId: string;
+  categoryId: string | null;
   tenantId: string;
-  defaultValue: ProductCategory | null;
+  defaultValue: ProductSubcategory | null;
 };
 
 type FormValues = {
@@ -45,8 +46,9 @@ type FormValues = {
 
 const PAGE_SIZE = 10;
 
-export const Category: FC<CategoryProps> = ({
+export const Subcategory: FC<SubcategoryProps> = ({
   defaultValue = null,
+  categoryId,
   productId,
   tenantId,
 }) => {
@@ -75,13 +77,15 @@ export const Category: FC<CategoryProps> = ({
     formState: { isDirty },
     watch,
   } = form;
-  const watchedValue = watch("value");
 
-  const loadCategories = async (page: number = 1) => {
+  const loadSubcategories = async (page: number = 1) => {
+    if (!categoryId) return;
+
     setIsLoading(true);
 
-    const result = await getCategoriesAction({
+    const result = await getSubcategoriesAction({
       tenantId,
+      categoryId,
       page,
       pageSize: PAGE_SIZE,
     });
@@ -91,8 +95,8 @@ export const Category: FC<CategoryProps> = ({
       return;
     }
 
-    const { categories, pagination } = result.value;
-    setCategories(categories);
+    const { subcategories, pagination } = result.value;
+    setCategories(subcategories);
     setTotalPages(pagination.totalPages);
     setCurrentPage(pagination.currentPage);
     setIsLoading(false);
@@ -100,27 +104,27 @@ export const Category: FC<CategoryProps> = ({
 
   useEffect(() => {
     if (renderMode === "EDIT") {
-      loadCategories();
+      loadSubcategories();
     }
   }, [renderMode]);
 
   const onSubmit = async (data: FormValues) => {
-    if (data.value && data.value !== defaultValue?.id) {
-      const result = await updateProductCategoryAction({
+    if (data.value !== defaultValue) {
+      const result = await updateProductSubcategoryAction({
         productId,
         tenantId,
-        categoryId: data.value,
+        subcategoryId: data.value === "none" ? null : data.value,
       });
 
       if ("error" in result) {
         toast.error("Falha na atualização", {
-          description: "Não foi possível atualizar a categoria do produto.",
+          description: "Não foi possível atualizar a sub-categoria do produto.",
         });
         return;
       }
 
       toast.success("Produto atualizado", {
-        description: "Categoria atualizada com sucesso.",
+        description: "Sub-categoria atualizada com sucesso.",
       });
     }
 
@@ -133,7 +137,7 @@ export const Category: FC<CategoryProps> = ({
         onSubmit={handleSubmit(onSubmit)}
         className="w-full flex flex-col gap-2"
       >
-        <p className="font-bold text-sm">Categoria</p>
+        <p className="font-bold text-sm">Sub-categoria</p>
         {renderMode === "EDIT" ? (
           <div className="relative space-y-2">
             <FormField
@@ -145,12 +149,13 @@ export const Category: FC<CategoryProps> = ({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value ?? "none"}
+                      disabled={!categoryId}
                     >
                       <SelectTrigger className="h-9 bg-secondary text-sm w-full">
-                        <SelectValue placeholder="Sem categoria" />
+                        <SelectValue placeholder="Sem sub-categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Sem categoria</SelectItem>
+                        <SelectItem value="none">Sem sub-categoria</SelectItem>
                         {categories.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.name}
@@ -162,7 +167,7 @@ export const Category: FC<CategoryProps> = ({
                             variant="ghost"
                             size="sm"
                             disabled={currentPage <= 1 || isLoading}
-                            onClick={() => loadCategories(currentPage - 1)}
+                            onClick={() => loadSubcategories(currentPage - 1)}
                           >
                             <ChevronUpIcon className="size-4" />
                           </Button>
@@ -174,7 +179,7 @@ export const Category: FC<CategoryProps> = ({
                             variant="ghost"
                             size="sm"
                             disabled={currentPage >= totalPages || isLoading}
-                            onClick={() => loadCategories(currentPage + 1)}
+                            onClick={() => loadSubcategories(currentPage + 1)}
                           >
                             <ChevronDownIcon className="size-4" />
                           </Button>
@@ -214,13 +219,14 @@ export const Category: FC<CategoryProps> = ({
         ) : (
           <div className="h-9 border rounded-md bg-secondary flex items-center justify-between px-3">
             <span className="text-sm">
-              {defaultValue?.name ?? "Sem categoria"}
+              {defaultValue?.name ?? "Sem sub-categoria"}
             </span>
             <Button
               size="icon"
               variant="ghost"
               className="size-7"
               onClick={toggleRenderMode}
+              disabled={!categoryId}
             >
               <PencilIcon className="size-4" />
             </Button>

@@ -425,8 +425,8 @@ model ProductCategory {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  products      Product[]
-  subcategories ProductSubcategory[]
+  products                     Product[]
+  productCategorySubcategories ProductCategorySubcategory[]
 
   @@map("product_categories")
 }
@@ -435,15 +435,25 @@ model ProductSubcategory {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
-  categoryId  String   @map("category_id") @db.Uuid
   tenantId    String   @map("tenant_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  category ProductCategory @relation(fields: [categoryId], references: [id])
-  products Product[]
+  products                   Product[]
+  productCategorySubcategory ProductCategorySubcategory[]
 
   @@map("product_subcategories")
+}
+
+model ProductCategorySubcategory {
+  categoryId    String @map("category_id") @db.Uuid
+  subcategoryId String @map("subcategory_id") @db.Uuid
+
+  category    ProductCategory    @relation(fields: [categoryId], references: [id])
+  subcategory ProductSubcategory @relation(fields: [subcategoryId], references: [id])
+
+  @@id([categoryId, subcategoryId])
+  @@map("product_category_subcategories")
 }
 
 model ProductSpecification {

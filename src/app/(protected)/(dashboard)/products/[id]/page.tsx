@@ -22,6 +22,7 @@ import { Category } from "./_components/category";
 import { FileUploader } from "./_components/attachments/file-uploader";
 import { Attachments } from "./_components/attachments";
 import { Compositions } from "./_components/compositions";
+import { Subcategory } from "./_components/subcategory";
 
 type PageParams = {
   id: string;
@@ -98,7 +99,13 @@ const Page: NextPage<PageProps> = async ({ params }) => {
             tenantId={session.tenantId}
           />
           <Category
-            defaultValue={product.categoryId}
+            defaultValue={product.category}
+            productId={product.id}
+            tenantId={session.tenantId}
+          />
+          <Subcategory
+            defaultValue={product.subcategory}
+            categoryId={product?.category?.id ?? null}
             productId={product.id}
             tenantId={session.tenantId}
           />

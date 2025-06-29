@@ -6,13 +6,24 @@ import { Action, success, failure } from "@/lib/action";
 import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
+export type ProductCategory = {
+  id: string;
+  name: string;
+};
+
+export type ProductSubcategory = {
+  id: string;
+  name: string;
+};
+
 export type Product = {
   id: string;
   name: string;
   description: string;
   active: boolean;
   skuCode: string;
-  categoryId: string | null;
+  category: ProductCategory | null;
+  subcategory: ProductSubcategory | null;
   salePrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -45,13 +56,34 @@ export type Product = {
   }[];
 };
 
-export const getProduct: Action<{ id: string }, { product: Product }> = async ({
-  id,
-}) => {
+type GetProductActionPayload = {
+  id: string;
+};
+
+type GetProductActionResult = {
+  product: Product;
+};
+
+export const getProduct: Action<
+  GetProductActionPayload,
+  GetProductActionResult
+> = async ({ id }) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id, deletedAt: null },
       include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        subcategory: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         productAttachments: {
           select: {
             id: true,
@@ -101,7 +133,8 @@ export const getProduct: Action<{ id: string }, { product: Product }> = async ({
       active: product.active,
       skuCode: product.skuCode,
       salePrice: product.salePrice.toNumber(),
-      categoryId: product.categoryId,
+      category: product.category,
+      subcategory: product.subcategory,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,
