@@ -27,6 +27,7 @@ import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async
 import { CustomerSale } from "./_components/sale";
 import { ExchangeReturnedProducts } from "./_components/products/returned";
 import { ExchangeReplacementProducts } from "./_components/products/replacement";
+import { ExchangeResume } from "./_components/resume";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
@@ -91,6 +92,10 @@ export const AddExchange: FC<AddExchangeProps> = ({
     defaultValues: {
       customerId: undefined,
       sale: undefined,
+      products: {
+        replacement: [],
+        returned: [],
+      },
     },
   });
 
@@ -129,7 +134,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
           Nova Troca
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-[500px] overflow-y-auto">
+      <DialogContent className="md:max-w-4xl max-h-[500px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Adicionar troca</DialogTitle>
           <DialogDescription />
@@ -138,32 +143,34 @@ export const AddExchange: FC<AddExchangeProps> = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid grid-cols-1 gap-3"
+            className="flex flex-col gap-3 min-h-[300px]"
           >
-            <FormField
-              control={form.control}
-              name="customerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cliente</FormLabel>
-                  <FormMessage />
-                  <FormControl>
-                    <CustomerAsyncSelect
-                      {...field}
-                      onValueChange={field.onChange}
-                      tenantId={tenantId}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="flex-1 w-full grid grid-cols-2 gap-5">
+              <div className="flex flex-col gap-3 flex-1 shrink-0">
+                <FormField
+                  control={form.control}
+                  name="customerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cliente</FormLabel>
+                      <FormMessage />
+                      <FormControl>
+                        <CustomerAsyncSelect
+                          {...field}
+                          onValueChange={field.onChange}
+                          tenantId={tenantId}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-            <CustomerSale tenantId={tenantId} />
+                <CustomerSale tenantId={tenantId} />
 
-            <ExchangeReturnedProducts />
+                <ExchangeReturnedProducts />
 
-            <ExchangeReplacementProducts tenantId={tenantId} />
-            {/* <FormField
+                <ExchangeReplacementProducts tenantId={tenantId} />
+                {/* <FormField
               control={form.control}
               name="paymentMethod"
               render={({ field }) => (
@@ -225,6 +232,10 @@ export const AddExchange: FC<AddExchangeProps> = ({
                 </FormItem>
               )}
             /> */}
+              </div>
+
+              <ExchangeResume />
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleCancel}>
