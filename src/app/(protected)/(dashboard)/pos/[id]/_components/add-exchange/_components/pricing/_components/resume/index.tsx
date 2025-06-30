@@ -1,6 +1,6 @@
 import React, { FC, useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { FormSchema } from "../..";
+import { FormSchema } from "../../../..";
 import { ExchangeResumeTable } from "./table";
 import { Label } from "@/components/ui/label";
 
@@ -71,7 +71,7 @@ export const ExchangeResume: FC = () => {
   }, [sale, returnedProducts, replacementProducts]);
 
   return (
-    <div className="flex-1 shrink-0 flex flex-col gap-2 overflow-x-auto">
+    <div className="shrink-0 flex flex-col gap-2 overflow-x-auto">
       <Label>Resumo</Label>
 
       <ExchangeResumeTable data={resumeList} />

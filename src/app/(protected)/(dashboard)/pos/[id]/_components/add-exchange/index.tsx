@@ -27,7 +27,7 @@ import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async
 import { CustomerSale } from "./_components/sale";
 import { ExchangeReturnedProducts } from "./_components/products/returned";
 import { ExchangeReplacementProducts } from "./_components/products/replacement";
-import { ExchangeResume } from "./_components/resume";
+import { ExchangePricing } from "./_components/pricing";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
@@ -45,7 +45,7 @@ const formSchema = z.object({
       totalItems: z.number().gt(0.0),
       products: z.array(
         z.object({
-          itemId: z.string(), // array itens with zod have 'id' prop
+          itemId: z.string(), // zod fieldArrays have internal 'id' prop.
           name: z.string(),
           salePrice: z.number().gt(0.0),
           totalQty: z.number().gt(0.0),
@@ -124,6 +124,8 @@ export const AddExchange: FC<AddExchangeProps> = ({
     setOpen(false);
   };
 
+  // TODO: lidar com dados em "onClose"
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -170,71 +172,9 @@ export const AddExchange: FC<AddExchangeProps> = ({
                 <ExchangeReturnedProducts />
 
                 <ExchangeReplacementProducts tenantId={tenantId} />
-                {/* <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Método de pagamento</FormLabel>
-                  <FormControl>
-                    <Select
-                      {...field}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione uma forma de pagamento" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.values(EPaymentMethod).map(p => (
-                          <SelectItem key={p} value={p}>
-                            {PaymentMethodPresenter.present(p)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantia</FormLabel>
-                  <FormControl>
-                    <NumericFormat
-                      value={field.value === 0 ? "" : field.value}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="R$ "
-                      allowNegative={false}
-                      decimalScale={2}
-                      fixedDecimalScale
-                      customInput={Input}
-                      onValueChange={({ floatValue }) => {
-                        field.onChange(floatValue ?? 0);
-                      }}
-                      onFocus={(e) => {
-                        if (field.value === 0) {
-                          e.currentTarget.setSelectionRange(
-                            e.currentTarget.value.length,
-                            e.currentTarget.value.length
-                          );
-                        }
-                      }}
-                      placeholder="R$ 0,00"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
               </div>
 
-              <ExchangeResume />
+              <ExchangePricing />
             </div>
 
             <div className="flex justify-end gap-2">
