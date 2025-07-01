@@ -1,80 +1,120 @@
-import React, { FC, useMemo } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
-import { FormSchema } from "../../../..";
-import { ExchangeResumeTable } from "./table";
+import React, { FC } from "react";
 import { Label } from "@/components/ui/label";
+import { ResumeItem } from "../..";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { ReactNode } from "react";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
+import { CircleCheckIcon, PlusIcon, UndoIcon } from "lucide-react";
 
-export type ResumeItem = {
-  productId: string;
-  name: string;
-  salePrice: number;
-  status: "unmodified" | "returned" | "replacement";
-  quantity: number;
-};
+type Props = {
+  resumeList: ResumeItem[];
+  adjustedTotal: number;
+}
 
-export const ExchangeResume: FC = () => {
-  const form = useFormContext<FormSchema>();
+type RenderElements = {
+  label: string;
+  icon: ReactNode;
+  subtotalLabel: string;
+}
 
-  const [sale, returnedProducts, replacementProducts] = useWatch({
-    name: ["sale", "products.returned", "products.replacement"],
-    control: form.control,
-  });
+const iconProps = { size: 15, strokeWidth: 2.5 };
 
-  const resumeList: ResumeItem[] = useMemo(() => {
-    if (!sale) return [];
+const getRenderElements = (item: ResumeItem): RenderElements => {
+  const subtotal = CurrencyFormatter.format(item.quantity * item.salePrice);
 
-    const data: ResumeItem[] = [];
+  switch (item.status) {
+    case "replacement": return {
+      label: "Incluído",
+      icon: <PlusIcon className="text-blue-400" {...iconProps} />,
+      subtotalLabel: "+ " + subtotal
+    };
+    case "returned": return {
+      label: "Devolvido",
+      icon: <UndoIcon className="text-orange-500" {...iconProps} />,
+      subtotalLabel: "- " + subtotal
+    };
+    case "unmodified": return {
+      label: "Mantido",
+      icon: <CircleCheckIcon className="text-green-500"  {...iconProps} />,
+      subtotalLabel: "+ " + subtotal
+    };
+    default:
+      throw new Error("Unmapped resume item status.");
+  }
+}
 
-    for (const saleItem of sale.products) {
-      const returnBody =
-        returnedProducts.find(p => p.productId == saleItem.productId);
-
-      // Is not returned.
-      if (returnBody == undefined) {
-        data.push({
-          ...saleItem,
-          quantity: saleItem.totalQty,
-          status: "unmodified",
-        });
-        continue;
-      };
-
-      // Add returned unities.
-      data.push({
-        ...saleItem,
-        quantity: returnBody.totalQty,
-        status: "returned",
-      });
-
-      const returnDiff = saleItem.totalQty - returnBody.totalQty;
-      const completelyReturned = returnDiff == 0;
-
-      // Check for remaining unities.
-      if (!completelyReturned) {
-        data.push({
-          ...saleItem,
-          quantity: returnDiff,
-          status: "unmodified",
-        });
-      }
-    }
-
-    // Add exchanged unities.
-    for (const replaementProd of replacementProducts) {
-      data.push({
-        ...replaementProd,
-        status: "replacement",
-      });
-    }
-
-    return data.sort((a, b) => a.productId.localeCompare(b.productId));
-  }, [sale, returnedProducts, replacementProducts]);
-
+export const ExchangeResume: FC<Props> = ({ resumeList, adjustedTotal }) => {
   return (
     <div className="shrink-0 flex flex-col gap-2 overflow-x-auto">
       <Label>Resumo</Label>
 
-      <ExchangeResumeTable data={resumeList} />
+      <div className="w-full border rounded-lg overflow-hidden">
+        {resumeList.length < 1
+          ? (
+            <div className="w-full px-5 py-8 flex items-center justify-center border border-dashed rounded-lg">
+              <p className="text-center text-muted-foreground text-sm">
+                Selecione uma venda e produtos para retirada e devolução.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-left sticky left-0 bg-background">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-left">Nome</TableHead>
+                  <TableHead className="text-left">Qntd</TableHead>
+                  <TableHead className="text-left">Preço</TableHead>
+                  <TableHead className="text-left">Subtotal</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {resumeList.map((item) => {
+                  const { icon, label, subtotalLabel } = getRenderElements(item);
+
+                  return (
+                    <TableRow key={`${item.productId}:${item.status}`}>
+                      <TableCell className="font-medium sticky left-0 bg-background z-10">
+                        <div className="w-min flex items-center gap-2 rounded-lg py-1 px-2 border b-slate-700 text-[13px]">
+                          {icon}
+                          {label}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {item.quantity}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {CurrencyFormatter.format(item.salePrice)}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {subtotalLabel}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="font-medium">
+                  <TableCell className="left-0 sticky bg-background z-10">
+                    Total
+                  </TableCell>
+                  <TableCell className="text-right" colSpan={4}>
+                    {CurrencyFormatter.format(adjustedTotal)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
+      </div>
     </div>
   );
 }

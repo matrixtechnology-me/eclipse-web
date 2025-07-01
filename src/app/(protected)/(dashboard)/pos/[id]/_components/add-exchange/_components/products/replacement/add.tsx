@@ -118,7 +118,7 @@ export const AddReplacementProduct = ({
               control={form.control}
               name="quantity"
               render={({ field }) => (
-                <FormItem className="mx-1">
+                <FormItem>
                   <FormLabel>Quantidade</FormLabel>
                   <FormControl>
                     <NumericFormat
