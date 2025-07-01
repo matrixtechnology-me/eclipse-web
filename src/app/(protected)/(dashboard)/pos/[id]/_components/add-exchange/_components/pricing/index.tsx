@@ -1,9 +1,9 @@
 import { useFormContext, useWatch } from "react-hook-form";
-// import { ExchangeMovements } from "./_components/movements";
-import { ExchangeResume } from "./_components/resume";
 import { FormSchema } from "../..";
 import { useMemo } from "react";
 import { createDinero } from "@/lib/dinero/factory";
+import { ExchangeResume } from "./_components/resume";
+import { ExchangeMovements } from "./_components/movements";
 
 export type ResumeItem = {
   productId: string;
@@ -71,22 +71,19 @@ export const ExchangePricing = () => {
     return data.sort((a, b) => a.productId.localeCompare(b.productId));
   }, [sale, returnedProducts, replacementProducts]);
 
-  const adjustedTotal = useMemo(() => {
-    let sum = createDinero(0);
-
-    resumeList.forEach(({ status, salePrice, quantity }) => {
+  const adjustedTotal = useMemo(() => (
+    resumeList.reduce((sum, item) => {
+      const { status, salePrice, quantity } = item;
       const subtotal = createDinero(salePrice).multiply(quantity);
 
       switch (status) {
-        case "replacement": return sum = sum.add(subtotal);
-        case "unmodified": return sum = sum.add(subtotal);
-        case "returned": return sum = sum.subtract(subtotal);
+        case "replacement": return sum.add(subtotal);
+        case "unmodified": return sum.add(subtotal);
+        case "returned": return sum;
         default: throw new Error("Unmapped resume item status.");
       };
-    });
-
-    return sum;
-  }, [resumeList]);
+    }, createDinero(0))
+  ), [resumeList]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -95,7 +92,7 @@ export const ExchangePricing = () => {
         adjustedTotal={adjustedTotal.toUnit()}
       />
 
-      {/* <ExchangeMovements /> */}
+      <ExchangeMovements adjustedTotal={adjustedTotal} />
     </div>
   );
 }

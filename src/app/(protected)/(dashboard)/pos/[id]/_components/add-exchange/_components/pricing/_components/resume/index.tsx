@@ -105,7 +105,7 @@ export const ExchangeResume: FC<Props> = ({ resumeList, adjustedTotal }) => {
                 })}
                 <TableRow className="font-medium">
                   <TableCell className="left-0 sticky bg-background z-10">
-                    Total
+                    Total ajustado
                   </TableCell>
                   <TableCell className="text-right" colSpan={4}>
                     {CurrencyFormatter.format(adjustedTotal)}

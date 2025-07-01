@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { FC, useState } from "react";
-import { EPosStatus } from "@prisma/client";
+import { EPaymentMethod, EPosStatus, ESaleMovementType } from "@prisma/client";
 import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async-select";
 import { CustomerSale } from "./_components/sale";
 import { ExchangeReturnedProducts } from "./_components/products/returned";
@@ -52,6 +52,13 @@ const formSchema = z.object({
           productId: z.string(),
         }),
       ),
+      movements: z.array(
+        z.object({
+          type: z.nativeEnum(ESaleMovementType),
+          amount: z.number().gt(0.0),
+          paymentMethod: z.nativeEnum(EPaymentMethod),
+        }),
+      ),
     }, { required_error: "Campo obrigatório." }),
   products: z.object({
     returned: z.array(
@@ -70,6 +77,13 @@ const formSchema = z.object({
       }),
     ).min(1, "Mínimo de um item."),
   }),
+  movements: z.array(
+    z.object({
+      type: z.nativeEnum(ESaleMovementType),
+      amount: z.number().gt(0.0),
+      paymentMethod: z.nativeEnum(EPaymentMethod),
+    }),
+  ),
 });
 
 export type FormSchema = z.infer<typeof formSchema>;
@@ -96,6 +110,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
         replacement: [],
         returned: [],
       },
+      movements: [],
     },
   });
 
