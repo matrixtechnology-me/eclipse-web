@@ -318,9 +318,10 @@ model PosEventSaleProduct {
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
-  productId String @map("product_id") @db.Uuid
+  productId      String @map("product_id") @db.Uuid
+  posEventSaleId String @map("pos_event_sale_id") @db.Uuid
 
-  posEventSale PosEventSale @relation(fields: [id], references: [id])
+  posEventSale PosEventSale @relation(fields: [posEventSaleId], references: [id])
   product      Product      @relation(fields: [productId], references: [id])
 
   @@map("pos_event_sale_products")
