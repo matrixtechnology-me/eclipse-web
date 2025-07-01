@@ -10,7 +10,7 @@ export const seedSaleModule = async (
       customerId: "c025f2fd-9c95-4b90-b5bc-140bf60b5ef7",
       internalCode: "DCA637",
       // Sum of each product p => p.salePrice * p.totalQty
-      estimatedTotal: 139.9,
+      estimatedTotal: 139.9 * 1 + 59.9 * 2,
       paidTotal: 0,
       discountValue: 0,
       discountVariant: EDiscountVariant.Percentage,
@@ -18,7 +18,7 @@ export const seedSaleModule = async (
       tenantId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      products: {
+      products: { // SaleItem != Product
         createMany: {
           data: [
             {
@@ -32,7 +32,19 @@ export const seedSaleModule = async (
               costPrice: 68,
               createdAt: new Date(),
               updatedAt: new Date(),
-            }
+            },
+            {
+              id: "1b7e437f-c159-4b33-8db2-89e4d6ff9d01",
+              productId: "d5c7a1f2-3bfa-46e0-8b22-12f34c56d789",
+              name: "Quebra-Cabeça Alfabeto Divertido",
+              description: "Quebra-cabeça educativo com peças em madeira que ajudam as crianças a aprender o alfabeto brincando. Estimula a coordenação motora e o raciocínio lógico.",
+              salePrice: 59.9,
+              totalQty: 2,
+              stockLotId: "e41f1db2-cd84-45eb-b93f-8a0646d47b6e",
+              costPrice: 68,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
           ]
         }
       }
