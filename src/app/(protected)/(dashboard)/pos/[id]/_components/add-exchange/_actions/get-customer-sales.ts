@@ -4,7 +4,9 @@ import { Action, success, failure } from "@/lib/action";
 import { BadRequestError } from "@/errors/http/bad-request.error";
 import { InternalServerError } from "@/errors";
 import {
+  EPaymentMethod,
   EPaymentStatus,
+  ESaleMovementType,
   ESaleStatus,
   Prisma,
   PrismaClient,
@@ -38,6 +40,11 @@ export type SaleItem = {
     salePrice: number;
     totalQty: number;
     productId: string;
+  }>;
+  movements: Array<{
+    type: ESaleMovementType;
+    paymentMethod: EPaymentMethod;
+    amount: number;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -88,6 +95,12 @@ export const getCustomerPendingSalesAction: Action<
         where: whereCondition,
         include: {
           products: true,
+          movements: {
+            include: {
+              change: true,
+              payment: true,
+            }
+          },
         },
         skip,
         take: pageSize,
@@ -102,21 +115,50 @@ export const getCustomerPendingSalesAction: Action<
       s => s.paymentStatus == EPaymentStatus.Pending
     );
 
-    const mappedSales: SaleItem[] = paymentPendingSales.map((sale) => ({
-      id: sale.id,
-      paidTotal: sale.paidTotal.toNumber(),
-      estimatedTotal: sale.estimatedTotal.toNumber(),
-      products: sale.products.map(saleItem => ({
+    const mappedSales: SaleItem[] = paymentPendingSales.map((sale) => {
+      const products = sale.products.map(saleItem => ({
         id: saleItem.id,
         name: saleItem.name,
         salePrice: saleItem.salePrice.toNumber(),
         totalQty: saleItem.totalQty,
         productId: saleItem.productId,
-      })),
-      totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
-      createdAt: sale.createdAt,
-      updatedAt: sale.updatedAt,
-    }));
+      }));
+
+      const movements = sale.movements.map(movement => {
+        switch (movement.type) {
+          case "Change": {
+            if (!movement.change) throw new Error("Null movement object.");
+
+            return {
+              type: movement.type,
+              amount: movement.change.amount.toNumber(),
+              paymentMethod: movement.change.method,
+            };
+          }
+          case "Payment": {
+            if (!movement.payment) throw new Error("Null movement object.");
+
+            return {
+              type: movement.type,
+              amount: movement.payment.amount.toNumber(),
+              paymentMethod: movement.payment.method,
+            };
+          }
+          default: throw new Error("Unmapped movement object.");
+        }
+      });
+
+      return {
+        id: sale.id,
+        paidTotal: sale.paidTotal.toNumber(),
+        estimatedTotal: sale.estimatedTotal.toNumber(),
+        products,
+        movements,
+        totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
+        createdAt: sale.createdAt,
+        updatedAt: sale.updatedAt,
+      };
+    });
 
     return success({
       sales: mappedSales,
