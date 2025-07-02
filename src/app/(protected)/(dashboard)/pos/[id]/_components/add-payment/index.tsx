@@ -32,11 +32,11 @@ import { toast } from "sonner";
 import { FC, useState } from "react";
 import { NumericFormat } from "react-number-format";
 import { EPaymentMethod, EPosStatus } from "@prisma/client";
-import { Customer } from "./_components/customer";
 import { CustomerSale } from "./_components/sale";
 import { PaymentMethodPresenter } from "@/utils/presenters/payment-method";
 import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 import { revalidate } from "./_actions/revalidate";
+import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async-select";
 
 const formSchema = z.object({
   customerId: z
@@ -122,7 +122,23 @@ export const AddPayment: FC<AddPaymentProps> = ({
             onSubmit={form.handleSubmit(onSubmit)}
             className="grid grid-cols-1 gap-3"
           >
-            <Customer tenantId={tenantId} />
+            <FormField
+              control={form.control}
+              name="customerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cliente</FormLabel>
+                  <FormMessage />
+                  <FormControl>
+                    <CustomerAsyncSelect
+                      {...field}
+                      onValueChange={field.onChange}
+                      tenantId={tenantId}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <CustomerSale tenantId={tenantId} />
 

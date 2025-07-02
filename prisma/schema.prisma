@@ -57,6 +57,11 @@ enum EPaymentMethod {
   DebitCard  @map(name: "debit-card")
 }
 
+enum EPaymentStatus {
+  Paid    @map(name: "paid")
+  Pending @map(name: "pending")
+}
+
 enum EPeriod {
   DAILY   @map(name: "daily")
   WEEKLY  @map(name: "weekly")
@@ -313,9 +318,10 @@ model PosEventSaleProduct {
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
-  productId String @map("product_id") @db.Uuid
+  productId      String @map("product_id") @db.Uuid
+  posEventSaleId String @map("pos_event_sale_id") @db.Uuid
 
-  posEventSale PosEventSale @relation(fields: [id], references: [id])
+  posEventSale PosEventSale @relation(fields: [posEventSaleId], references: [id])
   product      Product      @relation(fields: [productId], references: [id])
 
   @@map("pos_event_sale_products")
@@ -363,6 +369,19 @@ model ProductCategory {
   @@map("product_categories")
 }
 
+model ProductSpecification {
+  id        String   @id @default(uuid()) @db.Uuid
+  label     String
+  value     String
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("product_specifications")
+}
+
 model ProductSubcategory {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
@@ -376,19 +395,6 @@ model ProductSubcategory {
   products Product[]
 
   @@map("product_subcategories")
-}
-
-model ProductSpecification {
-  id        String   @id @default(uuid()) @db.Uuid
-  label     String
-  value     String
-  productId String   @map("product_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  product Product @relation(fields: [productId], references: [id])
-
-  @@map("product_specifications")
 }
 
 model Sale {

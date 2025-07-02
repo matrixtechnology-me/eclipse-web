@@ -10,12 +10,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useFormContext, useWatch } from "react-hook-form";
-import { FormSchema } from "../";
+import { FormSchema } from "..";
 import {
-  getCustomerSalesAction,
+  getCustomerPendingSalesAction,
   SaleItem,
 } from "../_actions/get-customer-sales";
-import { ESaleStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   EntityTable,
@@ -48,7 +47,15 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
   });
 
   const handleSelect = (sale: SaleItem) => {
-    form.setValue("saleId", sale.id, {
+    const payload: FormSchema["sale"] = {
+      ...sale,
+      products: sale.products.map(saleItem => ({
+        ...saleItem,
+        itemId: saleItem.id,
+      })),
+    }
+
+    form.setValue("sale", payload, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -56,7 +63,8 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
   }
 
   const handleUnselect = () => {
-    form.resetField("saleId");
+    form.resetField("sale");
+    form.resetField("products.returned");
   }
 
   const columns: ColumnDef<SaleItem>[] = useMemo(
@@ -116,13 +124,13 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
       },
       {
         id: "salePrice",
-        accessorFn: (sale) => sale.salePrice,
+        accessorFn: (sale) => sale.estimatedTotal,
         header: ({ column }) => (
           <EntityTableColumnHeader title="Total" column={column} />
         ),
         cell: ({ row }) => (
           <p className="flex-1 text-sm line-clamp-2">
-            {CurrencyFormatter.format(row.original.salePrice)}
+            {CurrencyFormatter.format(row.original.estimatedTotal)}
           </p>
         ),
       },
@@ -158,17 +166,16 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
     const loadValues = async () => {
       if (!watchedCustomerId) return;
 
-      const result = await getCustomerSalesAction({
+      const result = await getCustomerPendingSalesAction({
         page: PAGE,
         pageSize: PAGE_SIZE,
-        status: ESaleStatus.Processed,
         customerId: watchedCustomerId,
         tenantId,
       });
 
       if (result.isFailure) {
         return toast("", {
-          description: "Erro ao buscar clientes.",
+          description: "Erro ao buscar vendas.",
         });
       }
 
@@ -182,7 +189,7 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
   return (
     <FormField
       control={form.control}
-      name="saleId"
+      name="sale"
       render={() => (
         <FormItem>
           <FormLabel>Venda</FormLabel>
