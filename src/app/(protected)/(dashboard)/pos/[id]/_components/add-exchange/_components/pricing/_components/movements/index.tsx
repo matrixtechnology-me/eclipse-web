@@ -2,17 +2,19 @@ import { Label } from "@/components/ui/label";
 import { FC, useCallback, useMemo } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { FormSchema } from "../../../..";
-import { ExchangeMovimentsTable } from "./table";
+import { ExchangeMovementsTable } from "./table";
 import { EPaymentMethod } from "@prisma/client";
 import DineroFactory from "dinero.js";
 import { createDinero } from "@/lib/dinero/factory";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { InfoIcon } from "lucide-react";
+import { AddExchangeMovement } from "./add";
 
 export type MovementTableItem = {
   type: "payment" | "change" | "so-far";
   amount: number;
   paymentMethod?: EPaymentMethod;
+  fieldIndex?: number;
 }
 
 type Props = {
@@ -49,24 +51,26 @@ export const ExchangeMovements: FC<Props> = ({
   const movementItems: MovementTableItem[] = useMemo(() => {
     const data: MovementTableItem[] = [];
 
-    if (paidBalance) {
+    if (paidBalance?.isPositive() && !paidBalance?.isZero()) {
       data.push({
         type: "so-far",
         amount: paidBalance.toUnit(),
       });
     }
 
-    fieldArray.fields.forEach((field) => {
+    fieldArray.fields.forEach((field, index) => {
       switch (field.type) {
         case "Change": return data.push({
           type: "change",
           amount: field.amount,
           paymentMethod: field.paymentMethod,
+          fieldIndex: index,
         });
         case "Payment": return data.push({
           type: "payment",
           amount: field.amount,
           paymentMethod: field.paymentMethod,
+          fieldIndex: index,
         });
         default: throw new Error("Unmapped movement type.");
       }
@@ -102,11 +106,16 @@ export const ExchangeMovements: FC<Props> = ({
 
   return (
     <div className="flex-1 shrink-0 flex flex-col gap-2 overflow-x-auto">
-      <Label>Movimentações</Label>
+      <div className="flex items-center justify-between gap-3">
+        <Label>Movimentações</Label>
 
-      <ExchangeMovimentsTable
+        <AddExchangeMovement handleAppend={fieldArray.append} />
+      </div>
+
+      <ExchangeMovementsTable
         data={movementItems}
         currentPayment={currentPayment}
+        removeField={fieldArray.remove}
       />
 
       {saleMovements && (

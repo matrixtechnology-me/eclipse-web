@@ -7,14 +7,15 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { CoinsIcon, DollarSign, HistoryIcon } from "lucide-react";
+import { CoinsIcon, DollarSign, HistoryIcon, TrashIcon } from "lucide-react";
 import { PaymentMethodPresenter } from "@/utils/presenters/payment-method";
 import { MovementTableItem } from ".";
 import { useFormContext, useWatch } from "react-hook-form";
 import { FormSchema } from "../../../..";
 import DineroFactory from "dinero.js";
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import clsx from "clsx";
+import { Button } from "@/components/ui/button";
 
 type RenderElements = {
   label: string;
@@ -22,8 +23,9 @@ type RenderElements = {
   amountLabel: string;
 }
 
+const iconProps = { size: 15, strokeWidth: 2.5 };
+
 const getRenderElements = (item: MovementTableItem): RenderElements => {
-  const iconProps = { size: 15, strokeWidth: 2.5 };
   const amountStr = CurrencyFormatter.format(item.amount);
 
   switch (item.type) {
@@ -48,11 +50,13 @@ const getRenderElements = (item: MovementTableItem): RenderElements => {
 type Props = {
   data: MovementTableItem[];
   currentPayment: DineroFactory.Dinero;
+  removeField: (fieldIndex: number) => void;
 }
 
-export const ExchangeMovimentsTable = ({
+export const ExchangeMovementsTable = ({
   data,
   currentPayment,
+  removeField,
 }: Props) => {
   const form = useFormContext<FormSchema>();
 
@@ -60,6 +64,11 @@ export const ExchangeMovimentsTable = ({
     name: "sale",
     control: form.control,
   });
+
+  const getTotalLabel = useCallback(() => {
+    const prefix = currentPayment.isNegative() ? "- " : "+ ";
+    return prefix + CurrencyFormatter.format(currentPayment.toUnit());
+  }, [currentPayment]);
 
   return (
     <div className="w-full border rounded-lg overflow-hidden">
@@ -84,6 +93,9 @@ export const ExchangeMovimentsTable = ({
               </TableHead>
               <TableHead className="text-left">Método</TableHead>
               <TableHead className="text-left">Valor</TableHead>
+              <TableHead className="text-center">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -92,7 +104,7 @@ export const ExchangeMovimentsTable = ({
 
               return (
                 <TableRow key={index} className={clsx({
-                  "bg-muted/60": item.type == "so-far",
+                  "bg-muted/50": item.type == "so-far",
                 })}>
                   <TableCell>
                     <div className="w-min flex items-center gap-2 rounded-lg py-1 px-2 border b-slate-700 text-[13px]">
@@ -110,15 +122,27 @@ export const ExchangeMovimentsTable = ({
                   <TableCell className="font-medium">
                     {amountLabel}
                   </TableCell>
+                  <TableCell className="font-medium">
+                    <div className="w-full flex items-center justify-center">
+                      <Button
+                        variant="outline"
+                        className="p-0 size-9 cursor-pointer"
+                        disabled={item.fieldIndex == undefined}
+                        onClick={() => removeField(item.fieldIndex!)}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })}
             <TableRow className="font-medium">
-              <TableCell colSpan={2} className="left-0 sticky bg-background z-10">
+              <TableCell colSpan={2}>
                 Total pago
               </TableCell>
-              <TableCell>
-                {CurrencyFormatter.format(currentPayment.toUnit())}
+              <TableCell colSpan={2}>
+                {getTotalLabel()}
               </TableCell>
             </TableRow>
           </TableBody>

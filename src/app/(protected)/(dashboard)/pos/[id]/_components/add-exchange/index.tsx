@@ -139,10 +139,11 @@ export const AddExchange: FC<AddExchangeProps> = ({
     setOpen(false);
   };
 
-  // TODO: lidar com dados em "onClose"
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) form.reset(); // reset on close
+      setOpen(newOpen);
+    }}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -151,9 +152,9 @@ export const AddExchange: FC<AddExchangeProps> = ({
           Nova Troca
         </Button>
       </DialogTrigger>
-      <DialogContent className="md:max-w-4xl max-h-[500px] overflow-y-auto">
+      <DialogContent className="md:max-w-5xl max-h-[500px] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Adicionar troca</DialogTitle>
+          <DialogTitle>Realizar troca</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 
@@ -162,7 +163,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-3 min-h-[300px]"
           >
-            <div className="flex-1 w-full grid grid-cols-2 gap-5">
+            <div className="flex-1 w-full grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-3 flex-1 shrink-0">
                 <FormField
                   control={form.control}
