@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { Label } from "@/components/ui/label";
-import { ResumeItem } from "../..";
+import { ExchangeResumeItem } from "../../../../_types/resume";
 import {
   Table,
   TableHeader,
@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/table";
 import { ReactNode } from "react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { CircleCheckIcon, PlusIcon, UndoIcon } from "lucide-react";
+import { CircleCheckIcon, PackagePlusIcon, PlusIcon, UndoIcon } from "lucide-react";
 
 type Props = {
-  resumeList: ResumeItem[];
+  resumeList: ExchangeResumeItem[];
   adjustedTotal: number;
 }
 
@@ -26,21 +26,26 @@ type RenderElements = {
 
 const iconProps = { size: 15, strokeWidth: 2.5 };
 
-const getRenderElements = (item: ResumeItem): RenderElements => {
+const getRenderElements = (item: ExchangeResumeItem): RenderElements => {
   const subtotal = CurrencyFormatter.format(item.quantity * item.salePrice);
 
   switch (item.status) {
-    case "replacement": return {
+    case "new": return {
       label: "Incluído",
+      icon: <PackagePlusIcon className="text-purple-400" {...iconProps} />,
+      subtotalLabel: "+ " + subtotal
+    };
+    case "incremented": return {
+      label: "Acrescentado",
       icon: <PlusIcon className="text-blue-400" {...iconProps} />,
       subtotalLabel: "+ " + subtotal
     };
     case "returned": return {
       label: "Devolvido",
       icon: <UndoIcon className="text-orange-500" {...iconProps} />,
-      subtotalLabel: "- " + subtotal
+      subtotalLabel: subtotal
     };
-    case "unmodified": return {
+    case "kept": return {
       label: "Mantido",
       icon: <CircleCheckIcon className="text-green-500"  {...iconProps} />,
       subtotalLabel: "+ " + subtotal

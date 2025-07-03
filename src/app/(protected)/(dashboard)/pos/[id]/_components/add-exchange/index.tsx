@@ -31,8 +31,8 @@ import { ExchangePricing } from "./_components/pricing";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
-// This data will be used to data collection and rendering.
-// Not all this structure is used for the mutation.
+// This data willa also be used for rendering.
+// Not all this structure is used for data collection.
 const formSchema = z.object({
   customerId: z
     .string({ required_error: "Campo obrigatório." })
