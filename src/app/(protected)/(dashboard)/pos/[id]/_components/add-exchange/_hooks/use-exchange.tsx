@@ -27,8 +27,8 @@ import { createDinero } from "@/lib/dinero/factory";
 export const useExchange = () => {
   const form = useFormContext<FormSchema>();
 
-  const [sale, returnedItems, replacementItems] = useWatch({
-    name: ["sale", "products.returned", "products.replacement"],
+  const [sale, returnedItems, replacementItems, discount] = useWatch({
+    name: ["sale", "products.returned", "products.replacement", "discount"],
     control: form.control,
   });
 
@@ -109,5 +109,19 @@ export const useExchange = () => {
     }, createDinero(0))
   ), [resumeList]);
 
-  return { resumeList, adjustedTotal };
+  const discountedTotal = useMemo(() => {
+    if (!discount) return adjustedTotal;
+
+    switch (discount.type) {
+      case "cash":
+        return adjustedTotal.subtract(createDinero(discount.value));
+      case "percentage": {
+        const discountAmount = adjustedTotal.multiply(discount.value);
+        return adjustedTotal.subtract(discountAmount);
+      }
+      default: throw new Error("Unmapped discount type.");
+    }
+  }, [adjustedTotal, discount]);
+
+  return { resumeList, adjustedTotal, discountedTotal };
 }
