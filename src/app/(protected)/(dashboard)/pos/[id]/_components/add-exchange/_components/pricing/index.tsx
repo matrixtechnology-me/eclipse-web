@@ -1,6 +1,7 @@
 import { ExchangeResume } from "./_components/resume";
 import { ExchangeMovements } from "./_components/movements";
 import { useExchange } from "../../_hooks/use-exchange";
+import { ExchangeDiscountInput } from "./_components/discount";
 
 export const ExchangePricing = () => {
   const { resumeList, adjustedTotal } = useExchange();
@@ -11,6 +12,8 @@ export const ExchangePricing = () => {
         resumeList={resumeList}
         adjustedTotal={adjustedTotal.toUnit()}
       />
+
+      <ExchangeDiscountInput />
 
       <ExchangeMovements adjustedTotal={adjustedTotal} />
     </div>

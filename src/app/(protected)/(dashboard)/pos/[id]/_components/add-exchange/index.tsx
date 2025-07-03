@@ -60,6 +60,18 @@ const formSchema = z.object({
         }),
       ),
     }, { required_error: "Campo obrigatório." }),
+  discount: z.object({
+    value: z.number().gt(0.0, "Valor deve ser maior que zero."),
+    type: z.enum(["cash", "percentage"]),
+  })
+    .optional()
+    .refine(arg => {
+      if (!arg || arg.type == "cash") return true;
+      return arg.value < 1;
+    }, {
+      message: "Porcentagem deve ser menor que 100%.",
+      path: ["value"],
+    }),
   products: z.object({
     returned: z.array(
       z.object({
