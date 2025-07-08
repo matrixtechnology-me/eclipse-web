@@ -4,8 +4,7 @@ export const seedPosSaleModule = async (
   tenantId: string,
   prisma: PrismaClient,
 ) => {
-  // Seeds a PosSale with a single product.
-  // This PosSale reflects the Sale seeded on 'seedSaleModule'.
+  // PosSale reflects the Sale seeded on 'seedSaleModule'.
 
   const product1 = {
     productId: "b3ff3d0c-67d0-4f24-b5f7-b796017f7ba2",
@@ -29,15 +28,26 @@ export const seedPosSaleModule = async (
     updatedAt: new Date(),
   };
 
+  const product3 = {
+    productId: "c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
+    name: "Patinete Divertix 3 Rodas",
+    description: "Patinete estável com 3 rodas, ideal para o desenvolvimento do equilíbrio e coordenação motora. Indicado para crianças a partir de 3 anos.",
+    salePrice: 197.65,
+    costPrice: 110,
+    totalQty: 3,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
   await prisma.posEventSale.create({
     data: {
       amount: 0, // paid value
       customer: { connect: { id: "c025f2fd-9c95-4b90-b5bc-140bf60b5ef7" } },
       sale: { connect: { id: "d0d0a137-168b-44fd-9e2c-190e379fc134" } },
-      description: "Venda de um sapato infantil e quebra-cabeças para o Uncle Bob.",
+      description: "Venda de um sapato infantil, quebra-cabeças e patinetes para o Uncle Bob.",
       products: {
         createMany: {
-          data: [product1, product2],
+          data: [product1, product2, product3],
         },
       },
       posEvent: {
@@ -75,7 +85,20 @@ export const seedPosSaleModule = async (
           },
         },
       },
-    })
+    }),
+    prisma.stock.update({
+      where: { id: "d8734ea6-8cb7-4fcf-a342-fae8e5c8c2df" },
+      data: {
+        availableQty: { decrement: product3.totalQty },
+        totalQty: { decrement: product3.totalQty },
+        lots: {
+          update: {
+            where: { id: "4a5b6c7d-8e9f-4012-a3b4-c5d6e7f890ab" },
+            data: { totalQty: { decrement: product3.totalQty } },
+          },
+        },
+      },
+    }),
   ]);
 
   await Promise.all([
@@ -106,6 +129,20 @@ export const seedPosSaleModule = async (
           },
         },
       },
-    })
+    }),
+    prisma.stockEvent.create({
+      data: {
+        type: EStockEventType.Output,
+        tenantId,
+        stockId: "d8734ea6-8cb7-4fcf-a342-fae8e5c8c2df",
+        stockLotId: "4a5b6c7d-8e9f-4012-a3b4-c5d6e7f890ab",
+        output: {
+          create: {
+            quantity: product3.totalQty,
+            description: `Adeus, estoque! 🛒 Saíram ${product3.totalQty} unidades do lote. Venda feita, espaço liberado — bora repor?`,
+          },
+        },
+      },
+    }),
   ]);
 }

@@ -9,8 +9,7 @@ export const seedSaleModule = async (
       id: "d0d0a137-168b-44fd-9e2c-190e379fc134",
       customerId: "c025f2fd-9c95-4b90-b5bc-140bf60b5ef7",
       internalCode: "DCA637",
-      // Sum of each product p => p.salePrice * p.totalQty
-      estimatedTotal: 139.9 * 1 + 59.9 * 2,
+      estimatedTotal: 852.65,
       paidTotal: 0,
       discountValue: 0,
       discountVariant: EDiscountVariant.Percentage,
@@ -45,9 +44,22 @@ export const seedSaleModule = async (
               createdAt: new Date(),
               updatedAt: new Date(),
             },
+            {
+              id: "73f35c5b-4d1a-4ea0-98ec-1574d378e47a",
+              productId: "c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
+              name: "Patinete Divertix 3 Rodas",
+              description: "Patinete estável com 3 rodas, ideal para o desenvolvimento do equilíbrio e coordenação motora. Indicado para crianças a partir de 3 anos.",
+              salePrice: 197.65,
+              totalQty: 3,
+              stockLotId: "4a5b6c7d-8e9f-4012-a3b4-c5d6e7f890ab",
+              costPrice: 110,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
           ]
         }
       }
     },
   });
+
 }
