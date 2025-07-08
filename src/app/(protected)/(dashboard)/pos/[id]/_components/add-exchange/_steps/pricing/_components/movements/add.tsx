@@ -79,7 +79,11 @@ export const AddExchangeMovement = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="cursor-pointer" disabled={!sale}>
+        <Button
+          variant="outline"
+          className="cursor-pointer m-1"
+          disabled={!sale}
+        >
           Adicionar
         </Button>
       </DialogTrigger>
@@ -89,7 +93,12 @@ export const AddExchangeMovement = ({
           <DialogDescription />
         </DialogHeader>
         <Form {...form}>
-          <form className="flex flex-col gap-3">
+          <form
+            className="flex flex-col gap-3"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+          >
             <FormField
               control={form.control}
               name="type"
@@ -185,9 +194,9 @@ export const AddExchangeMovement = ({
         </Form>
         <div className="flex justify-end gap-2">
           <Button
+            type="button"
             variant="outline"
             onClick={() => setOpen(false)}
-            type="button"
           >
             Cancelar
           </Button>

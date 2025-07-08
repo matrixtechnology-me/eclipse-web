@@ -6,7 +6,6 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { CoinsIcon, DollarSign, HistoryIcon, TrashIcon } from "lucide-react";
 import { PaymentMethodPresenter } from "@/utils/presenters/payment-method";
 import { MovementTableItem } from ".";
@@ -16,6 +15,8 @@ import DineroFactory from "dinero.js";
 import { ReactNode, useCallback } from "react";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
+import { formatDinero } from "@/lib/dinero/formatter";
+import { createDinero } from "@/lib/dinero/factory";
 
 type RenderElements = {
   label: string;
@@ -26,7 +27,7 @@ type RenderElements = {
 const iconProps = { size: 15, strokeWidth: 2.5 };
 
 const getRenderElements = (item: MovementTableItem): RenderElements => {
-  const amountStr = CurrencyFormatter.format(item.amount);
+  const amountStr = formatDinero(createDinero(item.amount));
 
   switch (item.type) {
     case "change": return {
@@ -49,6 +50,7 @@ const getRenderElements = (item: MovementTableItem): RenderElements => {
 
 type Props = {
   data: MovementTableItem[];
+  // Dinero business instance with BUSINESS_PRECISION.
   currentPayment: DineroFactory.Dinero;
   removeField: (fieldIndex: number) => void;
 }
@@ -66,20 +68,21 @@ export const ExchangeMovementsTable = ({
   });
 
   const getTotalLabel = useCallback(() => {
-    const prefix = currentPayment.isNegative() ? "- " : "+ ";
-    return prefix + CurrencyFormatter.format(currentPayment.toUnit());
+    const formatted = formatDinero(currentPayment);
+
+    return currentPayment.isNegative() ? "- " + formatted : formatted;
   }, [currentPayment]);
 
   return (
     <div className="w-full border rounded-lg overflow-hidden">
       {!sale ? (
-        <div className="w-full px-5 py-8 flex items-center justify-center border border-dashed rounded-lg">
+        <div className="w-full px-5 py-12 flex items-center justify-center border border-dashed rounded-lg">
           <p className="text-center text-muted-foreground text-sm">
             Selecione uma venda para visualizar suas movimentações.
           </p>
         </div>
       ) : data.length < 1 ? (
-        <div className="w-full px-5 py-8 flex items-center justify-center border border-dashed rounded-lg">
+        <div className="w-full px-5 py-12 flex items-center justify-center border border-dashed rounded-lg">
           <p className="text-center text-muted-foreground text-sm">
             Adicione um pagamento para iniciar as movimentações da venda.
           </p>
@@ -93,9 +96,7 @@ export const ExchangeMovementsTable = ({
               </TableHead>
               <TableHead className="text-left">Método</TableHead>
               <TableHead className="text-left">Valor</TableHead>
-              <TableHead className="text-center">
-                Ações
-              </TableHead>
+              <TableHead className="text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -113,10 +114,9 @@ export const ExchangeMovementsTable = ({
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {
-                      item.paymentMethod
-                        ? PaymentMethodPresenter.present(item.paymentMethod)
-                        : "-"
+                    {item.paymentMethod
+                      ? PaymentMethodPresenter.present(item.paymentMethod)
+                      : "-"
                     }
                   </TableCell>
                   <TableCell className="font-medium">
@@ -125,6 +125,7 @@ export const ExchangeMovementsTable = ({
                   <TableCell className="font-medium">
                     <div className="w-full flex items-center justify-center">
                       <Button
+                        type="button"
                         variant="outline"
                         className="p-0 size-9 cursor-pointer"
                         disabled={item.fieldIndex == undefined}

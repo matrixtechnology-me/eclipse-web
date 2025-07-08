@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { Label } from "@/components/ui/label";
-import { ResumeItem } from "../..";
+import { ExchangeResumeItem } from "../../../../_types/resume";
 import {
   Table,
   TableHeader,
@@ -11,11 +11,19 @@ import {
 } from "@/components/ui/table";
 import { ReactNode } from "react";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
-import { CircleCheckIcon, PlusIcon, UndoIcon } from "lucide-react";
+import {
+  CircleCheckIcon,
+  PackagePlusIcon,
+  PlusIcon,
+  UndoIcon,
+} from "lucide-react";
+import DineroFactory from "dinero.js";
+import { createDinero } from "@/lib/dinero/factory";
+import { formatDinero } from "@/lib/dinero/formatter";
 
 type Props = {
-  resumeList: ResumeItem[];
-  adjustedTotal: number;
+  resumeList: ExchangeResumeItem[];
+  adjustedTotal: DineroFactory.Dinero;
 }
 
 type RenderElements = {
@@ -26,31 +34,39 @@ type RenderElements = {
 
 const iconProps = { size: 15, strokeWidth: 2.5 };
 
-const getRenderElements = (item: ResumeItem): RenderElements => {
-  const subtotal = CurrencyFormatter.format(item.quantity * item.salePrice);
+const getRenderElements = (item: ExchangeResumeItem): RenderElements => {
+  const subtotal = createDinero(item.salePrice).multiply(item.quantity);
 
   switch (item.status) {
-    case "replacement": return {
+    case "new": return {
       label: "Incluído",
+      icon: <PackagePlusIcon className="text-purple-400" {...iconProps} />,
+      subtotalLabel: "+ " + formatDinero(subtotal),
+    };
+    case "incremented": return {
+      label: "Acrescentado",
       icon: <PlusIcon className="text-blue-400" {...iconProps} />,
-      subtotalLabel: "+ " + subtotal
+      subtotalLabel: "+ " + formatDinero(subtotal)
     };
     case "returned": return {
       label: "Devolvido",
       icon: <UndoIcon className="text-orange-500" {...iconProps} />,
-      subtotalLabel: "- " + subtotal
+      subtotalLabel: formatDinero(subtotal)
     };
-    case "unmodified": return {
+    case "kept": return {
       label: "Mantido",
       icon: <CircleCheckIcon className="text-green-500"  {...iconProps} />,
-      subtotalLabel: "+ " + subtotal
+      subtotalLabel: "+ " + formatDinero(subtotal)
     };
     default:
       throw new Error("Unmapped resume item status.");
   }
 }
 
-export const ExchangeResume: FC<Props> = ({ resumeList, adjustedTotal }) => {
+export const ExchangeResume: FC<Props> = ({
+  resumeList,
+  adjustedTotal,
+}) => {
   return (
     <div className="shrink-0 flex flex-col gap-2 overflow-x-auto">
       <Label>Resumo</Label>
@@ -78,7 +94,11 @@ export const ExchangeResume: FC<Props> = ({ resumeList, adjustedTotal }) => {
               </TableHeader>
               <TableBody>
                 {resumeList.map((item) => {
-                  const { icon, label, subtotalLabel } = getRenderElements(item);
+                  const {
+                    icon,
+                    label,
+                    subtotalLabel,
+                  } = getRenderElements(item);
 
                   return (
                     <TableRow key={`${item.productId}:${item.status}`}>
@@ -108,7 +128,7 @@ export const ExchangeResume: FC<Props> = ({ resumeList, adjustedTotal }) => {
                     Total ajustado
                   </TableCell>
                   <TableCell className="text-right" colSpan={4}>
-                    {CurrencyFormatter.format(adjustedTotal)}
+                    {formatDinero(adjustedTotal)}
                   </TableCell>
                 </TableRow>
               </TableBody>

@@ -1,5 +1,3 @@
-import { ProductListItem } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
-import { ProductAsyncSelect } from "@/components/domain/entities/product-async-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,60 +18,45 @@ import {
 import { Input } from "@/components/ui/input";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PencilIcon, UndoIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { z } from "zod";
 
+type Props = {
+  originalQty: number;
+  currentQty: number;
+  onSubmit: (qty: number) => void;
+}
+
 const schema = z.object({
-  productId: z
-    .string({ required_error: "Campo obrigatório." })
-    .min(1, { message: "Campo obrigatório." }),
-  name: z
-    .string({ required_error: "Campo obrigatório." })
-    .min(1, { message: "Campo obrigatório." }),
-  salePrice: z
-    .number({ required_error: "Campo obrigatório." })
-    .gt(0.0, { message: "Quantidade inválida." }),
   quantity: z
-    .number({ required_error: "Campo obrigatório." })
+    .number({ required_error: "Campo obrigatório" })
     .gt(0.0, { message: "Quantidade inválida." }),
 });
 
-type ReplacementProductForm = z.infer<typeof schema>;
+type FormSchema = z.infer<typeof schema>;
 
-const PAGE = 1;
-const PAGE_SIZE = 99;
-
-type Props = {
-  tenantId: string;
-  handleAppend: (product: ReplacementProductForm) => void;
-}
-
-export const AddReplacementProduct = ({
-  tenantId,
-  handleAppend,
+export const AddReturnedProduct = ({
+  currentQty,
+  originalQty,
+  onSubmit,
 }: Props) => {
   const [open, setOpen] = useState<boolean>(false);
 
-  const form = useForm<ReplacementProductForm>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      productId: undefined,
-      name: undefined,
-      salePrice: undefined,
-      quantity: 0,
-    },
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(schema
+      .refine(({ quantity }) => quantity <= originalQty, {
+        message: "Quantidade inválida.",
+        path: ["quantity"],
+      }),
+    ),
+    defaultValues: { quantity: 0 },
   });
 
-  const handleSelect = (prod: ProductListItem) => {
-    form.setValue("productId", prod.id, { shouldValidate: true });
-    form.setValue("name", prod.name, { shouldValidate: true });
-    form.setValue("salePrice", prod.salePrice, { shouldValidate: true });
-  }
-
-  const handleAdd = (formData: ReplacementProductForm) => {
-    handleAppend(formData);
+  const handleAdd = ({ quantity }: FormSchema) => {
+    onSubmit(quantity);
     setOpen(false);
     form.reset();
   };
@@ -81,45 +64,37 @@ export const AddReplacementProduct = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="cursor-pointer">
-          Adicionar
+        <Button
+          variant="outline"
+          className="p-0 size-9 cursor-pointer"
+        >
+          {currentQty == 0
+            ? <PencilIcon className="size-4" />
+            : <UndoIcon className="size-4" />
+          }
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar produto de retirada</DialogTitle>
+          <DialogTitle>Adicionar produto de devolução</DialogTitle>
           <DialogDescription />
         </DialogHeader>
 
         <Form {...form}>
-          <form className="flex flex-col gap-3">
-            <FormField
-              control={form.control}
-              name="productId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Produto</FormLabel>
-                  <FormMessage />
-                  <FormControl>
-                    <ProductAsyncSelect
-                      {...field}
-                      onChange={handleSelect}
-                      page={PAGE}
-                      pageSize={PAGE_SIZE}
-                      tenantId={tenantId}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
+          <form
+            className="flex flex-col gap-3"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+          >
             <FormField
               control={form.control}
               name="quantity"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="mx-1">
                   <FormLabel>Quantidade</FormLabel>
+
                   <FormControl>
                     <NumericFormat
                       customInput={Input}
@@ -134,25 +109,35 @@ export const AddReplacementProduct = ({
                           field.onChange(0);
                           return;
                         }
+
                         const raw = CurrencyFormatter.unformat(target.value);
                         field.onChange(raw);
                       }}
                     />
                   </FormControl>
-                  <FormMessage />
+
+                  <div className="flex items-center justify-between gap-5">
+                    <FormMessage />
+
+                    <span className="flex-1 text-sm text-right">
+                      Máximo de {originalQty} unidade(s)
+                    </span>
+                  </div>
                 </FormItem>
               )}
             />
           </form>
         </Form>
+
         <div className="flex justify-end gap-2">
           <Button
+            type="button"
             variant="outline"
             onClick={() => setOpen(false)}
-            type="button"
           >
             Cancelar
           </Button>
+
           <Button
             type="button"
             onClick={form.handleSubmit(handleAdd)}

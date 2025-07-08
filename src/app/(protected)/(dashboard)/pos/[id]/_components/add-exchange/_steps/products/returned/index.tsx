@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useEffect } from "react";
+import React, { FC, Fragment } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { FormSchema } from "../../..";
 import {
@@ -16,10 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { AddReturnedProduct } from "./add";
+import { createDinero } from "@/lib/dinero/factory";
+import { formatDinero } from "@/lib/dinero/formatter";
 
 export const ExchangeReturnedProducts: FC = () => {
   const form = useFormContext<FormSchema>();
@@ -29,16 +30,12 @@ export const ExchangeReturnedProducts: FC = () => {
     control: form.control,
   });
 
-  const saleItems = useWatch<FormSchema, "sale.products">({
+  const saleItems = useWatch({
     name: "sale.products",
     control: form.control,
   });
 
-  useEffect(() => {
-    fieldArray.remove(); // clear
-  }, [saleItems]);
-
-  if (saleItems == undefined) return <React.Fragment />;
+  if (!saleItems || saleItems.length < 1) return <React.Fragment />;
 
   return (
     <FormField
@@ -107,12 +104,13 @@ export const ExchangeReturnedProducts: FC = () => {
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {CurrencyFormatter.format(saleItem.salePrice)}
+                              {formatDinero(createDinero(saleItem.salePrice))}
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {CurrencyFormatter.format(
-                                saleItem.salePrice * saleItem.totalQty
+                              {formatDinero(
+                                createDinero(saleItem.salePrice)
+                                  .multiply(saleItem.totalQty)
                               )}
                             </TableCell>
 

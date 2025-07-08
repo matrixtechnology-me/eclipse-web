@@ -16,10 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { AddReplacementProduct } from "./add";
+import { formatDinero } from "@/lib/dinero/formatter";
+import { createDinero } from "@/lib/dinero/factory";
 
 type Props = {
   tenantId: string;
@@ -62,7 +63,7 @@ export const ExchangeReplacementProducts: FC<Props> = ({
               <div className="w-full border rounded-lg">
                 {fieldArray.fields.length < 1
                   ? (
-                    <div className="w-full px-5 py-10 flex items-center justify-center border border-dashed rounded-lg">
+                    <div className="w-full px-5 py-12 flex items-center justify-center border border-dashed rounded-lg">
                       <p className="text-center text-muted-foreground text-sm">
                         Clique em "Adicionar" para adicionar produtos de retirada para a troca.
                       </p>
@@ -93,18 +94,20 @@ export const ExchangeReplacementProducts: FC<Props> = ({
                               </TableCell>
 
                               <TableCell className="font-medium">
-                                {CurrencyFormatter.format(field.salePrice)}
+                                {formatDinero(createDinero(field.salePrice))}
                               </TableCell>
 
                               <TableCell className="font-medium">
-                                {CurrencyFormatter.format(
-                                  field.salePrice * field.quantity
+                                {formatDinero(
+                                  createDinero(field.salePrice)
+                                    .multiply(field.quantity)
                                 )}
                               </TableCell>
 
                               <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-2 px-1">
                                   <Button
+                                    type="button"
                                     variant="outline"
                                     className="p-0 size-9 cursor-pointer"
                                     onClick={() => {

@@ -3,14 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,18 +14,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { FC, useState } from "react";
+import { FC, ReactNode, useMemo, useState } from "react";
 import { EPaymentMethod, EPosStatus, ESaleMovementType } from "@prisma/client";
-import { CustomerAsyncSelect } from "@/components/domain/entities/customer-async-select";
-import { CustomerSale } from "./_components/sale";
-import { ExchangeReturnedProducts } from "./_components/products/returned";
-import { ExchangeReplacementProducts } from "./_components/products/replacement";
-import { ExchangePricing } from "./_components/pricing";
+import TitledStepper from "@/components/titled-stepper";
+import { ExchangeSaleFormStep } from "./_steps/sale";
+import { ExchangeProductsFormStep } from "./_steps/products";
+import { ExchangePricingFormStep } from "./_steps/pricing";
 // import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
 // import { revalidate } from "./_actions/revalidate";
 
-// This data will be used to data collection and rendering.
-// Not all this structure is used for the mutation.
+// This data willa also be used for rendering.
+// Not all this structure is used for data collection.
 const formSchema = z.object({
   customerId: z
     .string({ required_error: "Campo obrigatório." })
@@ -60,6 +52,18 @@ const formSchema = z.object({
         }),
       ),
     }, { required_error: "Campo obrigatório." }),
+  discount: z.object({
+    value: z.number().gt(0.0, "Valor deve ser maior que zero."),
+    type: z.enum(["cash", "percentage"]),
+  })
+    .optional()
+    .refine(arg => {
+      if (!arg || arg.type == "cash") return true;
+      return arg.value < 1;
+    }, {
+      message: "Porcentagem deve ser menor que 100%.",
+      path: ["value"],
+    }),
   products: z.object({
     returned: z.array(
       z.object({
@@ -94,27 +98,39 @@ type AddExchangeProps = {
   tenantId: string;
 };
 
+type FormStep = {
+  step: number;
+  title: string;
+  element: ReactNode;
+}
+
+const formDefaultValues = {
+  customerId: undefined,
+  sale: undefined,
+  discount: undefined,
+  products: {
+    replacement: [],
+    returned: [],
+  },
+  movements: [],
+}
+
 export const AddExchange: FC<AddExchangeProps> = ({
   posId,
   posStatus,
   tenantId,
 }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [step, setStep] = useState<number>(1);
 
   const form = useForm<FormSchema>({
+    mode: "all",
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      customerId: undefined,
-      sale: undefined,
-      products: {
-        replacement: [],
-        returned: [],
-      },
-      movements: [],
-    },
+    defaultValues: formDefaultValues,
   });
 
   const onSubmit = async (formData: FormSchema) => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log(formData);
     // const result = await createPosSalePaymentAction({
     //   ...formData,
@@ -135,14 +151,51 @@ export const AddExchange: FC<AddExchangeProps> = ({
   };
 
   const handleCancel = () => {
-    form.reset();
-    setOpen(false);
+    form.reset(formDefaultValues);
+    handleClose();
   };
+
+  const handleClose = () => {
+    setStep(1);
+    setOpen(false);
+  }
+
+  const formSteps: FormStep[] = useMemo(() => [
+    {
+      step: 1,
+      title: "Venda",
+      element:
+        <ExchangeSaleFormStep
+          tenantId={tenantId}
+          onCancel={handleCancel}
+          onContinue={() => setStep(2)}
+        />,
+    },
+    {
+      step: 2,
+      title: "Produtos",
+      element:
+        <ExchangeProductsFormStep
+          tenantId={tenantId}
+          onPrev={() => setStep(1)}
+          onContinue={() => setStep(3)}
+        />,
+    },
+    {
+      step: 3,
+      title: "Precificação",
+      element:
+        <ExchangePricingFormStep
+          onPrev={() => setStep(2)}
+          onContinue={form.handleSubmit(onSubmit)}
+        />,
+    },
+  ], [tenantId]);
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) form.reset(); // reset on close
-      setOpen(newOpen);
+      if (!newOpen) return handleClose(); // reset step
+      setOpen(true);
     }}>
       <DialogTrigger asChild>
         <Button
@@ -152,7 +205,7 @@ export const AddExchange: FC<AddExchangeProps> = ({
           Nova Troca
         </Button>
       </DialogTrigger>
-      <DialogContent className="md:max-w-5xl max-h-[500px] overflow-y-auto">
+      <DialogContent className="md:max-w-3xl max-h-[500px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Realizar troca</DialogTitle>
           <DialogDescription />
@@ -160,48 +213,15 @@ export const AddExchange: FC<AddExchangeProps> = ({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-3 min-h-[300px]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
           >
-            <div className="flex-1 w-full grid grid-cols-2 gap-6">
-              <div className="flex flex-col gap-3 flex-1 shrink-0">
-                <FormField
-                  control={form.control}
-                  name="customerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente</FormLabel>
-                      <FormMessage />
-                      <FormControl>
-                        <CustomerAsyncSelect
-                          {...field}
-                          onValueChange={field.onChange}
-                          tenantId={tenantId}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+            <div className="flex-1 flex flex-col gap-4">
+              <TitledStepper steps={formSteps} currentStep={step} />
 
-                <CustomerSale tenantId={tenantId} />
-
-                <ExchangeReturnedProducts />
-
-                <ExchangeReplacementProducts tenantId={tenantId} />
-              </div>
-
-              <ExchangePricing />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? "Salvando alterações..."
-                  : "Salvar alterações"}
-              </Button>
+              {formSteps[step - 1].element}
             </div>
           </form>
         </Form>

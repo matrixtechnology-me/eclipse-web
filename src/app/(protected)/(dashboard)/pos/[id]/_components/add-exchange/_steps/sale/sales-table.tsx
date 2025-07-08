@@ -10,11 +10,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useFormContext, useWatch } from "react-hook-form";
-import { FormSchema } from "..";
+import { FormSchema } from "../..";
 import {
   getCustomerPendingSalesAction,
   SaleItem,
-} from "../_actions/get-customer-sales";
+} from "../../_actions/get-customer-sales";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   EntityTable,
@@ -29,20 +29,22 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import moment from "moment";
 
-type CustomerSaleProps = {
+type CustomerSalesTableProps = {
   tenantId: string;
 };
 
 const PAGE = 1;
 const PAGE_SIZE = 99;
 
-export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
+export const CustomerSalesTable: FC<CustomerSalesTableProps> = ({
+  tenantId,
+}) => {
   const [values, setValues] = useState<SaleItem[]>([]);
 
   const form = useFormContext<FormSchema>();
 
-  const watchedCustomerId = useWatch<FormSchema, "customerId">({
-    name: "customerId",
+  const [watchedCustomerId, watchedSaleId] = useWatch({
+    name: ["customerId", "sale.id"],
     control: form.control,
   });
 
@@ -77,7 +79,7 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
             checked={row.getIsSelected()}
             onCheckedChange={(value) => {
               if (typeof value !== "boolean") return;
-              row.toggleSelected(value);
+              // row.toggleSelected(value);
 
               value ? handleSelect(row.original) : handleUnselect();
             }}
@@ -185,6 +187,22 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
 
     loadValues();
   }, [watchedCustomerId]);
+
+  useEffect(() => {
+    if (!watchedCustomerId) return;
+    if (values.length < 1 || columns.length < 1) return;
+
+    if (!watchedSaleId) {
+      return table.getSelectedRowModel().rows.forEach(
+        row => row.toggleSelected(false)
+      );
+    }
+
+    // Select active row based on the form value because the
+    // table state is losed when the component unmounts.
+    const activeRow = table.getRowModel().rows.find(row => row.original.id);
+    if (!!activeRow) activeRow.toggleSelected(true);
+  }, [columns, watchedSaleId]);
 
   return (
     <FormField
