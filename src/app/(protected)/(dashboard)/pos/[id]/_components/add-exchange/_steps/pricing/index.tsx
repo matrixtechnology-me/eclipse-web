@@ -3,13 +3,13 @@ import { ExchangeMovements } from "./_components/movements";
 import { useExchange } from "../../_hooks/use-exchange";
 import { ExchangeDiscountInput } from "./_components/discount";
 import { Label } from "@/components/ui/label";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { SigmaIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { FC, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { FormSchema } from "../..";
+import { formatDinero } from "@/lib/dinero/formatter";
 
 type Props = {
   onPrev: () => void;
@@ -61,7 +61,7 @@ export const ExchangePricingFormStep: FC<Props> = ({
         </div>
 
         <span className="text-[15px] font-medium">
-          {CurrencyFormatter.format(discountedTotal.toUnit())}
+          {formatDinero(discountedTotal)}
         </span>
       </div>
 

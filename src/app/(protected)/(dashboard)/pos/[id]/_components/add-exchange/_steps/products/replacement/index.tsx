@@ -16,10 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { AddReplacementProduct } from "./add";
+import { formatDinero } from "@/lib/dinero/formatter";
+import { createDinero } from "@/lib/dinero/factory";
 
 type Props = {
   tenantId: string;
@@ -93,12 +94,13 @@ export const ExchangeReplacementProducts: FC<Props> = ({
                               </TableCell>
 
                               <TableCell className="font-medium">
-                                {CurrencyFormatter.format(field.salePrice)}
+                                {formatDinero(createDinero(field.salePrice))}
                               </TableCell>
 
                               <TableCell className="font-medium">
-                                {CurrencyFormatter.format(
-                                  field.salePrice * field.quantity
+                                {formatDinero(
+                                  createDinero(field.salePrice)
+                                    .multiply(field.quantity)
                                 )}
                               </TableCell>
 

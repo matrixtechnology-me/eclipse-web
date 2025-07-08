@@ -16,10 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { AddReturnedProduct } from "./add";
+import { createDinero } from "@/lib/dinero/factory";
+import { formatDinero } from "@/lib/dinero/formatter";
 
 export const ExchangeReturnedProducts: FC = () => {
   const form = useFormContext<FormSchema>();
@@ -103,12 +104,13 @@ export const ExchangeReturnedProducts: FC = () => {
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {CurrencyFormatter.format(saleItem.salePrice)}
+                              {formatDinero(createDinero(saleItem.salePrice))}
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {CurrencyFormatter.format(
-                                saleItem.salePrice * saleItem.totalQty
+                              {formatDinero(
+                                createDinero(saleItem.salePrice)
+                                  .multiply(saleItem.totalQty)
                               )}
                             </TableCell>
 
