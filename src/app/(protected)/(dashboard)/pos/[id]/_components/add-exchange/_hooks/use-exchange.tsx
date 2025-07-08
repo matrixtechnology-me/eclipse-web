@@ -3,6 +3,8 @@ import { FormSchema } from ".."
 import { ExchangeResumeItem, ExchangeResumeItemStatus } from "../_types/resume";
 import { useFormContext, useWatch } from "react-hook-form";
 import { createDinero } from "@/lib/dinero/factory";
+import DineroFactory from "dinero.js";
+import { toBusinessPrecision } from "@/lib/dinero/converter";
 
 /* 
   Status "kept" (mantido):
@@ -110,18 +112,32 @@ export const useExchange = () => {
   ), [resumeList]);
 
   const discountedTotal = useMemo(() => {
-    if (!discount) return adjustedTotal;
+    const exact = applyDiscount(adjustedTotal, discount);
 
-    switch (discount.type) {
-      case "cash":
-        return adjustedTotal.subtract(createDinero(discount.value));
-      case "percentage": {
-        const discountAmount = adjustedTotal.multiply(discount.value);
-        return adjustedTotal.subtract(discountAmount);
-      }
-      default: throw new Error("Unmapped discount type.");
-    }
+    return toBusinessPrecision(exact);
   }, [adjustedTotal, discount]);
 
   return { resumeList, adjustedTotal, discountedTotal };
+}
+
+type Discount = {
+  value: number;
+  type: "cash" | "percentage";
+}
+
+const applyDiscount = (
+  instance: DineroFactory.Dinero,
+  discount?: Discount,
+): DineroFactory.Dinero => {
+  if (!discount) return instance;
+
+  switch (discount.type) {
+    case "cash":
+      return instance.subtract(createDinero(discount.value));
+    case "percentage": {
+      const discountAmount = instance.multiply(discount.value);
+      return instance.subtract(discountAmount);
+    }
+    default: throw new Error("Unmapped discount type.");
+  }
 }

@@ -46,7 +46,7 @@ export const ExchangePricingFormStep: FC<Props> = ({
     <div className="flex flex-col gap-3">
       <ExchangeResume
         resumeList={resumeList}
-        adjustedTotal={adjustedTotal.toUnit()}
+        adjustedTotal={adjustedTotal}
       />
 
       <ExchangeDiscountInput />
