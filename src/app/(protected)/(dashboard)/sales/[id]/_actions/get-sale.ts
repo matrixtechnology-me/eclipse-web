@@ -23,10 +23,10 @@ type Product = {
   totalQty: number;
   salePrice: number;
   costPrice: number;
-  stockLot: {
-    id: string;
+  stockLotUsages: Array<{
     lotNumber: string;
-  };
+    quantity: number;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -80,10 +80,14 @@ export const getSaleAction: Action<
             totalQty: true,
             salePrice: true,
             costPrice: true,
-            stockLot: {
+            stockLotUsages: {
               select: {
-                id: true,
-                lotNumber: true,
+                quantity: true,
+                stockLot: {
+                  select: {
+                    lotNumber: true,
+                  },
+                },
               },
             },
             createdAt: true,
@@ -119,10 +123,10 @@ export const getSaleAction: Action<
         totalQty: pd.totalQty,
         salePrice: pd.salePrice.toNumber(),
         costPrice: pd.costPrice.toNumber(),
-        stockLot: {
-          id: pd.stockLot.id,
-          lotNumber: pd.stockLot.lotNumber,
-        },
+        stockLotUsages: pd.stockLotUsages.map(u => ({
+          lotNumber: u.stockLot.lotNumber,
+          quantity: u.quantity,
+        })),
         createdAt: pd.createdAt,
         updatedAt: pd.updatedAt,
       })
