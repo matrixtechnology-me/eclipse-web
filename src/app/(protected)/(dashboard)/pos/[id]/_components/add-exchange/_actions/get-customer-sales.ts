@@ -50,14 +50,14 @@ export type SaleItem = {
   updatedAt: Date;
 };
 
-type GetCustomerPendingSalesActionPayload = {
+type GetCustomerPaidSalesActionPayload = {
   page: number;
   pageSize: number;
   customerId: string;
   tenantId: string;
 };
 
-type GetCustomerPendingSalesActionResult = {
+type GetCustomerPaidSalesActionResult = {
   sales: SaleItem[];
   pagination: {
     currentPage: number;
@@ -67,9 +67,9 @@ type GetCustomerPendingSalesActionResult = {
   };
 };
 
-export const getCustomerPendingSalesAction: Action<
-  GetCustomerPendingSalesActionPayload,
-  GetCustomerPendingSalesActionResult
+export const getCustomerPaidSalesAction: Action<
+  GetCustomerPaidSalesActionPayload,
+  GetCustomerPaidSalesActionResult
 > = async ({ customerId, tenantId, page, pageSize }) => {
   "use cache";
   cacheTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
@@ -85,9 +85,7 @@ export const getCustomerPendingSalesAction: Action<
       tenantId,
       status: ESaleStatus.Processed, // Reanalyse when more enums.
       deletedAt: null,
-      customer: {
-        id: customerId,
-      },
+      customer: { id: customerId },
     };
 
     const [sales, totalCount] = await Promise.all([
@@ -111,11 +109,11 @@ export const getCustomerPendingSalesAction: Action<
       }),
     ]);
 
-    const paymentPendingSales = sales.filter(
-      s => s.paymentStatus == EPaymentStatus.Pending
+    const paymentPaidSales = sales.filter(
+      s => s.paymentStatus == EPaymentStatus.Paid
     );
 
-    const mappedSales: SaleItem[] = paymentPendingSales.map((sale) => {
+    const mappedSales: SaleItem[] = paymentPaidSales.map((sale) => {
       const products = sale.products.map(saleItem => ({
         id: saleItem.id,
         name: saleItem.name,
