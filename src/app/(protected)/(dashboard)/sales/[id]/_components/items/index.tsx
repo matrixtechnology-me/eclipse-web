@@ -7,10 +7,10 @@ type ItemsProps = {
     totalQty: number;
     salePrice: number;
     costPrice: number;
-    stockLot: {
-      id: string;
+    stockLotUsages: Array<{
       lotNumber: string;
-    };
+      quantity: number;
+    }>;
     createdAt: Date;
     updatedAt: Date;
   }[];
