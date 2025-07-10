@@ -27,7 +27,6 @@ export const seedSaleModule = async (
               description: "Tênis leve, com solado emborrachado e design colorido, desenvolvido especialmente para crianças em fase escolar. Oferece conforto e segurança nas atividades diárias.",
               salePrice: 139.9,
               totalQty: 1,
-              stockLotId: "388c93df-7f54-4b98-bc99-59cb4a648cff",
               costPrice: 68,
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -39,7 +38,6 @@ export const seedSaleModule = async (
               description: "Quebra-cabeça educativo com peças em madeira que ajudam as crianças a aprender o alfabeto brincando. Estimula a coordenação motora e o raciocínio lógico.",
               salePrice: 59.9,
               totalQty: 2,
-              stockLotId: "e41f1db2-cd84-45eb-b93f-8a0646d47b6e",
               costPrice: 68,
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -51,7 +49,6 @@ export const seedSaleModule = async (
               description: "Patinete estável com 3 rodas, ideal para o desenvolvimento do equilíbrio e coordenação motora. Indicado para crianças a partir de 3 anos.",
               salePrice: 197.65,
               totalQty: 3,
-              stockLotId: "4a5b6c7d-8e9f-4012-a3b4-c5d6e7f890ab",
               costPrice: 110,
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -61,5 +58,4 @@ export const seedSaleModule = async (
       }
     },
   });
-
 }

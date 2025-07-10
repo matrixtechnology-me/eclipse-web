@@ -145,4 +145,24 @@ export const seedPosSaleModule = async (
       },
     }),
   ]);
+
+  await prisma.stockLotUsage.createMany({
+    data: [
+      {
+        quantity: 1,
+        stockLotId: "388c93df-7f54-4b98-bc99-59cb4a648cff",
+        saleProductId: "8d0a78b4-a226-4edb-9177-50e7ab32a1ba",
+      },
+      {
+        quantity: 2,
+        stockLotId: "e41f1db2-cd84-45eb-b93f-8a0646d47b6e",
+        saleProductId: "1b7e437f-c159-4b33-8db2-89e4d6ff9d01",
+      },
+      {
+        quantity: 3,
+        stockLotId: "4a5b6c7d-8e9f-4012-a3b4-c5d6e7f890ab",
+        saleProductId: "73f35c5b-4d1a-4ea0-98ec-1574d378e47a",
+      },
+    ]
+  });
 }
