@@ -26,6 +26,7 @@ type Product = {
   stockLotUsages: Array<{
     lotNumber: string;
     quantity: number;
+    costPrice: number;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -132,6 +133,7 @@ export const getSaleAction: Action<
         stockLotUsages: pd.stockLotUsages.map(u => ({
           lotNumber: u.stockLot.lotNumber,
           quantity: u.quantity,
+          costPrice: u.stockLot.costPrice.toNumber(),
         })),
         createdAt: pd.createdAt,
         updatedAt: pd.updatedAt,
