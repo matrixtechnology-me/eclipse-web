@@ -47,8 +47,14 @@ export const getRetrospectiveAction: Action<
         products: {
           select: {
             salePrice: true,
-            costPrice: true,
             totalQty: true,
+            stockLotUsages: {
+              include: {
+                stockLot: {
+                  select: { costPrice: true }
+                }
+              },
+            },
             createdAt: true,
           },
         },
@@ -64,14 +70,21 @@ export const getRetrospectiveAction: Action<
       monthlyData[monthKey] = { revenue: 0, cost: 0 };
     }
 
+    // TODO: handle with precision.
     sales.forEach((sale) => {
       sale.products.forEach((product) => {
         const monthKey = moment(product.createdAt).format("YYYY-MM");
+
         if (monthlyData[monthKey]) {
           monthlyData[monthKey].revenue +=
             product.salePrice.toNumber() * product.totalQty;
-          monthlyData[monthKey].cost +=
-            product.costPrice.toNumber() * product.totalQty;
+
+          const unitsTotalCost = product.stockLotUsages.reduce(
+            (acc, { quantity, stockLot }) => {
+              return acc + stockLot.costPrice.toNumber() * quantity
+            }, 0);
+
+          monthlyData[monthKey].cost += unitsTotalCost;
         }
       });
     });

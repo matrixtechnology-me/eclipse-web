@@ -79,12 +79,12 @@ export const getSaleAction: Action<
             name: true,
             totalQty: true,
             salePrice: true,
-            costPrice: true,
             stockLotUsages: {
               select: {
                 quantity: true,
                 stockLot: {
                   select: {
+                    costPrice: true,
                     lotNumber: true,
                   },
                 },
@@ -116,21 +116,27 @@ export const getSaleAction: Action<
       });
     }
 
-    const mappedProducts = sale.products.map(
-      (pd): Product => ({
+    // TODO: handle numeric operations with precision.
+    const mappedProducts = sale.products.map((pd): Product => {
+      const costPrice = pd.stockLotUsages.reduce(
+        (prodAcc, { quantity, stockLot }) => {
+          return prodAcc + stockLot.costPrice.toNumber() * quantity
+        }, 0);
+
+      return {
         id: pd.id,
         name: pd.name,
         totalQty: pd.totalQty,
         salePrice: pd.salePrice.toNumber(),
-        costPrice: pd.costPrice.toNumber(),
+        costPrice,
         stockLotUsages: pd.stockLotUsages.map(u => ({
           lotNumber: u.stockLot.lotNumber,
           quantity: u.quantity,
         })),
         createdAt: pd.createdAt,
         updatedAt: pd.updatedAt,
-      })
-    );
+      };
+    });
 
     return success({
       sale: {
