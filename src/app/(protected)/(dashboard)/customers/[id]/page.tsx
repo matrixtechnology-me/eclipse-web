@@ -42,7 +42,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
   const { customer } = result.value;
 
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
         <div>
           <h1>Clientes</h1>

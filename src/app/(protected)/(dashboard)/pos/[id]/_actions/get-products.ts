@@ -31,6 +31,54 @@ export type ProductsWithPagination = {
   };
 };
 
+async function hasStockInComposition(
+  productId: string,
+  tenantId: string,
+  parentQuantity: number = 1
+): Promise<boolean> {
+  const product = await prisma.product.findUnique({
+    where: { id: productId, tenantId },
+    include: {
+      parentCompositions: {
+        include: {
+          child: {
+            include: {
+              stock: {
+                include: {
+                  lots: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      stock: {
+        include: {
+          lots: true,
+        },
+      },
+    },
+  });
+
+  if (!product) return false;
+
+  const availableQty =
+    product.stock?.lots.reduce((sum, lot) => sum + lot.totalQty, 0) ?? 0;
+  if (availableQty < parentQuantity) return false;
+
+  for (const composition of product.parentCompositions) {
+    const childQuantity = parentQuantity * composition.totalQty.toNumber();
+    const childHasStock = await hasStockInComposition(
+      composition.child.id,
+      tenantId,
+      childQuantity
+    );
+    if (!childHasStock) return false;
+  }
+
+  return true;
+}
+
 export const getProducts: Action<
   GetProductsActionPayload,
   ProductsWithPagination
@@ -50,47 +98,48 @@ export const getProducts: Action<
               ],
             }
           : {},
-        {
-          active,
-          stock: {
-            lots: {
-              some: {
-                totalQty: { gt: 0 },
-              },
-            },
-          },
-        },
+        { active },
       ],
     };
 
-    const [rawProducts, totalItems] = await Promise.all([
-      prisma.product.findMany({
-        where: whereCondition,
-        skip,
-        take: limit,
-        include: {
-          stock: {
-            select: {
-              strategy: true,
-              lots: {
-                select: {
-                  costPrice: true,
-                  expiresAt: true,
-                  totalQty: true,
-                },
-                orderBy: {
-                  expiresAt: "asc",
-                },
+    const rawProducts = await prisma.product.findMany({
+      where: whereCondition,
+      skip,
+      take: limit,
+      include: {
+        stock: {
+          select: {
+            strategy: true,
+            lots: {
+              select: {
+                costPrice: true,
+                expiresAt: true,
+                totalQty: true,
+              },
+              orderBy: {
+                expiresAt: "asc",
               },
             },
           },
         },
-        orderBy: { name: "asc" },
-      }),
-      prisma.product.count({ where: whereCondition }),
-    ]);
+      },
+      orderBy: { name: "asc" },
+    });
 
-    const results = rawProducts.map((product) => {
+    console.log("RAW PRODUCTS", rawProducts);
+
+    const productsWithStock = await Promise.all(
+      rawProducts.map(async (product) => {
+        const hasStock = await hasStockInComposition(product.id, tenantId);
+        return hasStock ? product : null;
+      })
+    );
+
+    const filteredProducts = productsWithStock.filter(
+      Boolean
+    ) as typeof rawProducts;
+
+    const results = filteredProducts.map((product) => {
       const strategy = product.stock?.strategy;
       const lots = product.stock?.lots || [];
 
@@ -113,8 +162,8 @@ export const getProducts: Action<
       pagination: {
         limit,
         currentPage: page,
-        totalItems,
-        totalPages: Math.ceil(totalItems / limit),
+        totalItems: results.length,
+        totalPages: Math.ceil(results.length / limit),
       },
     });
   } catch (error: unknown) {

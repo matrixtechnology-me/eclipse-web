@@ -11,10 +11,6 @@ export type SubcategoryListItem = {
   id: string;
   name: string;
   description: string;
-  category: {
-    id: string;
-    name: string;
-  };
   createdAt: Date;
   updatedAt: Date;
 };
@@ -31,6 +27,7 @@ type PaginatedSubcategories = {
 
 type GetSubcategoriesActionPayload = {
   tenantId: string;
+  categoryId?: string;
   page: number;
   pageSize: number;
   query?: string;
@@ -39,21 +36,17 @@ type GetSubcategoriesActionPayload = {
 export const getSubcategoriesAction: Action<
   GetSubcategoriesActionPayload,
   PaginatedSubcategories
-> = async ({ tenantId, page, pageSize, query = "" }) => {
-  "use cache";
-  cacheTag(
-    CACHE_TAGS.TENANT(tenantId).PRODUCTS.SUBCATEGORIES.INDEX.ALL,
-    CACHE_TAGS.TENANT(tenantId).PRODUCTS.SUBCATEGORIES.INDEX.PAGINATED(
-      page,
-      pageSize
-    )
-  );
-
+> = async ({ tenantId, categoryId, page, pageSize, query = "" }) => {
   try {
     const skip = (page - 1) * pageSize;
 
     const whereCondition: Prisma.ProductSubcategoryWhereInput = {
       tenantId,
+      productCategorySubcategory: {
+        some: {
+          categoryId,
+        },
+      },
       OR: [
         { name: { contains: query, mode: "insensitive" } },
         { description: { contains: query, mode: "insensitive" } },
@@ -66,14 +59,6 @@ export const getSubcategoriesAction: Action<
         skip,
         take: pageSize,
         orderBy: { name: "asc" },
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
       }),
       prisma.productSubcategory.count({ where: whereCondition }),
     ]);
@@ -82,10 +67,6 @@ export const getSubcategoriesAction: Action<
       id: subcategory.id,
       name: subcategory.name,
       description: subcategory.description || "",
-      category: {
-        id: subcategory.category.id,
-        name: subcategory.category.name,
-      },
       createdAt: subcategory.createdAt,
       updatedAt: subcategory.updatedAt,
     }));

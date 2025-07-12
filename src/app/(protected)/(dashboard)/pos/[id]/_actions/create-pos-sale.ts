@@ -17,6 +17,7 @@ import {
 } from "@prisma/client";
 import moment from "moment";
 import { revalidateTag } from "next/cache";
+import { number } from "zod";
 
 type CreatePosSaleActionPayload = {
   description: string;
@@ -57,7 +58,20 @@ export const createPosSaleAction: Action<
       products.map(async ({ id, totalQty }) => {
         const product = await prisma.product.findUnique({
           where: { id },
-          include: { stock: { select: { id: true, strategy: true } } },
+          include: {
+            stock: { select: { id: true, strategy: true } },
+            parentCompositions: {
+              select: {
+                totalQty: true,
+                child: {
+                  select: {
+                    id: true,
+                    stock: { select: { id: true, strategy: true } },
+                  },
+                },
+              },
+            },
+          },
         });
 
         if (!product?.stock) throw new NotFoundError("product stock not found");
@@ -74,9 +88,36 @@ export const createPosSaleAction: Action<
           take: 1,
         });
 
-        console.log(lot);
-
         if (!lot) throw new NotFoundError("No lots in product stock");
+
+        const mappedCompositions = await Promise.all(
+          product.parentCompositions.map(async (ref) => {
+            if (!ref?.child.stock)
+              throw new NotFoundError("product ref stock not found");
+
+            const compositionLot = await prisma.stockLot.findFirst({
+              where: {
+                stockId: ref.child.stock.id,
+                totalQty: { gt: 0 },
+              },
+              orderBy: [
+                { expiresAt: orderDirection },
+                { createdAt: orderDirection },
+              ],
+              take: 1,
+            });
+
+            if (!compositionLot)
+              throw new NotFoundError("No lots in composition product stock");
+
+            return {
+              productId: ref.child.id,
+              stockId: ref.child.stock.id,
+              stockLotId: compositionLot.id,
+              compositionQty: ref.totalQty.toNumber() * totalQty,
+            };
+          })
+        );
 
         return {
           costPrice: lot.costPrice,
@@ -87,6 +128,7 @@ export const createPosSaleAction: Action<
           totalQty,
           stockId: product.stock.id,
           stockLotId: lot.id,
+          compositions: mappedCompositions,
         };
       })
     );
@@ -111,7 +153,9 @@ export const createPosSaleAction: Action<
         paidTotal,
         products: {
           createMany: {
-            data: mappedProducts.map(({ stockId, ...rest }) => rest),
+            data: mappedProducts.map(
+              ({ stockId, compositions, ...rest }) => rest
+            ),
           },
         },
       },
@@ -126,7 +170,7 @@ export const createPosSaleAction: Action<
         products: {
           createMany: {
             data: mappedProducts.map(
-              ({ stockId, stockLotId, ...rest }) => rest
+              ({ stockId, stockLotId, compositions, ...rest }) => rest
             ),
           },
         },
@@ -161,41 +205,91 @@ export const createPosSaleAction: Action<
     );
 
     await Promise.all(
-      mappedProducts.map(async ({ stockId, stockLotId, totalQty }) => {
-        await prisma.stock.update({
-          where: { id: stockId },
-          data: {
-            availableQty: { decrement: totalQty },
-            totalQty: { decrement: totalQty },
-            lots: {
-              update: {
-                where: { id: stockLotId },
-                data: { totalQty: { decrement: totalQty } },
+      mappedProducts.map(
+        async ({ stockId, stockLotId, totalQty, compositions }) => {
+          await prisma.stock.update({
+            where: { id: stockId },
+            data: {
+              availableQty: { decrement: totalQty },
+              totalQty: { decrement: totalQty },
+              lots: {
+                update: {
+                  where: { id: stockLotId },
+                  data: { totalQty: { decrement: totalQty } },
+                },
               },
             },
-          },
-        });
+          });
 
-        await prisma.stockEvent.create({
-          data: {
-            type: EStockEventType.Output,
-            tenantId,
-            stockId,
-            stockLotId,
-            output: {
-              create: {
-                quantity: totalQty,
-                description: `Adeus, estoque! 🛒 Saíram ${totalQty} unidades do lote. Venda feita, espaço liberado — bora repor?`,
+          await prisma.stockEvent.create({
+            data: {
+              type: EStockEventType.Output,
+              tenantId,
+              stockId,
+              stockLotId,
+              output: {
+                create: {
+                  quantity: totalQty,
+                  description: `Adeus, estoque! 🛒 Saíram ${totalQty} unidades do lote. Venda feita, espaço liberado — bora repor?`,
+                },
               },
             },
-          },
-        });
+          });
 
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS);
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX);
-      })
+          if (compositions && compositions.length > 0) {
+            for await (const comp of compositions) {
+              await prisma.stock.update({
+                where: { id: comp.stockId },
+                data: {
+                  availableQty: { decrement: comp.compositionQty },
+                  totalQty: { decrement: comp.compositionQty },
+                  lots: {
+                    update: {
+                      where: { id: comp.stockLotId },
+                      data: { totalQty: { decrement: comp.compositionQty } },
+                    },
+                  },
+                },
+              });
+
+              await prisma.stockEvent.create({
+                data: {
+                  type: EStockEventType.Output,
+                  tenantId,
+                  stockId: comp.stockId,
+                  stockLotId: comp.stockLotId,
+                  output: {
+                    create: {
+                      quantity: comp.compositionQty,
+                      description: `Saída por composição: ${comp.compositionQty} unidades consumidas como parte de outro produto.`,
+                    },
+                  },
+                },
+              });
+
+              revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
+              revalidateTag(
+                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).EVENTS
+              );
+              revalidateTag(
+                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).LOTS
+              );
+              revalidateTag(
+                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).INDEX
+              );
+            }
+          }
+
+          revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
+          revalidateTag(
+            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
+          );
+          revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
+          revalidateTag(
+            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
+          );
+        }
+      )
     );
 
     const tenantOwner = await prisma.tenantMembership.findFirst({

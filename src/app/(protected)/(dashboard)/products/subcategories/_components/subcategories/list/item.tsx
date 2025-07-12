@@ -5,10 +5,6 @@ import { cn } from "@/lib/shadcn";
 type ItemProps = {
   name: string;
   description: string;
-  category: {
-    id: string;
-    name: string;
-  };
   createdAt: Date;
   className?: string;
 };
@@ -16,7 +12,6 @@ type ItemProps = {
 export const Item: FC<ItemProps> = ({
   name,
   description,
-  category,
   createdAt,
   className,
 }) => {
@@ -28,7 +23,6 @@ export const Item: FC<ItemProps> = ({
       <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
         {description || "Nenhuma descrição"}
       </p>
-      <span>{category.name}</span>
       <div className="mt-auto text-xs text-muted-foreground">
         Criado em: {moment(createdAt).format("DD/MM/YYYY")}
       </div>

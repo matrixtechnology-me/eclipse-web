@@ -1,21 +1,21 @@
 services:
-  postgres:
+  eclipse-postgres:
     image: postgres:15
-    container_name: postgresql
+    container_name: eclipse-postgres
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: db_eclipse_local
+      POSTGRES_DB: db_development
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - eclipse-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d db_eclipse_local"]
+      test: ["CMD-SHELL", "pg_isready -U root -d db_development"]
       interval: 20s
       timeout: 5s
       retries: 10
 
 volumes:
-  pgdata:
+  eclipse-pgdata:
     driver: local

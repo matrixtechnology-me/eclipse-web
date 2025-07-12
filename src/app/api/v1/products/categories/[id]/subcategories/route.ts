@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { getRequestSession } from "../../../../utils/get-request-session";
 
 type Params = {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 };
 
 export const POST = async (request: NextRequest, { params }: Params) => {
@@ -13,7 +13,7 @@ export const POST = async (request: NextRequest, { params }: Params) => {
   if (sessionResult.session == null) {
     return Response.json(
       { message: sessionResult.errorMessage },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
@@ -30,7 +30,11 @@ export const POST = async (request: NextRequest, { params }: Params) => {
 
   const whereCondition: Prisma.ProductSubcategoryWhereInput = {
     tenantId,
-    categoryId,
+    productCategorySubcategory: {
+      some: {
+        categoryId,
+      },
+    },
     OR: [
       { name: { contains: query, mode: "insensitive" } },
       { description: { contains: query, mode: "insensitive" } },
@@ -59,7 +63,6 @@ export const POST = async (request: NextRequest, { params }: Params) => {
       id: subcategory.id,
       name: subcategory.name,
       description: subcategory.description,
-      categoryId: subcategory.categoryId,
       createdAt: subcategory.createdAt,
       updatedAt: subcategory.updatedAt,
     })),

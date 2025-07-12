@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { authenticateUserAction } from "../_actions/authenticate-user";
 import { PasswordInput } from "./password-input";
+import { useState } from "react";
 
 const formSchema = z.object({
   email: z
@@ -43,6 +44,8 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 export const AuthenticationForm = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+
   const router = useRouter();
 
   const form = useForm({
@@ -54,6 +57,8 @@ export const AuthenticationForm = () => {
   });
 
   const handleSubmit = async ({ email, password }: FormSchema) => {
+    setLoading(true);
+
     const result = await authenticateUserAction({
       email,
       password,
@@ -61,6 +66,8 @@ export const AuthenticationForm = () => {
 
     if (result.isFailure) {
       const metadata = result.metadata;
+
+      setLoading(false);
 
       return toast(metadata?.attributes.title, {
         description: metadata?.attributes.description,
@@ -102,12 +109,13 @@ export const AuthenticationForm = () => {
         <Button
           type="submit"
           className="w-full h-10"
-          disabled={form.formState.isSubmitting}
+          disabled={form.formState.isSubmitting || loading}
         >
-          {form.formState.isSubmitting && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {form.formState.isSubmitting || loading ? (
+            <Loader className="size-4 animate-spin" />
+          ) : (
+            "Entrar"
           )}
-          Entrar
         </Button>
       </form>
     </Form>

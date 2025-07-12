@@ -8,10 +8,6 @@ export type ListProps = {
     id: string;
     name: string;
     description: string;
-    category: {
-      id: string;
-      name: string;
-    };
     createdAt: Date;
     updatedAt: Date;
   }[];
@@ -35,7 +31,6 @@ export const List: FC<ListProps> = ({ data, tenantId }) => {
             name={item.name}
             description={item.description}
             createdAt={item.createdAt}
-            category={item.category}
           />
         </Link>
       ))}

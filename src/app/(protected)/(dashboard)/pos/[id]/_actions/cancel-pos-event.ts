@@ -1,20 +1,21 @@
 "use server";
 
 import { CACHE_TAGS } from "@/config/cache-tags";
-import { failure, Action, success } from "@/lib/action";
+import { PATHS } from "@/config/paths";
 import { InternalServerError, NotFoundError } from "@/errors";
+import { Action, failure, success } from "@/lib/action";
 import prisma from "@/lib/prisma";
+import { CurrencyFormatter } from "@/utils/formatters/currency";
 import {
   EMembershipRole,
   EPosEventStatus,
   EPosEventType,
   ESaleStatus,
   EStockEventType,
+  EStockStrategy,
 } from "@prisma/client";
-import { revalidateTag } from "next/cache";
-import { PATHS } from "@/config/paths";
 import moment from "moment";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
+import { revalidateTag } from "next/cache";
 
 type CancelPosEventActionPayload = {
   tenantId: string;
@@ -79,7 +80,20 @@ export const cancelPosEventAction: Action<
           sale.products.map(async ({ productId, stockLotUsages, totalQty }) => {
             const product = await tx.product.findUnique({
               where: { id: productId },
-              include: { stock: { select: { id: true, strategy: true } } },
+              include: {
+                stock: { select: { id: true, strategy: true } },
+                parentCompositions: {
+                  select: {
+                    totalQty: true,
+                    child: {
+                      select: {
+                        id: true,
+                        stock: { select: { id: true, strategy: true } },
+                      },
+                    },
+                  },
+                },
+              },
             });
 
             if (!product?.stock)
@@ -94,61 +108,95 @@ export const cancelPosEventAction: Action<
               if (!lot) throw new NotFoundError("No lots in product stock");
             }
 
+            const orderDirection =
+              product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
+
+            const mappedCompositions = await Promise.all(
+              product.parentCompositions.map(async (ref) => {
+                if (!ref?.child.stock)
+                  throw new NotFoundError("product ref stock not found");
+
+                const compositionLot = await tx.stockLot.findFirst({
+                  where: {
+                    stockId: ref.child.stock.id,
+                    totalQty: { gt: 0 },
+                  },
+                  orderBy: [
+                    { expiresAt: orderDirection },
+                    { createdAt: orderDirection },
+                  ],
+                  take: 1,
+                });
+
+                if (!compositionLot)
+                  throw new NotFoundError(
+                    "No lots in composition product stock"
+                  );
+
+                return {
+                  productId: ref.child.id,
+                  stockId: ref.child.stock.id,
+                  stockLotId: compositionLot.id,
+                  compositionQty: ref.totalQty.toNumber() * totalQty,
+                };
+              })
+            );
+
             return {
               stockId: product.stock.id,
               stockLotUsages,
               totalQty,
+              compositions: mappedCompositions,
             };
           })
         );
 
-        await Promise.all(mappedProducts.map(async ({
-          stockId,
-          stockLotUsages,
-          totalQty,
-        }) => {
-          await tx.stock.update({
-            where: { id: stockId },
-            data: {
-              availableQty: { increment: totalQty },
-              totalQty: { increment: totalQty },
-            },
-          });
-
-          await Promise.all(stockLotUsages.map(async lotUsage => {
-            await tx.stockLot.update({
-              where: { id: lotUsage.stockLotId },
-              data: { totalQty: { increment: lotUsage.quantity } },
-            });
-
-            await tx.stockEvent.create({
+        await Promise.all(
+          mappedProducts.map(async ({ stockId, stockLotUsages, totalQty }) => {
+            await tx.stock.update({
+              where: { id: stockId },
               data: {
-                type: EStockEventType.Entry,
-                tenantId,
-                stockId,
-                stockLotId: lotUsage.stockLotId,
-                entry: {
-                  create: {
-                    quantity: lotUsage.quantity,
-                    description: `Devolução de estoque! 🔄 Retornaram ${lotUsage.quantity} unidades ao lote devido ao cancelamento da venda.`,
-                  },
-                },
+                availableQty: { increment: totalQty },
+                totalQty: { increment: totalQty },
               },
             });
-          }));
 
-          revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
+            await Promise.all(
+              stockLotUsages.map(async (lotUsage) => {
+                await tx.stockLot.update({
+                  where: { id: lotUsage.stockLotId },
+                  data: { totalQty: { increment: lotUsage.quantity } },
+                });
 
-          revalidateTag(
-            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
-          );
-          revalidateTag(
-            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
-          );
-          revalidateTag(
-            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
-          );
-        })
+                await tx.stockEvent.create({
+                  data: {
+                    type: EStockEventType.Entry,
+                    tenantId,
+                    stockId,
+                    stockLotId: lotUsage.stockLotId,
+                    entry: {
+                      create: {
+                        quantity: lotUsage.quantity,
+                        description: `Devolução de estoque! 🔄 Retornaram ${lotUsage.quantity} unidades ao lote devido ao cancelamento da venda.`,
+                      },
+                    },
+                  },
+                });
+              })
+            );
+
+            revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
+
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
+            );
+          })
         );
 
         const tenantOwner = await tx.tenantMembership.findFirst({
@@ -170,12 +218,13 @@ export const cancelPosEventAction: Action<
             await tx.notification.create({
               data: {
                 subject: `Venda cancelada para ${sale.customer.name}! ❌`,
-                body: `A loja ${tenant.name
-                  } cancelou uma venda de ${CurrencyFormatter.format(
-                    sale.paidTotal.toNumber()
-                  )} realizada às ${moment(sale.createdAt).format(
-                    "HH:mm"
-                  )} do dia ${moment(sale.createdAt).format("DD/MM/YYYY")}.`,
+                body: `A loja ${
+                  tenant.name
+                } cancelou uma venda de ${CurrencyFormatter.format(
+                  sale.paidTotal.toNumber()
+                )} realizada às ${moment(sale.createdAt).format(
+                  "HH:mm"
+                )} do dia ${moment(sale.createdAt).format("DD/MM/YYYY")}.`,
                 href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
                 targets: {
                   createMany: {
@@ -196,7 +245,6 @@ export const cancelPosEventAction: Action<
 
       revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
       revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-
       revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
     });
 

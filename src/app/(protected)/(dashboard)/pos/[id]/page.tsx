@@ -48,7 +48,7 @@ const Page: FC<PageProps> = async ({ params }) => {
   };
 
   return (
-    <div className="flex flex-col gap-8 p-5">
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-8 p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AddEntry {...commonProps} />

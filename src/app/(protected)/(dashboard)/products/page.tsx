@@ -33,12 +33,12 @@ const Page: NextPage<PageProps> = async ({ searchParams }) => {
   if (!session) throw new Error("session not found");
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-5">
+    <div className="w-full max-w-7xl mx-auto flex flex-col gap-5 p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Package className="size-6 text-primary sm:hidden" />
           <div>
-            <h1 className="text-xl font-semibold">Produtos</h1>
+            <h1>Produtos</h1>
             <Breadcrumb className="text-sm">
               <BreadcrumbList>
                 <BreadcrumbItem>

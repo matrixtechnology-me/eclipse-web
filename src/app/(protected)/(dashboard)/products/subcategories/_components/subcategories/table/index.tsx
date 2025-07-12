@@ -21,10 +21,6 @@ type TableProps = {
     id: string;
     name: string;
     description: string;
-    category: {
-      id: string;
-      name: string;
-    };
     createdAt: Date;
     updatedAt: Date;
   }[];
@@ -40,8 +36,8 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
 
   const handleRedirect = (categoryId: string) => {
     router.push(
-      PATHS.PROTECTED.DASHBOARD.PRODUCTS.SUBCATEGORIES
-        .SUBCATEGORY(categoryId).INDEX
+      PATHS.PROTECTED.DASHBOARD.PRODUCTS.SUBCATEGORIES.SUBCATEGORY(categoryId)
+        .INDEX
     );
   };
 
@@ -53,7 +49,6 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
             <TableHead className="text-left">#</TableHead>
             <TableHead className="text-left">Nome</TableHead>
             <TableHead className="text-left">Descrição</TableHead>
-            <TableHead className="text-left">Categoria</TableHead>
             <TableHead className="text-left">Data de criação</TableHead>
             <TableHead className="text-left">Data de atualização</TableHead>
           </TableRow>
@@ -71,20 +66,6 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
                 {item.description || (
                   <span className="text-muted-foreground">Sem descrição</span>
                 )}
-              </TableCell>
-              <TableCell>
-                <Link
-                  className="flex items-center gap-2"
-                  href={
-                    PATHS.PROTECTED.DASHBOARD.PRODUCTS.CATEGORIES.CATEGORY(
-                      item.category.id
-                    ).INDEX
-                  }
-                >
-                  <span className="font-medium text-primary">
-                    {item.category.name}
-                  </span>
-                </Link>
               </TableCell>
 
               <TableCell>

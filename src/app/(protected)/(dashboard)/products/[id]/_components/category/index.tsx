@@ -29,13 +29,14 @@ import {
 import { cn } from "@/lib/utils";
 import { updateProductCategoryAction } from "../../_actions/update-product-category";
 import { getCategoriesAction } from "../../../categories/_actions/get-categories";
+import { ProductCategory } from "../../../_actions/get-product";
 
 type RenderMode = "VIEW" | "EDIT";
 
 type CategoryProps = {
   productId: string;
   tenantId: string;
-  defaultValue: string | null;
+  defaultValue: ProductCategory | null;
 };
 
 type FormValues = {
@@ -62,7 +63,7 @@ export const Category: FC<CategoryProps> = ({
 
   const form = useForm<FormValues>({
     defaultValues: {
-      value: defaultValue,
+      value: defaultValue?.id,
     },
     mode: "onChange",
   });
@@ -78,6 +79,7 @@ export const Category: FC<CategoryProps> = ({
 
   const loadCategories = async (page: number = 1) => {
     setIsLoading(true);
+
     const result = await getCategoriesAction({
       tenantId,
       page,
@@ -103,11 +105,11 @@ export const Category: FC<CategoryProps> = ({
   }, [renderMode]);
 
   const onSubmit = async (data: FormValues) => {
-    if (data.value !== defaultValue) {
+    if (data.value && data.value !== defaultValue?.id) {
       const result = await updateProductCategoryAction({
         productId,
         tenantId,
-        categoryId: data.value === "none" ? null : data.value,
+        categoryId: data.value,
       });
 
       if ("error" in result) {
@@ -212,8 +214,7 @@ export const Category: FC<CategoryProps> = ({
         ) : (
           <div className="h-9 border rounded-md bg-secondary flex items-center justify-between px-3">
             <span className="text-sm">
-              {categories.find((c) => c.id === watchedValue)?.name ??
-                "Sem categoria"}
+              {defaultValue?.name ?? "Sem categoria"}
             </span>
             <Button
               size="icon"

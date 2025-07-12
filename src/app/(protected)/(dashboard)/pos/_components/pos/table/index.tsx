@@ -96,7 +96,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
                   {CurrencyFormatter.format(item.summary.entries.amount)}
                   <span className="text-xs text-muted-foreground">
                     {item.summary.entries.count}{" "}
-                    {item.summary.entries.count > 1 ? "operações" : "operação"}
+                    {item.summary.entries.count > 1 ? "eventos" : "evento"}
                   </span>
                 </div>
               </TableCell>
@@ -105,7 +105,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
                   {CurrencyFormatter.format(item.summary.outputs.amount)}
                   <span className="text-xs text-muted-foreground">
                     {item.summary.outputs.count}{" "}
-                    {item.summary.outputs.count > 1 ? "operações" : "operação"}
+                    {item.summary.outputs.count > 1 ? "eventos" : "evento"}
                   </span>
                 </div>
               </TableCell>
@@ -114,7 +114,7 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
                   {CurrencyFormatter.format(item.summary.sales.amount)}
                   <span className="text-xs text-muted-foreground">
                     {item.summary.sales.count}{" "}
-                    {item.summary.sales.count > 1 ? "operações" : "operação"}
+                    {item.summary.sales.count > 1 ? "eventos" : "evento"}
                   </span>
                 </div>
               </TableCell>
@@ -129,8 +129,8 @@ export const Table: FC<TableProps> = ({ data, pagination, tenantId }) => {
                       item.summary.outputs.count +
                       item.summary.sales.count >
                     1
-                      ? "operações"
-                      : "operação"}
+                      ? "eventos"
+                      : "evento"}
                   </span>
                 </div>
               </TableCell>
