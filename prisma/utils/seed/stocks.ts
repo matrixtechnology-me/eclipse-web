@@ -2,7 +2,7 @@ import { EStockEventType, EStockStrategy, PrismaClient } from "@prisma/client";
 
 export const seedStockModule = async (
   tenantId: string,
-  prisma: PrismaClient,
+  prisma: PrismaClient
 ) => {
   await prisma.stock.createMany({
     data: [
@@ -195,4 +195,4 @@ export const seedStockModule = async (
       },
     ],
   });
-}
+};
