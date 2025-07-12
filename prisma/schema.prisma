@@ -57,6 +57,11 @@ enum EPaymentMethod {
   DebitCard  @map(name: "debit-card")
 }
 
+enum EPaymentStatus {
+  Paid    @map(name: "paid")
+  Pending @map(name: "pending")
+}
+
 enum EPeriod {
   DAILY   @map(name: "daily")
   WEEKLY  @map(name: "weekly")
@@ -330,9 +335,10 @@ model PosEventSaleProduct {
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
-  productId String @map("product_id") @db.Uuid
+  productId      String @map("product_id") @db.Uuid
+  posEventSaleId String @map("pos_event_sale_id") @db.Uuid
 
-  posEventSale PosEventSale @relation(fields: [id], references: [id])
+  posEventSale PosEventSale @relation(fields: [posEventSaleId], references: [id])
   product      Product      @relation(fields: [productId], references: [id])
 
   @@map("pos_event_sale_products")
@@ -431,6 +437,19 @@ model ProductCategory {
   @@map("product_categories")
 }
 
+model ProductSpecification {
+  id        String   @id @default(uuid()) @db.Uuid
+  label     String
+  value     String
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("product_specifications")
+}
+
 model ProductSubcategory {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
@@ -454,19 +473,6 @@ model ProductCategorySubcategory {
 
   @@id([categoryId, subcategoryId])
   @@map("product_category_subcategories")
-}
-
-model ProductSpecification {
-  id        String   @id @default(uuid()) @db.Uuid
-  label     String
-  value     String
-  productId String   @map("product_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  product Product @relation(fields: [productId], references: [id])
-
-  @@map("product_specifications")
 }
 
 model ProductComposition {
@@ -557,13 +563,13 @@ model SaleProduct {
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 
-  saleId     String @map("sale_id") @db.Uuid
-  productId  String @map("product_id") @db.Uuid
-  stockLotId String @map("stock_lot_id") @db.Uuid
+  saleId    String @map("sale_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
 
-  sale     Sale     @relation(fields: [saleId], references: [id])
-  product  Product  @relation(fields: [productId], references: [id])
-  stockLot StockLot @relation(fields: [stockLotId], references: [id])
+  stockLotUsages StockLotUsage[]
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@unique([saleId, productId])
   @@map("sale_products")
@@ -642,10 +648,22 @@ model StockLot {
   stock  Stock  @relation(fields: [stockId], references: [id])
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
-  stockEvents StockEvent[]
-  saleProduct SaleProduct[]
+  stockEvents    StockEvent[]
+  stockLotUsages StockLotUsage[]
 
   @@map("stock_lots")
+}
+
+model StockLotUsage {
+  id            String @id @default(uuid()) @db.Uuid
+  quantity      Int
+  stockLotId    String @map("stock_lot_id") @db.Uuid
+  saleProductId String @map("sale_product_id") @db.Uuid
+
+  stockLot    StockLot    @relation(fields: [stockLotId], references: [id])
+  saleProduct SaleProduct @relation(fields: [saleProductId], references: [id])
+
+  @@map("stock_lot_usages")
 }
 
 model Tenant {

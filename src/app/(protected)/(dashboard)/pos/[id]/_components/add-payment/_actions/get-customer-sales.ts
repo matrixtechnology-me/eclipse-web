@@ -42,10 +42,7 @@ export const getCustomerSalesAction: Action<
   GetCustomerSalesActionResult
 > = async ({ customerId, tenantId, status, page, pageSize }) => {
   "use cache";
-  cacheTag(
-    CACHE_TAGS.TENANT(tenantId).SALES.FROM_CUSTOMER(customerId).ALL,
-    CACHE_TAGS.TENANT(tenantId).SALES.FROM_CUSTOMER(customerId).PAGINATED(page, pageSize)
-  );
+  cacheTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
 
   try {
     if (!tenantId) throw new BadRequestError("Tenant ID is required");

@@ -27,7 +27,7 @@ type PaginatedSubcategories = {
 
 type GetSubcategoriesActionPayload = {
   tenantId: string;
-  categoryId: string;
+  categoryId?: string;
   page: number;
   pageSize: number;
   query?: string;

@@ -75,11 +75,6 @@ export const CACHE_TAGS = {
       SALE: (saleId: string) => ({
         INDEX: `tenant-[${tenantId}].sale-[${saleId}]`,
       }),
-      FROM_CUSTOMER: (customerId: string) => ({
-        ALL: `tenant-[${tenantId}].customer-[${customerId}].sales`,
-        PAGINATED: (page: number, limit: number) =>
-          `tenant-[${tenantId}].customer-[${customerId}].sales?page=${page}&limit=${limit}`,
-      }),
     },
   }),
 };

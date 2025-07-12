@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Table as TableCn,
   TableBody,
@@ -7,9 +9,15 @@ import {
   TableRow,
   TableFooter,
 } from "@/components/ui/table";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import moment from "moment";
-import { FC, useMemo } from "react";
+import React, { FC, useMemo } from "react";
 
 type Product = {
   id: string;
@@ -17,10 +25,10 @@ type Product = {
   totalQty: number;
   salePrice: number;
   costPrice: number;
-  stockLot: {
-    id: string;
+  stockLotUsages: Array<{
     lotNumber: string;
-  };
+    quantity: number;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -40,49 +48,67 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
 
   return (
     <div className="w-full border rounded-sm overflow-x-auto">
-      <TableCn className="min-w-max">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-left">#</TableHead>
-            <TableHead className="text-left">Nome</TableHead>
-            <TableHead className="text-left">Preço de custo</TableHead>
-            <TableHead className="text-left">Preço de venda</TableHead>
-            <TableHead className="text-left">Lote</TableHead>
-            <TableHead className="text-left">Quantidade total</TableHead>
-            <TableHead className="text-left">Data de criação</TableHead>
-            <TableHead className="text-left">Data de atualização</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((item, index) => (
-            <TableRow key={item.id}>
-              <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
+      <Accordion type="multiple" className="w-full">
+        <TableCn className="min-w-max">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-left">#</TableHead>
+              <TableHead className="text-left">Nome</TableHead>
+              <TableHead className="text-left">Preço de custo</TableHead>
+              <TableHead className="text-left">Preço de venda</TableHead>
+              <TableHead className="text-left">Quantidade total</TableHead>
+              <TableHead className="text-left">Data de criação</TableHead>
+              <TableHead className="text-left">Data de atualização</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((item, index) => (
+              <React.Fragment key={item.id}>
+                <TableRow>
+                  <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
+                  <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
+                  <TableCell>{item.totalQty}</TableCell>
+                  <TableCell>
+                    {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
+                  </TableCell>
+                  <TableCell>
+                    {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
+                  </TableCell>
+                </TableRow>
 
-              <TableCell>{item.name}</TableCell>
-              <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
-              <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
-              <TableCell>
-                <span>{item.stockLot.lotNumber.toUpperCase()}</span>
-              </TableCell>
-              <TableCell>{item.totalQty}</TableCell>
-              <TableCell>
-                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
-              </TableCell>
-              <TableCell>
-                {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
+                <TableRow>
+                  <TableCell colSpan={7} className="p-0">
+                    <AccordionItem value={item.id} className="m-2">
+                      <AccordionTrigger className="h-5 p-0 gap-2 justify-normal cursor-pointer">
+                        Lote(s)
+                      </AccordionTrigger>
+
+                      <AccordionContent className="flex flex-col p-0 mt-1">
+                        {item.stockLotUsages.map(u => (
+                          <div key={u.lotNumber} className="flex items-center gap-2">
+                            <span>{u.lotNumber}:</span>
+                            <span>{u.quantity} unidade(s)</span>
+                          </div>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={6}>Total</TableCell>
+              <TableCell className="text-right">
+                {CurrencyFormatter.format(total)}
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={7}>Total</TableCell>
-            <TableCell className="text-right">
-              {CurrencyFormatter.format(total)}
-            </TableCell>
-          </TableRow>
-        </TableFooter>
-      </TableCn>
+          </TableFooter>
+        </TableCn>
+      </Accordion>
     </div>
   );
 };

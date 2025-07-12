@@ -58,7 +58,11 @@ export const cancelPosEventAction: Action<
             id: true,
             customer: { select: { name: true } },
             products: {
-              select: { productId: true, totalQty: true, stockLotId: true },
+              select: {
+                productId: true,
+                totalQty: true,
+                stockLotUsages: true,
+              },
             },
             createdAt: true,
             paidTotal: true,
@@ -73,7 +77,7 @@ export const cancelPosEventAction: Action<
         });
 
         const mappedProducts = await Promise.all(
-          sale.products.map(async ({ productId, stockLotId, totalQty }) => {
+          sale.products.map(async ({ productId, stockLotUsages, totalQty }) => {
             const product = await tx.product.findUnique({
               where: { id: productId },
               include: {
@@ -95,11 +99,14 @@ export const cancelPosEventAction: Action<
             if (!product?.stock)
               throw new NotFoundError("product stock not found");
 
-            const lot = await tx.stockLot.findUnique({
-              where: { id: stockLotId },
-            });
+            // Check if stockLotUsages exist.
+            for (const lotUsage of stockLotUsages) {
+              const lot = await tx.stockLot.findUnique({
+                where: { id: lotUsage.stockLotId },
+              });
 
-            if (!lot) throw new NotFoundError("No lots in product stock");
+              if (!lot) throw new NotFoundError("No lots in product stock");
+            }
 
             const orderDirection =
               product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
@@ -137,7 +144,7 @@ export const cancelPosEventAction: Action<
 
             return {
               stockId: product.stock.id,
-              stockLotId: lot.id,
+              stockLotUsages,
               totalQty,
               compositions: mappedCompositions,
             };
@@ -145,85 +152,51 @@ export const cancelPosEventAction: Action<
         );
 
         await Promise.all(
-          mappedProducts.flatMap(
-            async ({ stockId, stockLotId, totalQty, compositions }) => {
-              await tx.stock.update({
-                where: { id: stockId },
-                data: {
-                  availableQty: { increment: totalQty },
-                  totalQty: { increment: totalQty },
-                  lots: {
-                    update: {
-                      where: { id: stockLotId },
-                      data: { totalQty: { increment: totalQty } },
-                    },
-                  },
-                },
-              });
+          mappedProducts.map(async ({ stockId, stockLotUsages, totalQty }) => {
+            await tx.stock.update({
+              where: { id: stockId },
+              data: {
+                availableQty: { increment: totalQty },
+                totalQty: { increment: totalQty },
+              },
+            });
 
-              await tx.stockEvent.create({
-                data: {
-                  type: EStockEventType.Entry,
-                  tenantId,
-                  stockId,
-                  stockLotId,
-                  entry: {
-                    create: {
-                      quantity: totalQty,
-                      description: `Devolução de estoque! 🔄 Retornaram ${totalQty} unidades ao lote devido ao cancelamento da venda.`,
-                    },
-                  },
-                },
-              });
+            await Promise.all(
+              stockLotUsages.map(async (lotUsage) => {
+                await tx.stockLot.update({
+                  where: { id: lotUsage.stockLotId },
+                  data: { totalQty: { increment: lotUsage.quantity } },
+                });
 
-              if (compositions && compositions.length > 0) {
-                for await (const comp of compositions) {
-                  await tx.stock.update({
-                    where: { id: comp.stockId },
-                    data: {
-                      availableQty: { increment: comp.compositionQty },
-                      totalQty: { increment: comp.compositionQty },
-                      lots: {
-                        update: {
-                          where: { id: comp.stockLotId },
-                          data: {
-                            totalQty: { increment: comp.compositionQty },
-                          },
-                        },
+                await tx.stockEvent.create({
+                  data: {
+                    type: EStockEventType.Entry,
+                    tenantId,
+                    stockId,
+                    stockLotId: lotUsage.stockLotId,
+                    entry: {
+                      create: {
+                        quantity: lotUsage.quantity,
+                        description: `Devolução de estoque! 🔄 Retornaram ${lotUsage.quantity} unidades ao lote devido ao cancelamento da venda.`,
                       },
                     },
-                  });
+                  },
+                });
+              })
+            );
 
-                  await tx.stockEvent.create({
-                    data: {
-                      type: EStockEventType.Entry,
-                      tenantId,
-                      stockId: comp.stockId,
-                      stockLotId: comp.stockLotId,
-                      entry: {
-                        create: {
-                          quantity: comp.compositionQty,
-                          description: `Devolução por composição: ${comp.compositionQty} unidades retornadas como parte do cancelamento de produto composto.`,
-                        },
-                      },
-                    },
-                  });
+            revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
 
-                  revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-                  revalidateTag(
-                    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId)
-                      .EVENTS
-                  );
-                  revalidateTag(
-                    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).LOTS
-                  );
-                  revalidateTag(
-                    CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).INDEX
-                  );
-                }
-              }
-            }
-          )
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS
+            );
+            revalidateTag(
+              CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
+            );
+          })
         );
 
         const tenantOwner = await tx.tenantMembership.findFirst({

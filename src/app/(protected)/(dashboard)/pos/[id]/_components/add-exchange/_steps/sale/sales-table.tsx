@@ -10,12 +10,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useFormContext, useWatch } from "react-hook-form";
-import { FormSchema } from "../";
+import { FormSchema } from "../..";
 import {
-  getCustomerSalesAction,
+  getCustomerPendingSalesAction,
   SaleItem,
-} from "../_actions/get-customer-sales";
-import { ESaleStatus } from "@prisma/client";
+} from "../../_actions/get-customer-sales";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   EntityTable,
@@ -30,25 +29,35 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import moment from "moment";
 
-type CustomerSaleProps = {
+type CustomerSalesTableProps = {
   tenantId: string;
 };
 
 const PAGE = 1;
 const PAGE_SIZE = 99;
 
-export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
+export const CustomerSalesTable: FC<CustomerSalesTableProps> = ({
+  tenantId,
+}) => {
   const [values, setValues] = useState<SaleItem[]>([]);
 
   const form = useFormContext<FormSchema>();
 
-  const watchedCustomerId = useWatch<FormSchema, "customerId">({
-    name: "customerId",
+  const [watchedCustomerId, watchedSaleId] = useWatch({
+    name: ["customerId", "sale.id"],
     control: form.control,
   });
 
   const handleSelect = (sale: SaleItem) => {
-    form.setValue("saleId", sale.id, {
+    const payload: FormSchema["sale"] = {
+      ...sale,
+      products: sale.products.map(saleItem => ({
+        ...saleItem,
+        itemId: saleItem.id,
+      })),
+    }
+
+    form.setValue("sale", payload, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -56,7 +65,8 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
   }
 
   const handleUnselect = () => {
-    form.resetField("saleId");
+    form.resetField("sale");
+    form.resetField("products.returned");
   }
 
   const columns: ColumnDef<SaleItem>[] = useMemo(
@@ -69,7 +79,7 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
             checked={row.getIsSelected()}
             onCheckedChange={(value) => {
               if (typeof value !== "boolean") return;
-              row.toggleSelected(value);
+              // row.toggleSelected(value);
 
               value ? handleSelect(row.original) : handleUnselect();
             }}
@@ -116,13 +126,13 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
       },
       {
         id: "salePrice",
-        accessorFn: (sale) => sale.salePrice,
+        accessorFn: (sale) => sale.estimatedTotal,
         header: ({ column }) => (
           <EntityTableColumnHeader title="Total" column={column} />
         ),
         cell: ({ row }) => (
           <p className="flex-1 text-sm line-clamp-2">
-            {CurrencyFormatter.format(row.original.salePrice)}
+            {CurrencyFormatter.format(row.original.estimatedTotal)}
           </p>
         ),
       },
@@ -158,17 +168,16 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
     const loadValues = async () => {
       if (!watchedCustomerId) return;
 
-      const result = await getCustomerSalesAction({
+      const result = await getCustomerPendingSalesAction({
         page: PAGE,
         pageSize: PAGE_SIZE,
-        status: ESaleStatus.Processed,
         customerId: watchedCustomerId,
         tenantId,
       });
 
       if (result.isFailure) {
         return toast("", {
-          description: "Erro ao buscar clientes.",
+          description: "Erro ao buscar vendas.",
         });
       }
 
@@ -179,10 +188,26 @@ export const CustomerSale: FC<CustomerSaleProps> = ({ tenantId }) => {
     loadValues();
   }, [watchedCustomerId]);
 
+  useEffect(() => {
+    if (!watchedCustomerId) return;
+    if (values.length < 1 || columns.length < 1) return;
+
+    if (!watchedSaleId) {
+      return table.getSelectedRowModel().rows.forEach(
+        row => row.toggleSelected(false)
+      );
+    }
+
+    // Select active row based on the form value because the
+    // table state is losed when the component unmounts.
+    const activeRow = table.getRowModel().rows.find(row => row.original.id);
+    if (!!activeRow) activeRow.toggleSelected(true);
+  }, [columns, watchedSaleId]);
+
   return (
     <FormField
       control={form.control}
-      name="saleId"
+      name="sale"
       render={() => (
         <FormItem>
           <FormLabel>Venda</FormLabel>
