@@ -1,4 +1,6 @@
+import { InvalidParamError } from "@/errors/domain/invalid-param.error";
 import prisma from "@/lib/prisma";
+import { EitherResult, failure, success } from "@/utils/types/either";
 import { EStockEventType } from "@prisma/client";
 
 type DispatchOutputEventParams = {
@@ -8,14 +10,21 @@ type DispatchOutputEventParams = {
   quantity: number;
 }
 
+export type EmitOutputEventResult = EitherResult<
+  null,
+  InvalidParamError
+>;
+
 export class StockEventService {
   public static async emitOutput({
     tenantId,
     stockId,
     stockLotId,
     quantity,
-  }: DispatchOutputEventParams) {
-    // TODO: quantity validation: Int > 0.
+  }: DispatchOutputEventParams): Promise<EmitOutputEventResult> {
+    if (quantity <= 0) return failure(
+      new InvalidParamError("Quantity must be greater than zero.")
+    );
 
     await prisma.stockEvent.create({
       data: {
@@ -31,5 +40,7 @@ export class StockEventService {
         },
       },
     });
+
+    return success(null);
   }
 }
