@@ -76,7 +76,10 @@ vi.mock("@/lib/prisma"); // looks for "@/lib/__mocks__/prisma"
 
 vi.mock("../stock-event/stock-event-service", () => ({
   StockEventService: {
-    emitOutput: vi.fn().mockResolvedValue(undefined),
+    emitOutput: vi.fn().mockResolvedValue({
+      isSuccess: true,
+      isFailure: false,
+    }),
   },
 }));
 
@@ -297,10 +300,10 @@ describe("StockService.decrease", async () => {
                 { expiresAt: { gt: expect.any(Date) } },
               ],
             },
-            orderBy: {
-              expiresAt: "asc",
-              createdAt: "asc",
-            },
+            orderBy: [
+              { expiresAt: "asc" },
+              { createdAt: "asc" },
+            ],
           });
       });
 
@@ -349,10 +352,10 @@ describe("StockService.decrease", async () => {
                 { expiresAt: { gt: expect.any(Date) } },
               ],
             },
-            orderBy: {
-              expiresAt: "desc",
-              createdAt: "desc",
-            },
+            orderBy: [
+              { expiresAt: "desc" },
+              { createdAt: "desc" },
+            ],
           });
       });
     }

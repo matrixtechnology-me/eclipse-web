@@ -52,10 +52,10 @@ export class StockService {
             { expiresAt: { gt: new Date() } },
           ],
         },
-        orderBy: {
-          expiresAt: orderDirection,
-          createdAt: orderDirection,
-        },
+        orderBy: [
+          { expiresAt: orderDirection },
+          { createdAt: orderDirection },
+        ],
       });
 
       const decrements: StockLotDecrement[] = [];
@@ -91,7 +91,7 @@ export class StockService {
         new InsufficientUnitsError("Inconsistent units between stock and lots.")
       );
 
-      await Promise.all([
+      const [, , outputEventsResults] = await Promise.all([
         // Stock quantity.
         await prisma.stock.update({
           where: { id: stock.id },
@@ -101,27 +101,32 @@ export class StockService {
           },
         }),
         // Stock Lots quantity.
-        ...decrements.map(async (dec) => (
+        await Promise.all(decrements.map(async (dec) => (
           await prisma.stockLot.update({
             where: { id: dec.stockLotId },
             data: { totalQty: { decrement: dec.quantity } },
           })
-        )),
+        ))),
         // Output events.
-        ...decrements.map(async (dec) => (
+        await Promise.all(decrements.map(async (dec) => (
           await StockEventService.emitOutput({
             tenantId: stock.tenantId,
             stockId: stock.id,
             stockLotId: dec.stockLotId,
             quantity: dec.quantity,
           })
-        )),
+        ))),
       ]);
+
+      for (const result of outputEventsResults)
+        if (result.isFailure) throw result.error;
 
       return success({ stockId: stock.id, decrements });
     }
     catch (error) {
-      console.error("StockService.decrease: unexpected error.");
+      console.error(
+        `StockService.decrease unexpected error: ${JSON.stringify(error)}`
+      );
 
       return failure(error instanceof Error
         ? error
