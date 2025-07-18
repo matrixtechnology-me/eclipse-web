@@ -3,7 +3,11 @@
 import { CACHE_TAGS } from "@/config/cache-tags";
 import { PATHS } from "@/config/paths";
 import { failure, Action, success } from "@/lib/action";
-import { InternalServerError, NotFoundError } from "@/errors";
+import {
+  InternalServerError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from "@/errors";
 import prisma from "@/lib/prisma";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import {
@@ -11,13 +15,14 @@ import {
   EPaymentMethod,
   EPosEventType,
   ESaleMovementType,
-  EStockEventType,
-  EStockStrategy,
   Prisma,
 } from "@prisma/client";
 import moment from "moment";
 import { revalidateTag } from "next/cache";
-import { number } from "zod";
+import { StockService } from "@/domain/services/stock/stock-service";
+import { InvalidParamError } from "@/errors/domain/invalid-param.error";
+import { InvalidEntityError } from "@/errors/domain/invalid-entity.error";
+import { InsufficientUnitsError } from "@/errors/domain/insufficient-units.error";
 
 type CreatePosSaleActionPayload = {
   description: string;
@@ -43,306 +48,222 @@ export const createPosSaleAction: Action<
   tenantId,
   movements,
 }) => {
-  try {
-    const [tenant, customer, pos] = await Promise.all([
-      prisma.tenant.findUnique({ where: { id: tenantId } }),
-      prisma.customer.findUnique({ where: { id: customerId, tenantId } }),
-      prisma.pos.findUnique({ where: { id: posId, tenantId } }),
-    ]);
+    try {
+      const [tenant, customer, pos] = await Promise.all([
+        prisma.tenant.findUnique({ where: { id: tenantId } }),
+        prisma.customer.findUnique({ where: { id: customerId, tenantId } }),
+        prisma.pos.findUnique({ where: { id: posId, tenantId } }),
+      ]);
 
-    if (!tenant) return failure(new NotFoundError("tenant not found"));
-    if (!customer) return failure(new NotFoundError("customer not found"));
-    if (!pos) return failure(new NotFoundError("not found POS"));
+      if (!tenant) return failure(new NotFoundError("tenant not found"));
+      if (!customer) return failure(new NotFoundError("customer not found"));
+      if (!pos) return failure(new NotFoundError("not found POS"));
 
-    const mappedProducts = await Promise.all(
-      products.map(async ({ id, totalQty }) => {
-        const product = await prisma.product.findUnique({
-          where: { id },
-          include: {
-            stock: { select: { id: true, strategy: true } },
-            parentCompositions: {
-              select: {
-                totalQty: true,
-                child: {
-                  select: {
-                    id: true,
-                    stock: { select: { id: true, strategy: true } },
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        if (!product?.stock) throw new NotFoundError("product stock not found");
-
-        const orderDirection =
-          product.stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
-
-        const lot = await prisma.stockLot.findFirst({
-          where: { stockId: product.stock.id, totalQty: { gt: 0 } },
-          orderBy: [
-            { expiresAt: orderDirection },
-            { createdAt: orderDirection },
-          ],
-          take: 1,
-        });
-
-        if (!lot) throw new NotFoundError("No lots in product stock");
-
-        const mappedCompositions = await Promise.all(
-          product.parentCompositions.map(async (ref) => {
-            if (!ref?.child.stock)
-              throw new NotFoundError("product ref stock not found");
-
-            const compositionLot = await prisma.stockLot.findFirst({
-              where: {
-                stockId: ref.child.stock.id,
-                totalQty: { gt: 0 },
-              },
-              orderBy: [
-                { expiresAt: orderDirection },
-                { createdAt: orderDirection },
-              ],
-              take: 1,
-            });
-
-            if (!compositionLot)
-              throw new NotFoundError("No lots in composition product stock");
-
-            return {
-              productId: ref.child.id,
-              stockId: ref.child.stock.id,
-              stockLotId: compositionLot.id,
-              compositionQty: ref.totalQty.toNumber() * totalQty,
-            };
-          })
-        );
-
-        return {
-          costPrice: lot.costPrice,
-          description: product.description,
-          name: product.name,
-          productId: product.id,
-          salePrice: product.salePrice,
-          totalQty,
-          stockId: product.stock.id,
-          stockLotId: lot.id,
-          compositions: mappedCompositions,
-        };
-      })
-    );
-
-    const estimatedTotal = mappedProducts.reduce(
-      (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
-      0
-    );
-
-    const paidTotal = movements
-      .filter((mv) => mv.type === ESaleMovementType.Payment)
-      .reduce((sum, mv) => sum + mv.amount, 0);
-
-    const sale = await prisma.sale.create({
-      data: {
-        customerId,
-        internalCode: Math.floor(Math.random() * 0xffffff)
-          .toString(16)
-          .padStart(6, "0"),
-        tenantId,
-        estimatedTotal,
-        paidTotal,
-        products: {
-          createMany: {
-            data: mappedProducts.map(
-              ({ stockId, compositions, ...rest }) => rest
-            ),
-          },
-        },
-      },
-    });
-
-    const posEventSale = await prisma.posEventSale.create({
-      data: {
-        amount: paidTotal,
-        description,
-        customer: { connect: { id: customerId } },
-        sale: { connect: { id: sale.id } },
-        products: {
-          createMany: {
-            data: mappedProducts.map(
-              ({ stockId, stockLotId, compositions, ...rest }) => rest
-            ),
-          },
-        },
-        posEvent: {
-          create: { type: EPosEventType.Sale, posId },
-        },
-      } as Prisma.PosEventSaleCreateInput,
-    });
-
-    await Promise.all(
-      movements.map(async ({ type, method, amount }) => {
-        const baseData = { amount, method };
-
-        const eventRef = {
-          posEventSale: { connect: { id: posEventSale.id } },
-        };
-
-        const saleRef = { sale: { connect: { id: sale.id } } };
-
-        const createData =
-          type === ESaleMovementType.Change
-            ? { type, change: { create: baseData } }
-            : { type, payment: { create: baseData } };
-
-        await Promise.all([
-          prisma.posEventSaleMovement.create({
-            data: { ...eventRef, ...createData },
-          }),
-          prisma.saleMovement.create({ data: { ...saleRef, ...createData } }),
-        ]);
-      })
-    );
-
-    await Promise.all(
-      mappedProducts.map(
-        async ({ stockId, stockLotId, totalQty, compositions }) => {
-          await prisma.stock.update({
-            where: { id: stockId },
-            data: {
-              availableQty: { decrement: totalQty },
-              totalQty: { decrement: totalQty },
-              lots: {
-                update: {
-                  where: { id: stockLotId },
-                  data: { totalQty: { decrement: totalQty } },
+      // TODO: insert within transaction.
+      const mappedProducts = await Promise.all(
+        products.map(async ({ id, totalQty }) => {
+          const product = await prisma.product.findUnique({
+            where: { id, active: true, deletedAt: null },
+            include: {
+              parentCompositions: {
+                select: {
+                  totalQty: true,
+                  child: { select: { id: true } },
                 },
               },
             },
           });
 
-          await prisma.stockEvent.create({
-            data: {
-              type: EStockEventType.Output,
-              tenantId,
-              stockId,
-              stockLotId,
-              output: {
-                create: {
-                  quantity: totalQty,
-                  description: `Adeus, estoque! 🛒 Saíram ${totalQty} unidades do lote. Venda feita, espaço liberado — bora repor?`,
-                },
-              },
+          if (!product) throw new NotFoundError("product not found");
+
+          return {
+            productId: product.id,
+            name: product.name,
+            description: product.description,
+            salePrice: product.salePrice,
+            totalQty,
+            compositions: product.parentCompositions,
+          };
+        })
+      );
+
+      const estimatedTotal = mappedProducts.reduce(
+        (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
+        0
+      );
+
+      const paidTotal = movements
+        .filter((mv) => mv.type === ESaleMovementType.Payment)
+        .reduce((sum, mv) => sum + mv.amount, 0);
+
+      // TODO: insert within transaction.
+      const sale = await prisma.sale.create({
+        data: {
+          customerId,
+          internalCode: Math.floor(Math.random() * 0xffffff)
+            .toString(16)
+            .padStart(6, "0"),
+          tenantId,
+          estimatedTotal,
+          paidTotal,
+          products: {
+            createMany: {
+              data: mappedProducts.map(
+                ({ compositions, ...rest }) => rest
+              ),
             },
-          });
-
-          if (compositions && compositions.length > 0) {
-            for await (const comp of compositions) {
-              await prisma.stock.update({
-                where: { id: comp.stockId },
-                data: {
-                  availableQty: { decrement: comp.compositionQty },
-                  totalQty: { decrement: comp.compositionQty },
-                  lots: {
-                    update: {
-                      where: { id: comp.stockLotId },
-                      data: { totalQty: { decrement: comp.compositionQty } },
-                    },
-                  },
-                },
-              });
-
-              await prisma.stockEvent.create({
-                data: {
-                  type: EStockEventType.Output,
-                  tenantId,
-                  stockId: comp.stockId,
-                  stockLotId: comp.stockLotId,
-                  output: {
-                    create: {
-                      quantity: comp.compositionQty,
-                      description: `Saída por composição: ${comp.compositionQty} unidades consumidas como parte de outro produto.`,
-                    },
-                  },
-                },
-              });
-
-              revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-              revalidateTag(
-                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).EVENTS
-              );
-              revalidateTag(
-                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).LOTS
-              );
-              revalidateTag(
-                CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(comp.stockId).INDEX
-              );
-            }
-          }
-
-          revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-          revalidateTag(
-            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).EVENTS
-          );
-          revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).LOTS);
-          revalidateTag(
-            CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId).INDEX
-          );
-        }
-      )
-    );
-
-    const tenantOwner = await prisma.tenantMembership.findFirst({
-      where: { tenantId, membership: { role: EMembershipRole.Owner } },
-      select: { membership: { select: { userId: true } } },
-    });
-
-    if (tenantOwner) {
-      const userTenantSettings = await prisma.userTenantSettings.findUnique({
-        where: {
-          userId_tenantId: {
-            tenantId,
-            userId: tenantOwner.membership.userId,
           },
         },
       });
 
-      if (!userTenantSettings?.doNotDisturb) {
-        await prisma.notification.create({
-          data: {
-            subject: `Venda feita para ${customer.name}! 💰`,
-            body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
-              paidTotal
-            )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
-              sale.createdAt
-            ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
-            href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
-            targets: {
-              createMany: {
-                data: [{ tenantId, userId: tenantOwner.membership.userId }],
-                skipDuplicates: true,
-              },
+      // TODO: insert within transaction.
+      const posEventSale = await prisma.posEventSale.create({
+        data: {
+          amount: paidTotal,
+          description,
+          customer: { connect: { id: customerId } },
+          sale: { connect: { id: sale.id } },
+          products: {
+            createMany: {
+              data: mappedProducts.map(
+                ({ compositions, ...rest }) => rest
+              ),
+            },
+          },
+          posEvent: {
+            create: { type: EPosEventType.Sale, posId },
+          },
+        } as Prisma.PosEventSaleCreateInput,
+      });
+
+      // TODO: insert within transaction.
+      await Promise.all(
+        movements.map(async ({ type, method, amount }) => {
+          const baseData = { amount, method };
+
+          const eventRef = {
+            posEventSale: { connect: { id: posEventSale.id } },
+          };
+
+          const saleRef = { sale: { connect: { id: sale.id } } };
+
+          const createData =
+            type === ESaleMovementType.Change
+              ? { type, change: { create: baseData } }
+              : { type, payment: { create: baseData } };
+
+          await Promise.all([
+            prisma.posEventSaleMovement.create({
+              data: { ...eventRef, ...createData },
+            }),
+            prisma.saleMovement.create({ data: { ...saleRef, ...createData } }),
+          ]);
+        })
+      );
+
+      // TODO: insert within transaction.
+      for (const product of mappedProducts) {
+        // * Decrement composition Childs Stock.
+        for (const composition of product.compositions) {
+          const decreaseQty =
+            composition.totalQty.toNumber() * product.totalQty;
+
+          const stockResult =
+            await StockService.decrease(composition.child.id, decreaseQty);
+
+          if (stockResult.isFailure) throw stockResult.error;
+
+          // Revalidate child stock tags.
+          const stockId = stockResult.data.stockId;
+          const stockTag = CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId);
+
+          revalidateTag(stockTag.INDEX);
+          revalidateTag(stockTag.LOTS);
+          revalidateTag(stockTag.EVENTS);
+        }
+
+        // * Decrement Product Stock.
+        const stockResult =
+          await StockService.decrease(product.productId, product.totalQty);
+
+        if (stockResult.isFailure) throw stockResult.error;
+
+        // Revalidate parent stock tags.
+        const stockId = stockResult.data.stockId;
+        const stockTag = CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId);
+
+        revalidateTag(stockTag.INDEX);
+        revalidateTag(stockTag.LOTS);
+        revalidateTag(stockTag.EVENTS);
+        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
+      }
+
+      const tenantOwner = await prisma.tenantMembership.findFirst({
+        where: { tenantId, membership: { role: EMembershipRole.Owner } },
+        select: { membership: { select: { userId: true } } },
+      });
+
+      if (tenantOwner) {
+        const userTenantSettings = await prisma.userTenantSettings.findUnique({
+          where: {
+            userId_tenantId: {
+              tenantId,
+              userId: tenantOwner.membership.userId,
             },
           },
         });
 
-        revalidateTag(
-          CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
-            .NOTIFICATIONS
-        );
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
+        // TODO: insert within transaction.
+        if (!userTenantSettings?.doNotDisturb) {
+          await prisma.notification.create({
+            data: {
+              subject: `Venda feita para ${customer.name}! 💰`,
+              body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
+                paidTotal
+              )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
+                sale.createdAt
+              ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
+              href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
+              targets: {
+                createMany: {
+                  data: [{ tenantId, userId: tenantOwner.membership.userId }],
+                  skipDuplicates: true,
+                },
+              },
+            },
+          });
+
+          revalidateTag(
+            CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
+              .NOTIFICATIONS
+          );
+          revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
+        }
       }
+
+      revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
+
+      return success({});
+    } catch (error) {
+      console.error(`CreatePosSale: ${JSON.stringify(error)}`);
+
+      if (error instanceof Error) {
+        const message = error.message;
+
+        switch (error.constructor) {
+          case InvalidParamError:
+            return failure(new UnprocessableEntityError(message));
+          case InvalidEntityError:
+            return failure(new UnprocessableEntityError(message));
+          case InsufficientUnitsError:
+            return failure(new UnprocessableEntityError(message));
+        }
+      }
+
+      return failure(
+        new InternalServerError(
+          "cannot create a new pos sale event because error: " + error
+        )
+      );
     }
-
-    revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
-
-    return success({});
-  } catch (error) {
-    console.error(error);
-    return failure(
-      new InternalServerError(
-        "cannot create a new pos sale event because error: " + error
-      )
-    );
-  }
-};
+  };
