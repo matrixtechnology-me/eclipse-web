@@ -329,7 +329,6 @@ model PosEventSaleProduct {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
-  costPrice   Decimal  @map("cost_price") @db.Decimal(19, 6)
   salePrice   Decimal  @map("sale_price") @db.Decimal(19, 6)
   totalQty    Int      @default(0) @map("total_qty")
   createdAt   DateTime @default(now()) @map(name: "created_at")
@@ -557,7 +556,6 @@ model SaleProduct {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String   @default("")
-  costPrice   Decimal  @map("cost_price") @db.Decimal(19, 6)
   salePrice   Decimal  @map("sale_price") @db.Decimal(19, 6)
   totalQty    Int      @default(0) @map("total_qty")
   createdAt   DateTime @default(now()) @map(name: "created_at")

@@ -21,10 +21,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { FC, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { GroupBase } from "react-select";
@@ -80,9 +78,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
         movements: values.movements,
       });
 
-      if (result.isFailure) {
-        return;
-      }
+      if (result.isFailure) return console.log(result.error);
 
       toast.success("Venda registrada com sucesso");
       form.reset();
@@ -139,7 +135,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
           Nova venda
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[500px] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Adicionar venda</DialogTitle>
           <DialogDescription>

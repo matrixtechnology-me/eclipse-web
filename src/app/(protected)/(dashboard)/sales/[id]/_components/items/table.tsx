@@ -28,6 +28,7 @@ type Product = {
   stockLotUsages: Array<{
     lotNumber: string;
     quantity: number;
+    costPrice: number;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -38,13 +39,9 @@ type TableItemsProps = {
 };
 
 export const TableItems: FC<TableItemsProps> = ({ data }) => {
-  const total = useMemo(() => {
-    const subtotal = data.reduce(
-      (sum, item) => sum + item.salePrice * item.totalQty,
-      0
-    );
-    return subtotal;
-  }, [data]);
+  const total = useMemo(() => data.reduce(
+    (sum, item) => sum + item.salePrice * item.totalQty, 0
+  ), [data]);
 
   return (
     <div className="w-full border rounded-sm overflow-x-auto">
@@ -54,9 +51,10 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
             <TableRow>
               <TableHead className="text-left">#</TableHead>
               <TableHead className="text-left">Nome</TableHead>
-              <TableHead className="text-left">Preço de custo</TableHead>
               <TableHead className="text-left">Preço de venda</TableHead>
-              <TableHead className="text-left">Quantidade total</TableHead>
+              <TableHead className="text-left">Qntd</TableHead>
+              <TableHead className="text-left">Custo total</TableHead>
+              <TableHead className="text-left">Subtotal</TableHead>
               <TableHead className="text-left">Data de criação</TableHead>
               <TableHead className="text-left">Data de atualização</TableHead>
             </TableRow>
@@ -67,9 +65,12 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
                 <TableRow>
                   <TableCell>{String(index + 1).padStart(2, "0")}</TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
                   <TableCell>{CurrencyFormatter.format(item.salePrice)}</TableCell>
                   <TableCell>{item.totalQty}</TableCell>
+                  <TableCell>{CurrencyFormatter.format(item.costPrice)}</TableCell>
+                  <TableCell>{CurrencyFormatter.format(
+                    item.totalQty * item.salePrice
+                  )}</TableCell>
                   <TableCell>
                     {moment(item.updatedAt).format("DD/MM/YYYY [às] HH:mm")}
                   </TableCell>
@@ -79,7 +80,7 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
                 </TableRow>
 
                 <TableRow>
-                  <TableCell colSpan={7} className="p-0">
+                  <TableCell colSpan={8} className="p-0">
                     <AccordionItem value={item.id} className="m-2">
                       <AccordionTrigger className="h-5 p-0 gap-2 justify-normal cursor-pointer">
                         Lote(s)
@@ -87,9 +88,13 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
 
                       <AccordionContent className="flex flex-col p-0 mt-1">
                         {item.stockLotUsages.map(u => (
-                          <div key={u.lotNumber} className="flex items-center gap-2">
-                            <span>{u.lotNumber}:</span>
-                            <span>{u.quantity} unidade(s)</span>
+                          <div key={u.lotNumber} className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <span>{`${u.lotNumber}: `}</span>
+                              <span>{`${u.quantity} unidade(s).`}</span>
+                            </div>
+
+                            <span>{`${CurrencyFormatter.format(u.costPrice)}/unidade.`}</span>
                           </div>
                         ))}
                       </AccordionContent>
@@ -101,7 +106,7 @@ export const TableItems: FC<TableItemsProps> = ({ data }) => {
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={6}>Total</TableCell>
+              <TableCell colSpan={7}>Total</TableCell>
               <TableCell className="text-right">
                 {CurrencyFormatter.format(total)}
               </TableCell>

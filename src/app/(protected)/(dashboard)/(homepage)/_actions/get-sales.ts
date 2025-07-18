@@ -41,7 +41,6 @@ export const getSalesAction: Action<
     const sales = await prisma.sale.findMany({
       where: whereCondition,
       include: {
-        products: true,
         customer: {
           select: {
             id: true,
@@ -49,29 +48,51 @@ export const getSalesAction: Action<
             phoneNumber: true,
           },
         },
+        products: {
+          select: {
+            salePrice: true,
+            totalQty: true,
+            stockLotUsages: {
+              include: {
+                stockLot: {
+                  select: { costPrice: true }
+                }
+              },
+            },
+          },
+        }
       },
       orderBy: { createdAt: "desc" },
     });
 
-    const mappedSales: Sale[] = sales.map((sale) => ({
-      id: sale.id,
-      createdAt: sale.createdAt,
-      updatedAt: sale.updatedAt,
-      status: sale.status,
-      customer: {
-        ...sale.customer,
-        phoneNumber: sale.customer.phoneNumber ?? "00000000000",
-      },
-      costPrice: sale.products.reduce(
-        (acc, p) => acc + p.costPrice.toNumber(),
-        0
-      ),
-      salePrice: sale.products.reduce(
-        (acc, p) => acc + p.salePrice.toNumber(),
-        0
-      ),
-      totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
-    }));
+    // TODO: handle numeric operations with precision.
+    const mappedSales: Sale[] = sales.map((sale) => {
+      const saleCostPrice = sale.products.reduce((saleAcc, product) => {
+        const prodUnitsCost = product.stockLotUsages.reduce(
+          (prodAcc, { quantity, stockLot }) => {
+            return prodAcc + stockLot.costPrice.toNumber() * quantity
+          }, 0);
+
+        return saleAcc + prodUnitsCost;
+      }, 0);
+
+      return {
+        id: sale.id,
+        createdAt: sale.createdAt,
+        updatedAt: sale.updatedAt,
+        status: sale.status,
+        customer: {
+          ...sale.customer,
+          phoneNumber: sale.customer.phoneNumber ?? "00000000000",
+        },
+        costPrice: saleCostPrice,
+        salePrice: sale.products.reduce(
+          (acc, p) => acc + p.salePrice.toNumber(),
+          0
+        ),
+        totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),
+      };
+    });
 
     return success({
       sales: mappedSales,

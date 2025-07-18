@@ -11,7 +11,6 @@ export const seedPosSaleModule = async (
     name: "Tênis Infantil ColorFlex",
     description: "Tênis leve, com solado emborrachado e design colorido, desenvolvido especialmente para crianças em fase escolar. Oferece conforto e segurança nas atividades diárias.",
     salePrice: 139.9,
-    costPrice: 68,
     totalQty: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -23,7 +22,6 @@ export const seedPosSaleModule = async (
     description: "Quebra-cabeça educativo com peças em madeira que ajudam as crianças a aprender o alfabeto brincando. Estimula a coordenação motora e o raciocínio lógico.",
     salePrice: 59.9,
     totalQty: 2,
-    costPrice: 21.35,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -33,7 +31,6 @@ export const seedPosSaleModule = async (
     name: "Patinete Divertix 3 Rodas",
     description: "Patinete estável com 3 rodas, ideal para o desenvolvimento do equilíbrio e coordenação motora. Indicado para crianças a partir de 3 anos.",
     salePrice: 197.65,
-    costPrice: 110,
     totalQty: 3,
     createdAt: new Date(),
     updatedAt: new Date(),

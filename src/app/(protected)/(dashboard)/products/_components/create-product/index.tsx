@@ -7,7 +7,6 @@ import { PlusIcon } from "lucide-react";
 import { FC, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -102,8 +101,8 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
           Novo Produto
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl px-0">
-        <DialogHeader className="px-5">
+      <DialogContent className="max-w-2xl px-5 h-[500px] overflow-y-auto overflow-x-hidden">
+        <DialogHeader>
           <DialogTitle>Novo Produto</DialogTitle>
           <DialogDescription>
             Preencha os campos abaixo para cadastrar um novo produto.
@@ -115,179 +114,177 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-5 my-5"
           >
-            <ScrollArea className="h-full max-h-[512px] px-5">
-              <div className="space-y-5">
-                <FormField
-                  control={form.control}
-                  name="product.name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome do Produto*</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o nome do produto"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="product.description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrição</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Descrição do produto"
-                          className="min-h-48"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="product.barCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Código de Barras*</FormLabel>
-                      <FormControl>
-                        <BarcodeInput
-                          placeholder="Digite o código de barras"
-                          onChange={field.onChange}
-                          value={field.value}
-                          tenantId={tenantId}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="product.salePrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço de Venda*</FormLabel>
-                      <FormControl>
-                        <CurrencyInput
-                          placeholder="R$ 0,00"
-                          onChange={field.onChange}
-                          value={field.value}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Specifications form={form} />
-
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        id="stock-switch"
-                        checked={showStock}
-                        onCheckedChange={setShowStock}
+            <div className="space-y-5">
+              <FormField
+                control={form.control}
+                name="product.name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Produto*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite o nome do produto"
+                        {...field}
                       />
-                      <Label htmlFor="stock-switch">
-                        Configurar estoque inicial
-                      </Label>
-                    </div>
-                    {!showStock && (
-                      <span className="text-xs text-muted-foreground">
-                        Estoque inicial desativado
-                      </span>
-                    )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="product.description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descrição do produto"
+                        className="min-h-48"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="product.barCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código de Barras*</FormLabel>
+                    <FormControl>
+                      <BarcodeInput
+                        placeholder="Digite o código de barras"
+                        onChange={field.onChange}
+                        value={field.value}
+                        tenantId={tenantId}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="product.salePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preço de Venda*</FormLabel>
+                    <FormControl>
+                      <CurrencyInput
+                        placeholder="R$ 0,00"
+                        onChange={field.onChange}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Specifications form={form} />
+
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="stock-switch"
+                      checked={showStock}
+                      onCheckedChange={setShowStock}
+                    />
+                    <Label htmlFor="stock-switch">
+                      Configurar estoque inicial
+                    </Label>
                   </div>
-
-                  {showStock && (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <h1 className="text-sm font-semibold tracking-tight">
-                            Estoque inicial
-                          </h1>
-                          <p className="text-muted-foreground text-xs">
-                            Defina a quantidade, custo e data de validade do
-                            lote inicial.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <FormField
-                          control={form.control}
-                          name="stock.costPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Preço de Custo*</FormLabel>
-                              <FormControl>
-                                <CurrencyInput
-                                  placeholder="R$ 0,00"
-                                  onChange={field.onChange}
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="stock.initialQuantity"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Quantidade inicial*</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  placeholder="Insira a quantidade inicial"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value, 10);
-                                    field.onChange(isNaN(value) ? 0 : value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="stock.expiresAt"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Data de validade (opcional)</FormLabel>
-                              <FormControl>
-                                <DatePicker
-                                  onChange={field.onChange}
-                                  value={field.value}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
+                  {!showStock && (
+                    <span className="text-xs text-muted-foreground">
+                      Estoque inicial desativado
+                    </span>
                   )}
                 </div>
+
+                {showStock && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <h1 className="text-sm font-semibold tracking-tight">
+                          Estoque inicial
+                        </h1>
+                        <p className="text-muted-foreground text-xs">
+                          Defina a quantidade, custo e data de validade do
+                          lote inicial.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <FormField
+                        control={form.control}
+                        name="stock.costPrice"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Preço de Custo*</FormLabel>
+                            <FormControl>
+                              <CurrencyInput
+                                placeholder="R$ 0,00"
+                                onChange={field.onChange}
+                                value={field.value}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stock.initialQuantity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantidade inicial*</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                placeholder="Insira a quantidade inicial"
+                                {...field}
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value, 10);
+                                  field.onChange(isNaN(value) ? 0 : value);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="stock.expiresAt"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data de validade (opcional)</FormLabel>
+                            <FormControl>
+                              <DatePicker
+                                onChange={field.onChange}
+                                value={field.value}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex justify-end gap-3 px-5">
               <Button

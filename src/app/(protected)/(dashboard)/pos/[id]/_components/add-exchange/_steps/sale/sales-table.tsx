@@ -12,7 +12,7 @@ import {
 import { useFormContext, useWatch } from "react-hook-form";
 import { FormSchema } from "../..";
 import {
-  getCustomerPendingSalesAction,
+  getCustomerPaidSalesAction,
   SaleItem,
 } from "../../_actions/get-customer-sales";
 import { ColumnDef } from "@tanstack/react-table";
@@ -168,7 +168,7 @@ export const CustomerSalesTable: FC<CustomerSalesTableProps> = ({
     const loadValues = async () => {
       if (!watchedCustomerId) return;
 
-      const result = await getCustomerPendingSalesAction({
+      const result = await getCustomerPaidSalesAction({
         page: PAGE,
         pageSize: PAGE_SIZE,
         customerId: watchedCustomerId,
