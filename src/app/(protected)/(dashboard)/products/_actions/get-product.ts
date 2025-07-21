@@ -32,7 +32,7 @@ export type Product = {
     label: string;
     value: string;
   }>;
-  stock: {
+  stock?: {
     id: string;
     totalQty: number;
     availableQty: number;
@@ -122,10 +122,6 @@ export const getProduct: Action<
       return failure(new NotFoundError("Product not found"));
     }
 
-    if (!product.stock) {
-      return failure(new NotFoundError("Product stock not found"));
-    }
-
     const productDetails: Product = {
       id: product.id,
       name: product.name,
@@ -138,7 +134,7 @@ export const getProduct: Action<
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,
-      stock: {
+      stock: product.stock ? {
         id: product.stock.id,
         totalQty: product.stock.totalQty,
         availableQty: product.stock.availableQty,
@@ -152,7 +148,7 @@ export const getProduct: Action<
           createdAt: lot.createdAt,
           updatedAt: lot.updatedAt,
         })),
-      },
+      } : undefined,
       attachments: product.productAttachments.map((attachment) => ({
         id: attachment.id,
         name: attachment.file.name,
