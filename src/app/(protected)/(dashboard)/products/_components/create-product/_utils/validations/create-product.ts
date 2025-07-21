@@ -1,19 +1,5 @@
+import { ProductionType } from "@prisma/client";
 import { z } from "zod";
-
-export const createSpecificationsSchema = z.object({
-  label: z
-    .string()
-    .min(1, { message: "O nome da variação é obrigatório." })
-    .max(50, {
-      message: "O nome da variação deve ter no máximo 50 caracteres.",
-    }),
-  value: z
-    .string()
-    .min(1, { message: "O valor da variação é obrigatório." })
-    .max(100, {
-      message: "O valor da variação deve ter no máximo 100 caracteres.",
-    }),
-});
 
 export const createProductSchema = z.object({
   product: z.object({
@@ -36,7 +22,11 @@ export const createProductSchema = z.object({
     salePrice: z
       .number({ invalid_type_error: "Informe um valor válido." })
       .nonnegative({ message: "O preço de venda deve ser zero ou positivo." }),
-    specifications: z.array(createSpecificationsSchema).optional().default([]),
+    productionType: z
+      .nativeEnum(ProductionType, {
+        message: "Tipo de Produção é obrigatório.",
+      }),
+    composite: z.boolean({ required_error: "Campo obrigatório." }),
   }),
   stock: z.object({
     costPrice: z
@@ -48,7 +38,7 @@ export const createProductSchema = z.object({
       .int({ message: "A quantidade deve ser um número inteiro." })
       .nonnegative({ message: "A quantidade deve ser zero ou positiva." }),
     expiresAt: z.date().optional(),
-  }),
+  }).optional(),
 });
 
 export type CreateProductSchema = z.infer<typeof createProductSchema>;
