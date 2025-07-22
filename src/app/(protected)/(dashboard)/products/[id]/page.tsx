@@ -9,7 +9,7 @@ import {
 import { PATHS } from "@/config/paths";
 import { getServerSession } from "@/lib/session";
 import { NextPage } from "next";
-import { getProduct } from "../_actions/get-product";
+import { getProduct } from "../_actions/get-detailed-product";
 import { Active } from "./_components/active/active";
 import { Description } from "./_components/description";
 import { Name } from "./_components/name";
@@ -81,11 +81,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        {product.stock && (
+        {product.stockId && (
           <div className="flex items-center justify-center gap-3">
             <Link
               href={
-                PATHS.PROTECTED.DASHBOARD.STOCKS.STOCK(product.stock.id).INDEX
+                PATHS.PROTECTED.DASHBOARD.STOCKS.STOCK(product.stockId).INDEX
               }
             >
               <Button variant="outline">Ir para o estoque</Button>

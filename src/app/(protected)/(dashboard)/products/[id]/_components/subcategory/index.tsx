@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { updateProductSubcategoryAction } from "../../_actions/update-product-subcategory";
 import { getSubcategoriesAction } from "../../../subcategories/_actions/get-subcategories";
-import { ProductSubcategory } from "../../../_actions/get-product";
+import { ProductSubcategory } from "../../../_actions/get-detailed-product";
 
 type RenderMode = "VIEW" | "EDIT";
 

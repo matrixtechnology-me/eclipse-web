@@ -3,7 +3,6 @@
 import { NotFoundError } from "@/errors/http/not-found.error";
 import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/lib/action";
-import { EStockStrategy } from "@prisma/client";
 import { InternalServerError } from "@/errors";
 
 export type ProductCategory = {
@@ -32,21 +31,7 @@ export type Product = {
     label: string;
     value: string;
   }>;
-  stock?: {
-    id: string;
-    totalQty: number;
-    availableQty: number;
-    strategy: EStockStrategy;
-    lots: Array<{
-      id: string;
-      totalQty: number;
-      costPrice: number;
-      lotNumber: string;
-      expiresAt?: Date;
-      createdAt: Date;
-      updatedAt: Date;
-    }>;
-  };
+  stockId: string | undefined;
   attachments: {
     id: string;
     name: string;
@@ -72,6 +57,9 @@ export const getProduct: Action<
     const product = await prisma.product.findUnique({
       where: { id, deletedAt: null },
       include: {
+        stock: {
+          select: { id: true }
+        },
         category: {
           select: {
             id: true,
@@ -97,24 +85,6 @@ export const getProduct: Action<
             value: true,
           },
         },
-        stock: {
-          include: {
-            lots: {
-              orderBy: {
-                createdAt: "desc",
-              },
-              select: {
-                id: true,
-                totalQty: true,
-                costPrice: true,
-                lotNumber: true,
-                expiresAt: true,
-                createdAt: true,
-                updatedAt: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -134,21 +104,7 @@ export const getProduct: Action<
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       specifications: product.specifications,
-      stock: product.stock ? {
-        id: product.stock.id,
-        totalQty: product.stock.totalQty,
-        availableQty: product.stock.availableQty,
-        strategy: product.stock.strategy,
-        lots: product.stock.lots.map((lot) => ({
-          id: lot.id,
-          totalQty: lot.totalQty,
-          costPrice: lot.costPrice.toNumber(),
-          lotNumber: lot.lotNumber,
-          expiresAt: lot.expiresAt ?? undefined,
-          createdAt: lot.createdAt,
-          updatedAt: lot.updatedAt,
-        })),
-      } : undefined,
+      stockId: product.stock?.id,
       attachments: product.productAttachments.map((attachment) => ({
         id: attachment.id,
         name: attachment.file.name,
