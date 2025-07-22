@@ -22,10 +22,11 @@ export const Products: FC<ProductsProps> = async ({
   if (!session) throw new Error("Session not found");
 
   const result = await getProductsAction({
-    tenantId: session.tenantId,
+    active: true,
     page,
-    pageSize,
+    limit: pageSize,
     query,
+    tenantId: session.tenantId,
   });
 
   if ("error" in result) {

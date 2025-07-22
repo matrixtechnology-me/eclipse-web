@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/select";
 import { FC, useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  getProductsAction,
-  ProductListItem,
-} from "@/app/(protected)/(dashboard)/products/_actions/get-products";
+import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
+import { ProductListItem } from "@/domain/services/product/product-service";
 
 type Props = Omit<React.ComponentProps<typeof Select>, "onValueChange"> & {
   page: number;
@@ -36,9 +34,11 @@ export const ProductAsyncSelect: FC<Props> = ({
     const loadValues = async () => {
       const result = await getProductsAction({
         page,
-        pageSize,
+        limit: pageSize,
         tenantId,
-        query: query || "",
+        query,
+        active: true,
+        includeAvailableQty: false,
       });
 
       if (result.isFailure) {

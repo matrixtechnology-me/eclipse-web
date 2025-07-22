@@ -17,17 +17,17 @@ import {
 import { Form, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { z } from "zod";
-import { getProducts, Product } from "../../_actions/get-products";
 import { toast } from "sonner";
+import { ProductListItem } from "@/domain/services/product/product-service";
+import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
 
 interface IProps {
   tenantId: string;
@@ -87,8 +87,8 @@ export const AddTransfer = ({ tenantId }: IProps) => {
   };
 
   const loadPaginatedSearchProducts: LoadOptions<
-    DefaultOptionType<Product>,
-    GroupBase<DefaultOptionType<Product>>,
+    DefaultOptionType<ProductListItem>,
+    GroupBase<DefaultOptionType<ProductListItem>>,
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
@@ -99,8 +99,8 @@ export const AddTransfer = ({ tenantId }: IProps) => {
     const curPage = additional!.page;
     const pageSize = additional!.itemsPerPage;
 
-    const result = await getProducts({
-      searchValue: input.trim(),
+    const result = await getProductsAction({
+      query: input.trim(),
       active: true,
       limit: pageSize,
       page: curPage,
@@ -112,7 +112,7 @@ export const AddTransfer = ({ tenantId }: IProps) => {
       return { options: [], additional, hasMore: true };
     }
 
-    const products = result.value.results;
+    const { products, pagination } = result.value;
 
     if (products.length === 0) {
       toast.info("Nenhum produto encontrado.");
@@ -124,11 +124,9 @@ export const AddTransfer = ({ tenantId }: IProps) => {
         label: product.name,
       })),
       additional: { itemsPerPage: pageSize, page: curPage + 1 },
-      hasMore: curPage * pageSize < result.value.pagination.totalItems,
+      hasMore: curPage * pageSize < pagination.totalCount,
     };
   };
-
-  const { quantity } = form.watch();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -154,7 +152,7 @@ export const AddTransfer = ({ tenantId }: IProps) => {
                 control={form.control}
                 name="id"
                 render={({ field }) => (
-                  <SelectPaginated<Product>
+                  <SelectPaginated<ProductListItem>
                     className="text-sm"
                     placeholder="Buscar um produto..."
                     menuPlacement="bottom"
@@ -165,7 +163,7 @@ export const AddTransfer = ({ tenantId }: IProps) => {
                       const product = option!.value;
                       field.onChange(product.id);
                       form.setValue("name", option!.label);
-                      setMaxQuantity(product.availableQty);
+                      setMaxQuantity(product.availableQty as number);
                     }}
                     additional={{
                       page: 1,

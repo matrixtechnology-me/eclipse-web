@@ -1,22 +1,17 @@
 "use server";
 
-import { InternalServerError, NotFoundError } from "@/errors";
+import { InternalServerError, UnprocessableEntityError } from "@/errors";
 import prisma from "@/lib/prisma";
 import { Action, success, failure } from "@/lib/action";
-import { Prisma } from "@prisma/client";
 import { unstable_cacheTag as cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
-
-export type ProductListItem = {
-  id: string;
-  name: string;
-  barCode: string;
-  internalCode: string;
-  active: boolean;
-  salePrice: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import {
+  ProductListItem,
+  ProductService,
+} from "@/domain/services/product/product-service";
+import { StockService } from "@/domain/services/stock/stock-service";
+import { StockEventService } from "@/domain/services/stock-event/stock-event-service";
+import { InvalidEntityError } from "@/errors/domain/invalid-entity.error";
 
 type PaginatedProducts = {
   products: ProductListItem[];
@@ -29,74 +24,82 @@ type PaginatedProducts = {
 };
 
 type GetProductsActionPayload = {
-  tenantId: string;
   page: number;
-  pageSize: number;
-  query: string;
+  limit: number;
+  active: boolean;
+  tenantId: string;
+  query?: string;
+  excludeIds?: string[];
+  includeAvailableQty?: boolean;
 };
 
 export const getProductsAction: Action<
   GetProductsActionPayload,
   PaginatedProducts
-> = async ({ tenantId, page, pageSize, query }) => {
-  "use cache";
-  cacheTag(
-    CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL,
-    CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.PAGINATED(page, pageSize)
-  );
-
-  try {
-    const skip = (page - 1) * pageSize;
-
-    const whereCondition: Prisma.ProductWhereInput = {
-      tenantId,
-      active: true,
-      deletedAt: null,
-      OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { barCode: { contains: query, mode: "insensitive" } },
-        { internalCode: { contains: query, mode: "insensitive" } },
-      ],
-    };
-
-    const [products, totalCount] = await Promise.all([
-      prisma.product.findMany({
-        where: whereCondition,
-        skip,
-        take: pageSize,
-        orderBy: { name: "asc" },
-      }),
-      prisma.product.count({ where: whereCondition }),
-    ]);
-
-    if (!products.length) {
-      return failure(new NotFoundError("No active products found"));
-    }
-
-    return success({
-      products: products.map((product) => ({
-        id: product.id,
-        name: product.name,
-        barCode: product.barCode,
-        internalCode: product.internalCode,
-        active: product.active,
-        salePrice: product.salePrice.toNumber(),
-        createdAt: product.createdAt,
-        updatedAt: product.updatedAt,
-      })),
-      pagination: {
-        currentPage: page,
-        pageSize,
-        totalCount,
-        totalPages: Math.ceil(totalCount / pageSize),
-      },
-    });
-  } catch (error: unknown) {
-    console.error("Failed to fetch products:", error);
-    return failure(
-      new InternalServerError("Ocorreu um erro durante o registro", {
-        originalError: error instanceof Error ? error.message : String(error),
-      })
+> = async ({
+  tenantId,
+  page,
+  limit,
+  query,
+  active,
+  excludeIds,
+  includeAvailableQty,
+}) => {
+    "use cache";
+    cacheTag(
+      CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL,
+      CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.PAGINATED(page, limit)
     );
-  }
-};
+
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const stockEventService = new StockEventService(tx);
+        const stockService = new StockService(tx, stockEventService);
+        const productService = new ProductService(tx, stockService);
+
+        return await productService.getProducts({
+          pagination: {
+            page,
+            limit,
+          },
+          filters: {
+            searchValue: query,
+            active,
+            tenantId,
+            excludeIds,
+          },
+          populate: { availableQty: includeAvailableQty },
+        });
+      });
+
+      if (result.isFailure) throw result.error;
+      const { results, pagination } = result.data;
+
+      return success({
+        products: results,
+        pagination: {
+          currentPage: pagination.currentPage,
+          pageSize: pagination.limit,
+          totalCount: pagination.totalItems,
+          totalPages: pagination.totalPages,
+        }
+      });
+    } catch (error: unknown) {
+      console.error("Failed to fetch products:", error);
+
+      if (error instanceof Error) {
+        const message = error.message;
+
+        switch (error.constructor) {
+          case InvalidEntityError:
+            return failure(new UnprocessableEntityError(message));
+        }
+      }
+
+      return failure(
+        new InternalServerError("Ocorreu um erro durante a busca", {
+          originalError: error instanceof Error ? error.message : String(error),
+        })
+      );
+    }
+  };

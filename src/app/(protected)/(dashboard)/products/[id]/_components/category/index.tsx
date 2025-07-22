@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { updateProductCategoryAction } from "../../_actions/update-product-category";
 import { getCategoriesAction } from "../../../categories/_actions/get-categories";
-import { ProductCategory } from "../../../_actions/get-product";
+import { ProductCategory } from "../../../_actions/get-detailed-product";
 
 type RenderMode = "VIEW" | "EDIT";
 
@@ -75,7 +75,6 @@ export const Category: FC<CategoryProps> = ({
     formState: { isDirty },
     watch,
   } = form;
-  const watchedValue = watch("value");
 
   const loadCategories = async (page: number = 1) => {
     setIsLoading(true);
