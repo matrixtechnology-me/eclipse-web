@@ -17,11 +17,72 @@ export type DecreaseResult = EitherResult<
   InvalidParamError | InvalidEntityError | InsufficientUnitsError
 >;
 
+export type GetAvailableQtyResult = EitherResult<
+  number,
+  InvalidEntityError
+>;
+
 export class StockService {
   constructor(
     private readonly prisma: PrismaTransaction,
     private readonly stockEventService: StockEventService,
   ) {};
+
+  // TODO: unit tests.
+  public async getAvailableQty(productId: string): Promise<GetAvailableQtyResult> {
+    const product = await this.prisma.product.findUnique({
+      where: {
+        id: productId,
+        deletedAt: null,
+        active: true,
+      },
+      include: {
+        stock: {
+          select: {
+            availableQty: true,
+          },
+        },
+        parentCompositions: {
+          select: {
+            childId: true,
+            totalQty: true,
+          },
+        },
+      },
+    });
+
+    if (!product) return failure(
+      new InvalidEntityError(`Product '${productId}' does not exist.`)
+    );
+
+    if (!!product.stock) return success(product.stock.availableQty);
+
+    // Composite Product
+    if (product.parentCompositions.length < 1) return failure(
+      new InvalidEntityError(`Composite Product '${productId}' has no parent compositions.`)
+    );
+
+    // Available quantity of a composite Product is the minimum 
+    // possible units between all of its children.
+    let min: number | undefined = undefined;
+
+    for (const composition of product.parentCompositions) {
+      const childQtyResult = await this.getAvailableQty(composition.childId);
+      if (childQtyResult.isFailure) return failure(childQtyResult.error);
+
+      const childAvailableQty = childQtyResult.data;
+      const unitsUsedToCompose = composition.totalQty.toNumber();
+      const possibleUnits = childAvailableQty / unitsUsedToCompose;
+
+      if (!min || possibleUnits < min) min = possibleUnits;
+    }
+
+    if (min == undefined) return failure(
+      new Error("Unexpected error due to inconsistent composition.")
+    );
+
+    return success(min);
+  }
 
   public async decrease(
     productId: string, decreaseQuantity: number
