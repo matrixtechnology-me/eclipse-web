@@ -30,58 +30,13 @@ export class StockService {
 
   // TODO: unit tests.
   public async getAvailableQty(productId: string): Promise<GetAvailableQtyResult> {
-    const product = await this.prisma.product.findUnique({
-      where: {
-        id: productId,
-        deletedAt: null,
-        active: true,
-      },
-      include: {
-        stock: {
-          select: {
-            availableQty: true,
-          },
-        },
-        parentCompositions: {
-          select: {
-            childId: true,
-            totalQty: true,
-          },
-        },
-      },
-    });
+    // DB get_available_qty function is defined on 
+    // migration "20250723125301_feat".
+    const resultSet = await this.prisma.$queryRaw<{ available_qty: number }[]>`
+      SELECT get_available_qty(${productId}) AS available_qty
+    `;
 
-    if (!product) return failure(
-      new InvalidEntityError(`Product '${productId}' does not exist.`)
-    );
-
-    if (!!product.stock) return success(product.stock.availableQty);
-
-    // Composite Product
-    if (product.parentCompositions.length < 1) return failure(
-      new InvalidEntityError(`Composite Product '${productId}' has no parent compositions.`)
-    );
-
-    // Available quantity of a composite Product is the minimum 
-    // possible units between all of its children.
-    let min: number | undefined = undefined;
-
-    for (const composition of product.parentCompositions) {
-      const childQtyResult = await this.getAvailableQty(composition.childId);
-      if (childQtyResult.isFailure) return failure(childQtyResult.error);
-
-      const childAvailableQty = childQtyResult.data;
-      const unitsUsedToCompose = composition.totalQty.toNumber();
-      const possibleUnits = childAvailableQty / unitsUsedToCompose;
-
-      if (!min || possibleUnits < min) min = possibleUnits;
-    }
-
-    if (min == undefined) return failure(
-      new Error("Unexpected error due to inconsistent composition.")
-    );
-
-    return success(min);
+    return success(resultSet[0]?.available_qty || 0);
   }
 
   public async decrease(
