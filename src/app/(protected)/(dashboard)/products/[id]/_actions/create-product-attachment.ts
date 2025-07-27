@@ -4,6 +4,8 @@ import { FILE_SYSTEM } from "@/config/file-system";
 import { ConflictError, InternalServerError, NotFoundError } from "@/errors";
 import { Action, failure, success } from "@/lib/action";
 import prisma from "@/lib/prisma";
+import { S3Service } from "@/services/aws/s3.service";
+import { STSService } from "@/services/aws/sts.service";
 import { R2Service } from "@/services/cloudflare/r2";
 import { randomUUID } from "crypto";
 
@@ -30,7 +32,14 @@ export const createProductAttachment: Action<
 
     if (!product) return failure(new NotFoundError("Product not found"));
 
-    const r2Service = new R2Service();
+    const stsService = new STSService();
+
+    const credentials = await stsService.assumeRole(
+      process.env.AWS_ROLE_ARN || "",
+      "create-product-attachment"
+    );
+
+    const s3Service = new S3Service(credentials);
 
     const uploadFileBuffer = Buffer.from(await uploadFile.arrayBuffer());
 
@@ -42,17 +51,19 @@ export const createProductAttachment: Action<
     if (!uploadFileExtension)
       return failure(new ConflictError("Invalid file: extension not found."));
 
-    const upload = await r2Service.upload({
-      path: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
-        product.id
-      ).ATTACHMENTS.ATTACHMENT(
-        randomAttachmentId,
-        randomFileId,
-        uploadFileExtension
-      ).PATH,
-      body: uploadFileBuffer,
-      fileType: uploadFile.type,
-    });
+    const filePath = FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
+      product.id
+    ).ATTACHMENTS.ATTACHMENT(
+      randomAttachmentId,
+      randomFileId,
+      uploadFileExtension
+    ).PATH;
+
+    await s3Service.putObject(
+      process.env.AWS_BUCKET_NAME || "",
+      filePath,
+      uploadFileBuffer
+    );
 
     const folder = await prisma.folder.upsert({
       where: { key: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(product.id).INDEX.KEY },
@@ -62,6 +73,9 @@ export const createProductAttachment: Action<
       },
       update: {},
     });
+
+    const cloudfrontDistributionUrl =
+      process.env.AWS_CLOUDFRONT_DISTRIBUTION_URL || "";
 
     const file = await prisma.file.create({
       data: {
@@ -75,7 +89,7 @@ export const createProductAttachment: Action<
         ).KEY,
         mimeType: uploadFile.type,
         size: uploadFile.size,
-        url: upload.url,
+        url: cloudfrontDistributionUrl + "/" + filePath,
         folderId: folder.id,
       },
     });

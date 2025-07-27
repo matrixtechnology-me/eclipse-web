@@ -13,7 +13,7 @@ export const FILE_SYSTEM = {
             fileExtension: string
           ) => ({
             KEY: `fs.root.products.product-[${productId}].attachments.attachment-[${attachmentId}]`,
-            PATH: `/root/products/${productId}/attachments/${attachmentId}/${fileId}.${fileExtension}`,
+            PATH: `root/products/${productId}/attachments/${attachmentId}/${fileId}.${fileExtension}`,
           }),
         },
       }),
