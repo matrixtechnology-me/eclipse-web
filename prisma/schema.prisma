@@ -110,6 +110,11 @@ enum EStockStrategy {
   Lifo @map(name: "lifo")
 }
 
+enum ProductionType {
+  Own        @map(name: "own")
+  Outsourced @map(name: "outsourced")
+}
+
 enum UnitOfMeasure {
   Unit        @map(name: "unit")
   Kilogram    @map(name: "kilogram")
@@ -120,11 +125,6 @@ enum UnitOfMeasure {
   Centimeter  @map(name: "centimeter")
   SquareMeter @map(name: "square_meter")
   CubicMeter  @map(name: "cubic_meter")
-}
-
-enum ProductionType {
-  Own        @map(name: "own")
-  Outsourced @map(name: "outsourced")
 }
 
 model Address {
@@ -168,6 +168,37 @@ model Document {
   updatedAt DateTime     @updatedAt @map(name: "updated_at")
 
   @@map("documents")
+}
+
+model File {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  size        BigInt
+  mimeType    String   @map(name: "mime_type")
+  key         String   @unique
+  url         String
+  folderId    String?  @map(name: "folder_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  folder            Folder?             @relation(fields: [folderId], references: [id])
+  ProductAttachment ProductAttachment[]
+
+  @@map("files")
+}
+
+model Folder {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String   @default("")
+  key         String   @unique
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+
+  files File[]
+
+  @@map("folders")
 }
 
 model Membership {
@@ -343,37 +374,6 @@ model PosEventSaleProduct {
   @@map("pos_event_sale_products")
 }
 
-model Folder {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String   @default("")
-  key         String   @unique
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
-
-  files File[]
-
-  @@map("folders")
-}
-
-model File {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String   @default("")
-  size        BigInt
-  mimeType    String   @map(name: "mime_type")
-  key         String   @unique
-  url         String
-  folderId    String?  @map(name: "folder_id") @db.Uuid
-  createdAt   DateTime @default(now()) @map(name: "created_at")
-  updatedAt   DateTime @updatedAt @map(name: "updated_at")
-
-  folder            Folder?             @relation(fields: [folderId], references: [id])
-  ProductAttachment ProductAttachment[]
-
-  @@map("files")
-}
-
 model Product {
   id             String         @id @default(uuid()) @db.Uuid
   name           String
@@ -436,6 +436,31 @@ model ProductCategory {
   @@map("product_categories")
 }
 
+model ProductCategorySubcategory {
+  categoryId    String @map("category_id") @db.Uuid
+  subcategoryId String @map("subcategory_id") @db.Uuid
+
+  category    ProductCategory    @relation(fields: [categoryId], references: [id])
+  subcategory ProductSubcategory @relation(fields: [subcategoryId], references: [id])
+
+  @@id([categoryId, subcategoryId])
+  @@map("product_category_subcategories")
+}
+
+model ProductComposition {
+  id        String   @id @default(uuid()) @db.Uuid
+  totalQty  Decimal  @default(0) @map("total_qty") @db.Decimal(10, 2)
+  parentId  String   @map("parent_id") @db.Uuid
+  childId   String   @map("child_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(name: "ParentProductComposition", fields: [parentId], references: [id])
+  child   Product @relation(name: "ChildProductComposition", fields: [childId], references: [id])
+
+  @@map("product_compositions")
+}
+
 model ProductSpecification {
   id        String   @id @default(uuid()) @db.Uuid
   label     String
@@ -461,31 +486,6 @@ model ProductSubcategory {
   productCategorySubcategory ProductCategorySubcategory[]
 
   @@map("product_subcategories")
-}
-
-model ProductCategorySubcategory {
-  categoryId    String @map("category_id") @db.Uuid
-  subcategoryId String @map("subcategory_id") @db.Uuid
-
-  category    ProductCategory    @relation(fields: [categoryId], references: [id])
-  subcategory ProductSubcategory @relation(fields: [subcategoryId], references: [id])
-
-  @@id([categoryId, subcategoryId])
-  @@map("product_category_subcategories")
-}
-
-model ProductComposition {
-  id        String   @id @default(uuid()) @db.Uuid
-  totalQty  Decimal  @default(0) @map("total_qty") @db.Decimal(10, 2)
-  parentId  String   @map("parent_id") @db.Uuid
-  childId   String   @map("child_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  product Product @relation(name: "ParentProductComposition", fields: [parentId], references: [id])
-  child   Product @relation(name: "ChildProductComposition", fields: [childId], references: [id])
-
-  @@map("product_compositions")
 }
 
 model Sale {
