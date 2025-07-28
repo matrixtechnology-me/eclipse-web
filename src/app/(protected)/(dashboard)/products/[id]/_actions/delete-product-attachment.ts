@@ -4,7 +4,8 @@ import { FILE_SYSTEM } from "@/config/file-system";
 import { ConflictError, InternalServerError, NotFoundError } from "@/errors";
 import { Action, failure, success } from "@/lib/action";
 import prisma from "@/lib/prisma";
-import { R2Service } from "@/services/cloudflare/r2";
+import { S3Service } from "@/services/aws/s3.service";
+import { STSService } from "@/services/aws/sts.service";
 
 type DeleteProductAttachmentActionPayload = {
   attachmentId: string;
@@ -33,17 +34,25 @@ export const deleteProductAttachment: Action<
     if (!uploadFileExtension)
       return failure(new ConflictError("Invalid file: extension not found."));
 
-    const r2Service = new R2Service();
+    const stsService = new STSService();
 
-    await r2Service.delete({
-      path: FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
+    const credentials = await stsService.assumeRole(
+      process.env.AWS_ROLE_ARN || "",
+      "delete-product-attachment"
+    );
+
+    const s3Service = new S3Service(credentials);
+
+    await s3Service.deleteObject(
+      process.env.AWS_BUCKET_NAME || "",
+      FILE_SYSTEM.ROOT.PRODUCTS.PRODUCT(
         attachment.productId
       ).ATTACHMENTS.ATTACHMENT(
         attachment.id,
         attachment.file.id,
         uploadFileExtension
-      ).PATH,
-    });
+      ).PATH
+    );
 
     await prisma.productAttachment.delete({
       where: { id: attachmentId },
