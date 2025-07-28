@@ -6,7 +6,6 @@ import { Action, failure, success } from "@/lib/action";
 import prisma from "@/lib/prisma";
 import { S3Service } from "@/services/aws/s3.service";
 import { STSService } from "@/services/aws/sts.service";
-import { R2Service } from "@/services/cloudflare/r2";
 import { randomUUID } from "crypto";
 
 type CreateProductAttachmentActionPayload = {
@@ -36,7 +35,8 @@ export const createProductAttachment: Action<
 
     const credentials = await stsService.assumeRole(
       process.env.AWS_ROLE_ARN || "",
-      "create-product-attachment"
+      "create-product-attachment",
+      900
     );
 
     const s3Service = new S3Service(credentials);
