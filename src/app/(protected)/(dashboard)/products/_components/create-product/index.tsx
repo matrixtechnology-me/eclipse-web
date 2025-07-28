@@ -1,6 +1,5 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
@@ -25,19 +24,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { getServerSession } from "@/lib/session";
 import { createProduct } from "../../_actions/create-product";
 import { BarcodeInput } from "./_components/barcode-input";
 import { CurrencyInput } from "./_components/currency-input";
-import { DatePicker } from "./_components/date-picker";
-import { Specifications } from "./_components/specifications";
 import {
   createProductSchema,
   CreateProductSchema,
 } from "./_utils/validations/create-product";
+import { ProductionTypeInput } from "./_components/production-type";
+import { StockInput } from "./_components/stock";
+import { ProductionType } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { PATHS } from "@/config/paths";
 
 type CreateProductProps = {
   tenantId: string;
@@ -45,7 +45,8 @@ type CreateProductProps = {
 
 export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
   const [open, setOpen] = useState<boolean>(false);
-  const [showStock, setShowStock] = useState<boolean>(false);
+
+  const router = useRouter();
 
   const form = useForm<CreateProductSchema>({
     resolver: zodResolver(createProductSchema),
@@ -55,16 +56,14 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
         description: "",
         barCode: "",
         salePrice: 0,
-        specifications: [],
+        productionType: undefined,
+        composite: false,
       },
-      stock: {
-        costPrice: 0,
-        initialQuantity: 0,
-      },
+      stock: undefined,
     },
   });
 
-  const onSubmit = async (values: CreateProductSchema) => {
+  const onSubmit = async (formData: CreateProductSchema) => {
     try {
       const session = await getServerSession({
         requirements: { tenant: true },
@@ -73,17 +72,20 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
       if (!session) throw new Error("Sessão não encontrada");
 
       const result = await createProduct({
-        ...values.product,
-        ...values.stock,
-        description: values.product.description || "",
+        ...formData.product,
+        initialStock: formData.stock,
+        description: formData.product.description || "",
         tenantId: session.tenantId,
       });
 
       if (result.isFailure) return;
+      const productId = result.value as string;
 
       toast.success("Produto criado com sucesso");
       form.reset();
       setOpen(false);
+
+      router.push(PATHS.PROTECTED.DASHBOARD.PRODUCTS.PRODUCT(productId).INDEX);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -92,6 +94,23 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
       );
     }
   };
+
+  const [productionType, composite] = form.watch([
+    "product.productionType",
+    "product.composite"
+  ]);
+
+  const toggleProductionType = (input: ProductionType) => {
+    if (input == "Outsourced" && composite)
+      form.setValue("product.composite", false, { shouldValidate: true });
+
+    form.setValue("product.productionType", input, { shouldValidate: true });
+  }
+
+  const toggleComposite = (toggle: boolean) => {
+    if (!toggle) form.setValue("stock", undefined, { shouldValidate: true });
+    form.setValue("product.composite", toggle, { shouldValidate: true });
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -187,103 +206,45 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
                 )}
               />
 
-              <Specifications form={form} />
-
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="stock-switch"
-                      checked={showStock}
-                      onCheckedChange={setShowStock}
-                    />
-                    <Label htmlFor="stock-switch">
-                      Configurar estoque inicial
-                    </Label>
-                  </div>
-                  {!showStock && (
-                    <span className="text-xs text-muted-foreground">
-                      Estoque inicial desativado
-                    </span>
-                  )}
-                </div>
-
-                {showStock && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <h1 className="text-sm font-semibold tracking-tight">
-                          Estoque inicial
-                        </h1>
-                        <p className="text-muted-foreground text-xs">
-                          Defina a quantidade, custo e data de validade do
-                          lote inicial.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      <FormField
-                        control={form.control}
-                        name="stock.costPrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Preço de Custo*</FormLabel>
-                            <FormControl>
-                              <CurrencyInput
-                                placeholder="R$ 0,00"
-                                onChange={field.onChange}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+              <FormField
+                control={form.control}
+                name="product.productionType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Produção*</FormLabel>
+                    <FormControl>
+                      <ProductionTypeInput
+                        name={field.name}
+                        value={field.value}
+                        onValueChange={toggleProductionType}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="stock.initialQuantity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Quantidade inicial*</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                placeholder="Insira a quantidade inicial"
-                                {...field}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value, 10);
-                                  field.onChange(isNaN(value) ? 0 : value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="stock.expiresAt"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Data de validade (opcional)</FormLabel>
-                            <FormControl>
-                              <DatePicker
-                                onChange={field.onChange}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+                    </FormControl>
+                  </FormItem>
                 )}
-              </div>
+              />
+
+              {productionType == "Own" && (
+                <FormField
+                  control={form.control}
+                  name="product.composite"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={toggleComposite}
+                          />
+                        </FormControl>
+                        <FormLabel>É composto?*</FormLabel>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {!composite && <StockInput />}
             </div>
 
             <div className="flex justify-end gap-3 px-5">

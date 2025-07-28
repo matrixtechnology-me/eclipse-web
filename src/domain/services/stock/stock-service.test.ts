@@ -7,12 +7,15 @@ import { InvalidEntityError } from '@/errors/domain/invalid-entity.error';
 import { InvalidParamError } from '@/errors/domain/invalid-param.error';
 import { InsufficientUnitsError } from '@/errors/domain/insufficient-units.error';
 import { Decimal } from '@prisma/client/runtime/library';
-import { StockEventService } from '../stock-event/stock-event-service';
 import { beforeEach } from 'node:test';
+import { StockEventService } from '../stock-event/stock-event-service';
 
 const [stockId, productId, tenantId] = Object.freeze(["ID", "P_ID", "T_ID"]);
 
-let lots = Object.freeze([
+let stockEventService = new StockEventService(mockedPrisma);
+let stockService = new StockService(mockedPrisma, stockEventService);
+
+let lots = [
   {
     id: "Lot1", // older
     lotNumber: "1",
@@ -68,20 +71,21 @@ let lots = Object.freeze([
     createdAt: new Date("2025-10-01T10:30:00Z"),
     expiresAt: new Date("2026-06-01T10:30:00Z"),
   }
-]);
+];
 
 const [lot1, lot2, lot3, lot4, lot5] = lots;
 
 vi.mock("@/lib/prisma"); // looks for "@/lib/__mocks__/prisma"
 
-vi.mock("../stock-event/stock-event-service", () => ({
-  StockEventService: {
-    emitOutput: vi.fn().mockResolvedValue({
-      isSuccess: true,
-      isFailure: false,
-    }),
-  },
-}));
+vi.mock("../stock-event/stock-event-service", () => {
+  const StockEventService = vi.fn();
+  StockEventService.prototype.emitOutput = vi.fn().mockResolvedValue({
+    isSuccess: true,
+    isFailure: false,
+  });
+
+  return { StockEventService };
+});
 
 beforeEach(() => {
   // Mock stock update mutation.
@@ -90,7 +94,7 @@ beforeEach(() => {
   // Mock stock lot update mutation.
   (mockedPrisma.stockLot.update as VitestMock).mockResolvedValue(undefined);
 
-  lots = Object.freeze([
+  lots = [
     {
       id: "Lot1", // older
       lotNumber: "1",
@@ -146,26 +150,29 @@ beforeEach(() => {
       createdAt: new Date("2025-10-01T10:30:00Z"),
       expiresAt: new Date("2026-06-01T10:30:00Z"),
     }
-  ]);
+  ];
+
+  stockEventService = new StockEventService(mockedPrisma);
+  stockService = new StockService(mockedPrisma, stockEventService);
 });
 
 afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("StockService.decrease", async () => {
+describe("stockService.decrease", async () => {
   it("should not accept decrease quantity lower or equals than zero", () => {
     const expected = failure(
       new InvalidParamError('Decrease quantity must be greater than 0.')
     );
 
-    expect(StockService.decrease(productId, 0))
+    expect(stockService.decrease(productId, 0))
       .resolves.toStrictEqual(expected);
 
-    expect(StockService.decrease(productId, -15))
+    expect(stockService.decrease(productId, -15))
       .resolves.toStrictEqual(expected);
 
-    expect(StockService.decrease(productId, -43.873))
+    expect(stockService.decrease(productId, -43.873))
       .resolves.toStrictEqual(expected);
   });
 
@@ -176,7 +183,7 @@ describe("StockService.decrease", async () => {
 
     mockedPrisma.stock.findUnique.mockResolvedValueOnce(null);
 
-    expect(StockService.decrease(productId, 20))
+    expect(stockService.decrease(productId, 20))
       .resolves.toStrictEqual(expected);
 
     expect(mockedPrisma.stock.findUnique)
@@ -199,12 +206,12 @@ describe("StockService.decrease", async () => {
 
     mockedPrisma.stock.findUnique.mockResolvedValue(stockMock);
 
-    expect(StockService.decrease(productId, 21))
+    expect(stockService.decrease(productId, 21))
       .resolves.toStrictEqual(expected);
 
     mockedPrisma.stock.findUnique.mockResolvedValue(stockMock);
 
-    expect(StockService.decrease(productId, 280.33))
+    expect(stockService.decrease(productId, 280.33))
       .resolves.toStrictEqual(expected);
   });
 
@@ -229,7 +236,7 @@ describe("StockService.decrease", async () => {
         lot2, lot4, // 19 units
       ]);
 
-      expect(StockService.decrease(productId, 20))
+      expect(stockService.decrease(productId, 20))
         .resolves.toStrictEqual(expected);
 
       mockedPrisma.stock.findUnique.mockResolvedValueOnce({
@@ -247,7 +254,7 @@ describe("StockService.decrease", async () => {
         lot4, lot5, // 49 units
       ]);
 
-      expect(StockService.decrease(productId, 50))
+      expect(stockService.decrease(productId, 50))
         .resolves.toStrictEqual(expected);
     }
   );
@@ -287,7 +294,7 @@ describe("StockService.decrease", async () => {
           ],
         });
 
-        expect(await StockService.decrease(productId, 15))
+        expect(await stockService.decrease(productId, 15))
           .toStrictEqual(expected);
 
         expect(mockedPrisma.stockLot.findMany)
@@ -339,7 +346,7 @@ describe("StockService.decrease", async () => {
           ],
         });
 
-        expect(await StockService.decrease(productId, 15))
+        expect(await stockService.decrease(productId, 15))
           .toStrictEqual(expected);
 
         expect(mockedPrisma.stockLot.findMany)
@@ -377,7 +384,7 @@ describe("StockService.decrease", async () => {
       lot1, lot2, lot3,
     ]);
 
-    await StockService.decrease(productId, 15);
+    await stockService.decrease(productId, 15);
 
     expect(mockedPrisma.stock.update)
       .toHaveBeenCalledWith({
@@ -433,7 +440,7 @@ describe("StockService.decrease", async () => {
       ],
     });
 
-    expect(StockService.decrease(productId, 15))
+    expect(stockService.decrease(productId, 15))
       .resolves.toStrictEqual(expected);
   });
 
@@ -453,18 +460,18 @@ describe("StockService.decrease", async () => {
       lot1, lot2, lot3,
     ]);
 
-    await StockService.decrease(productId, 15);
+    await stockService.decrease(productId, 15);
 
-    expect(StockEventService.emitOutput).toHaveBeenCalledTimes(2);
+    expect(stockEventService.emitOutput).toHaveBeenCalledTimes(2);
 
-    expect(StockEventService.emitOutput).toHaveBeenCalledWith({
+    expect(stockEventService.emitOutput).toHaveBeenCalledWith({
       tenantId,
       stockId,
       stockLotId: "Lot1",
       quantity: 10,
     });
 
-    expect(StockEventService.emitOutput).toHaveBeenCalledWith({
+    expect(stockEventService.emitOutput).toHaveBeenCalledWith({
       tenantId,
       stockId,
       stockLotId: "Lot2",
@@ -505,7 +512,7 @@ describe("StockService.decrease", async () => {
         ],
       });
 
-      const result = await StockService.decrease(productId, 15);
+      const result = await stockService.decrease(productId, 15);
       expect(result).toStrictEqual(expected);
 
       if (result.isFailure) throw new Error("Malformed test.");

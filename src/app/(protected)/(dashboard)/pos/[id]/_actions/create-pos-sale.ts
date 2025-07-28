@@ -23,6 +23,7 @@ import { StockService } from "@/domain/services/stock/stock-service";
 import { InvalidParamError } from "@/errors/domain/invalid-param.error";
 import { InvalidEntityError } from "@/errors/domain/invalid-entity.error";
 import { InsufficientUnitsError } from "@/errors/domain/insufficient-units.error";
+import { StockEventService } from "@/domain/services/stock-event/stock-event-service";
 
 type CreatePosSaleActionPayload = {
   description: string;
@@ -59,189 +60,190 @@ export const createPosSaleAction: Action<
       if (!customer) return failure(new NotFoundError("customer not found"));
       if (!pos) return failure(new NotFoundError("not found POS"));
 
-      // TODO: insert within transaction.
-      const mappedProducts = await Promise.all(
-        products.map(async ({ id, totalQty }) => {
-          const product = await prisma.product.findUnique({
-            where: { id, active: true, deletedAt: null },
-            include: {
-              parentCompositions: {
-                select: {
-                  totalQty: true,
-                  child: { select: { id: true } },
+      const TENANT_TAGS = CACHE_TAGS.TENANT(tenantId);
+
+      // "Promise.all" execute calls serially due to single 
+      // query at time per db connection within transaction.
+      await prisma.$transaction(async (tx) => {
+        const mappedProducts = await Promise.all(
+          products.map(async ({ id, totalQty }) => {
+            const product = await tx.product.findUnique({
+              where: { id, active: true, deletedAt: null },
+              include: {
+                parentCompositions: {
+                  select: {
+                    totalQty: true,
+                    child: { select: { id: true } },
+                  },
                 },
               },
-            },
-          });
+            });
 
-          if (!product) throw new NotFoundError("product not found");
+            if (!product) throw new NotFoundError("product not found");
 
-          return {
-            productId: product.id,
-            name: product.name,
-            description: product.description,
-            salePrice: product.salePrice,
-            totalQty,
-            compositions: product.parentCompositions,
-          };
-        })
-      );
+            return {
+              productId: product.id,
+              name: product.name,
+              description: product.description,
+              salePrice: product.salePrice,
+              totalQty,
+              compositions: product.parentCompositions,
+            };
+          })
+        );
 
-      const estimatedTotal = mappedProducts.reduce(
-        (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
-        0
-      );
+        const estimatedTotal = mappedProducts.reduce(
+          (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
+          0
+        );
 
-      const paidTotal = movements
-        .filter((mv) => mv.type === ESaleMovementType.Payment)
-        .reduce((sum, mv) => sum + mv.amount, 0);
+        const paidTotal = movements
+          .filter((mv) => mv.type === ESaleMovementType.Payment)
+          .reduce((sum, mv) => sum + mv.amount, 0);
 
-      // TODO: insert within transaction.
-      const sale = await prisma.sale.create({
-        data: {
-          customerId,
-          internalCode: Math.floor(Math.random() * 0xffffff)
-            .toString(16)
-            .padStart(6, "0"),
-          tenantId,
-          estimatedTotal,
-          paidTotal,
-          products: {
-            createMany: {
-              data: mappedProducts.map(
-                ({ compositions, ...rest }) => rest
-              ),
-            },
-          },
-        },
-      });
-
-      // TODO: insert within transaction.
-      const posEventSale = await prisma.posEventSale.create({
-        data: {
-          amount: paidTotal,
-          description,
-          customer: { connect: { id: customerId } },
-          sale: { connect: { id: sale.id } },
-          products: {
-            createMany: {
-              data: mappedProducts.map(
-                ({ compositions, ...rest }) => rest
-              ),
-            },
-          },
-          posEvent: {
-            create: { type: EPosEventType.Sale, posId },
-          },
-        } as Prisma.PosEventSaleCreateInput,
-      });
-
-      // TODO: insert within transaction.
-      await Promise.all(
-        movements.map(async ({ type, method, amount }) => {
-          const baseData = { amount, method };
-
-          const eventRef = {
-            posEventSale: { connect: { id: posEventSale.id } },
-          };
-
-          const saleRef = { sale: { connect: { id: sale.id } } };
-
-          const createData =
-            type === ESaleMovementType.Change
-              ? { type, change: { create: baseData } }
-              : { type, payment: { create: baseData } };
-
-          await Promise.all([
-            prisma.posEventSaleMovement.create({
-              data: { ...eventRef, ...createData },
-            }),
-            prisma.saleMovement.create({ data: { ...saleRef, ...createData } }),
-          ]);
-        })
-      );
-
-      // TODO: insert within transaction.
-      for (const product of mappedProducts) {
-        // * Decrement composition Childs Stock.
-        for (const composition of product.compositions) {
-          const decreaseQty =
-            composition.totalQty.toNumber() * product.totalQty;
-
-          const stockResult =
-            await StockService.decrease(composition.child.id, decreaseQty);
-
-          if (stockResult.isFailure) throw stockResult.error;
-
-          // Revalidate child stock tags.
-          const stockId = stockResult.data.stockId;
-          const stockTag = CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId);
-
-          revalidateTag(stockTag.INDEX);
-          revalidateTag(stockTag.LOTS);
-          revalidateTag(stockTag.EVENTS);
-        }
-
-        // * Decrement Product Stock.
-        const stockResult =
-          await StockService.decrease(product.productId, product.totalQty);
-
-        if (stockResult.isFailure) throw stockResult.error;
-
-        // Revalidate parent stock tags.
-        const stockId = stockResult.data.stockId;
-        const stockTag = CACHE_TAGS.TENANT(tenantId).STOCKS.STOCK(stockId);
-
-        revalidateTag(stockTag.INDEX);
-        revalidateTag(stockTag.LOTS);
-        revalidateTag(stockTag.EVENTS);
-        revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
-      }
-
-      const tenantOwner = await prisma.tenantMembership.findFirst({
-        where: { tenantId, membership: { role: EMembershipRole.Owner } },
-        select: { membership: { select: { userId: true } } },
-      });
-
-      if (tenantOwner) {
-        const userTenantSettings = await prisma.userTenantSettings.findUnique({
-          where: {
-            userId_tenantId: {
-              tenantId,
-              userId: tenantOwner.membership.userId,
+        const sale = await tx.sale.create({
+          data: {
+            customerId,
+            internalCode: Math.floor(Math.random() * 0xffffff)
+              .toString(16)
+              .padStart(6, "0"),
+            tenantId,
+            estimatedTotal,
+            paidTotal,
+            products: {
+              createMany: {
+                data: mappedProducts.map(
+                  ({ compositions, ...rest }) => rest
+                ),
+              },
             },
           },
         });
 
-        // TODO: insert within transaction.
-        if (!userTenantSettings?.doNotDisturb) {
-          await prisma.notification.create({
-            data: {
-              subject: `Venda feita para ${customer.name}! 💰`,
-              body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
-                paidTotal
-              )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
-                sale.createdAt
-              ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
-              href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
-              targets: {
-                createMany: {
-                  data: [{ tenantId, userId: tenantOwner.membership.userId }],
-                  skipDuplicates: true,
-                },
+        const posEventSale = await tx.posEventSale.create({
+          data: {
+            amount: paidTotal,
+            description,
+            customer: { connect: { id: customerId } },
+            sale: { connect: { id: sale.id } },
+            products: {
+              createMany: {
+                data: mappedProducts.map(
+                  ({ compositions, ...rest }) => rest
+                ),
+              },
+            },
+            posEvent: {
+              create: { type: EPosEventType.Sale, posId },
+            },
+          } as Prisma.PosEventSaleCreateInput,
+        });
+
+        await Promise.all(
+          movements.map(async ({ type, method, amount }) => {
+            const baseData = { amount, method };
+
+            const eventRef = {
+              posEventSale: { connect: { id: posEventSale.id } },
+            };
+
+            const saleRef = { sale: { connect: { id: sale.id } } };
+
+            const createData =
+              type === ESaleMovementType.Change
+                ? { type, change: { create: baseData } }
+                : { type, payment: { create: baseData } };
+
+            await Promise.all([
+              tx.posEventSaleMovement.create({
+                data: { ...eventRef, ...createData },
+              }),
+              tx.saleMovement.create({ data: { ...saleRef, ...createData } }),
+            ]);
+          })
+        );
+
+        const stockService =
+          new StockService(tx, new StockEventService(tx));
+
+        for (const product of mappedProducts) {
+          // * Decrement composition Childs Stock.
+          for (const composition of product.compositions) {
+            const decreaseQty =
+              composition.totalQty.toNumber() * product.totalQty;
+
+            const stockResult =
+              await stockService.decrease(composition.child.id, decreaseQty);
+
+            if (stockResult.isFailure) throw stockResult.error;
+
+            // Revalidate child stock tags.
+            const stockId = stockResult.data.stockId;
+            const stockTag = TENANT_TAGS.STOCKS.STOCK(stockId);
+            revalidateTag(stockTag.INDEX);
+            revalidateTag(stockTag.LOTS);
+            revalidateTag(stockTag.EVENTS);
+          }
+
+          // * Decrement Product Stock.
+          const stockResult =
+            await stockService.decrease(product.productId, product.totalQty);
+
+          if (stockResult.isFailure) throw stockResult.error;
+
+          // Revalidate stock tags.
+          const stockId = stockResult.data.stockId;
+          const stockTag = TENANT_TAGS.STOCKS.STOCK(stockId);
+          revalidateTag(stockTag.INDEX);
+          revalidateTag(stockTag.LOTS);
+          revalidateTag(stockTag.EVENTS);
+          revalidateTag(TENANT_TAGS.STOCKS.INDEX.ALL);
+        }
+
+        const tenantOwner = await tx.tenantMembership.findFirst({
+          where: { tenantId, membership: { role: EMembershipRole.Owner } },
+          select: { membership: { select: { userId: true } } },
+        });
+
+        if (tenantOwner) {
+          const userTenantSettings = await tx.userTenantSettings.findUnique({
+            where: {
+              userId_tenantId: {
+                tenantId,
+                userId: tenantOwner.membership.userId,
               },
             },
           });
 
-          revalidateTag(
-            CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
-              .NOTIFICATIONS
-          );
-          revalidateTag(CACHE_TAGS.TENANT(tenantId).SALES.INDEX.ALL);
-        }
-      }
+          if (!userTenantSettings?.doNotDisturb) {
+            await tx.notification.create({
+              data: {
+                subject: `Venda feita para ${customer.name}! 💰`,
+                body: `A loja ${tenant.name} vendeu ${CurrencyFormatter.format(
+                  paidTotal
+                )} às ${moment(sale.createdAt).format("HH:mm")} do dia ${moment(
+                  sale.createdAt
+                ).format("DD/MM/YYYY")}. Bora conferir os detalhes?`,
+                href: PATHS.PROTECTED.DASHBOARD.SALES.SALE(sale.id).INDEX,
+                targets: {
+                  createMany: {
+                    data: [{ tenantId, userId: tenantOwner.membership.userId }],
+                    skipDuplicates: true,
+                  },
+                },
+              },
+            });
 
-      revalidateTag(CACHE_TAGS.TENANT(tenantId).POS.POS(posId).INDEX);
+            revalidateTag(
+              CACHE_TAGS.USER_TENANT(tenantOwner.membership.userId, tenantId)
+                .NOTIFICATIONS
+            );
+            revalidateTag(TENANT_TAGS.SALES.INDEX.ALL);
+          }
+        }
+
+        revalidateTag(TENANT_TAGS.POS.POS(posId).INDEX);
+      });
 
       return success({});
     } catch (error) {

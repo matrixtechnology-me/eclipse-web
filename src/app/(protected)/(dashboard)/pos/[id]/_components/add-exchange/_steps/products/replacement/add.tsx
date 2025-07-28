@@ -1,4 +1,3 @@
-import { ProductListItem } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
 import { ProductAsyncSelect } from "@/components/domain/entities/product-async-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { ProductListItem } from "@/domain/services/product/product-service";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";

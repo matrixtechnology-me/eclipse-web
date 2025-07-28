@@ -1,17 +1,21 @@
 import { InvalidParamError } from '@/errors/domain/invalid-param.error';
 import { failure } from '@/utils/types/either';
-import { describe, expect, it, vi, Mock as VitestMock } from 'vitest'
+import { beforeEach, describe, expect, it, vi, Mock as VitestMock } from 'vitest'
 import { StockEventService } from './stock-event-service';
 import mockedPrisma from '@/lib/__mocks__/prisma';
-import { beforeEach } from 'node:test';
 
 const [tenantId, stockId, stockLotId] = ["T_ID", "S_ID", "SL_ID"];;
+
+let stockEventService = new StockEventService(mockedPrisma);
 
 vi.mock("@/lib/prisma");
 
 beforeEach(() => {
   // Mock create event mutation.
   (mockedPrisma.stockEvent.create as VitestMock).mockResolvedValue(undefined);
+
+  // Service entities.
+  stockEventService = new StockEventService(mockedPrisma);
 });
 
 describe("StockEventService.emitOutput", () => {
@@ -19,21 +23,21 @@ describe("StockEventService.emitOutput", () => {
     const expected =
       failure(new InvalidParamError("Quantity must be greater than zero."));
 
-    expect(StockEventService.emitOutput({
+    expect(stockEventService.emitOutput({
       tenantId,
       stockId,
       stockLotId,
       quantity: 0,
     })).resolves.toStrictEqual(expected);
 
-    expect(StockEventService.emitOutput({
+    expect(stockEventService.emitOutput({
       tenantId,
       stockId,
       stockLotId,
       quantity: -15,
     })).resolves.toStrictEqual(expected);
 
-    expect(StockEventService.emitOutput({
+    expect(stockEventService.emitOutput({
       tenantId,
       stockId,
       stockLotId,

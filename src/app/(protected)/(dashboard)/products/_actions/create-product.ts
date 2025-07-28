@@ -11,13 +11,15 @@ import { CACHE_TAGS } from "@/config/cache-tags";
 type CreateProductActionPayload = {
   name: string;
   description: string;
-  costPrice: number;
   salePrice: number;
   barCode: string;
-  specifications: Array<{ label: string; value: string }>;
+  composite: boolean;
+  initialStock?: {
+    initialQuantity: number;
+    costPrice: number;
+    expiresAt?: Date;
+  },
   tenantId: string;
-  initialQuantity: number;
-  expiresAt?: Date;
 };
 
 export const createProduct: Action<CreateProductActionPayload> = async ({
@@ -25,11 +27,9 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
   description,
   tenantId,
   salePrice,
-  specifications,
   barCode,
-  initialQuantity,
-  costPrice,
-  expiresAt,
+  initialStock,
+  composite,
 }) => {
   try {
     if (!name || !tenantId || salePrice <= 0) {
@@ -43,6 +43,8 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
 
     const generatedLotNumber = generateLotNumber();
 
+    let productId = undefined;
+
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
@@ -55,63 +57,68 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
           internalCode: Math.floor(Math.random() * 0xffffff)
             .toString(16)
             .padStart(6, "0"),
-          specifications: {
-            createMany: {
-              data: specifications,
+        },
+      });
+
+      productId = product.id;
+
+      if (!composite) {
+        const { costPrice, initialQuantity, expiresAt } = initialStock || {
+          initialQuantity: 0,
+          costPrice: 0,
+          expiresAt: undefined,
+        };
+
+        const stock = await tx.stock.create({
+          data: {
+            strategy: EStockStrategy.Fifo,
+            availableQty: initialQuantity || 0,
+            totalQty: initialQuantity || 0,
+            tenantId,
+            productId: product.id,
+          },
+        });
+
+        if (initialQuantity > 0) {
+          await tx.stockLot.create({
+            data: {
+              lotNumber: generatedLotNumber,
+              costPrice,
+              totalQty: initialQuantity,
+              tenantId,
+              expiresAt,
+              stockId: stock.id,
             },
-          },
-        },
-      });
+          });
 
-      const stock = await tx.stock.create({
-        data: {
-          strategy: EStockStrategy.Fifo,
-          availableQty: initialQuantity,
-          totalQty: initialQuantity,
-          tenantId,
-          productId: product.id,
-        },
-      });
+          const stockEvent = await tx.stockEvent.create({
+            data: {
+              type: EStockEventType.Entry,
+              stockId: stock.id,
+              tenantId,
+              description: `Lote ${generatedLotNumber} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
+                costPrice
+              )}. Vamos vender!`,
+            },
+          });
 
-      if (initialQuantity > 0) {
-        await tx.stockLot.create({
-          data: {
-            lotNumber: generatedLotNumber,
-            costPrice,
-            totalQty: initialQuantity,
-            tenantId,
-            expiresAt,
-            stockId: stock.id,
-          },
-        });
-
-        const stockEvent = await tx.stockEvent.create({
-          data: {
-            type: EStockEventType.Entry,
-            stockId: stock.id,
-            tenantId,
-            description: `Lote ${generatedLotNumber} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
-              costPrice
-            )}. Vamos vender!`,
-          },
-        });
-
-        await tx.stockEventEntry.create({
-          data: {
-            id: stockEvent.id,
-            quantity: initialQuantity,
-            description: `Lote ${generatedLotNumber.toUpperCase()} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
-              costPrice
-            )}. Vamos vender!`,
-          },
-        });
+          await tx.stockEventEntry.create({
+            data: {
+              id: stockEvent.id,
+              quantity: initialQuantity,
+              description: `Lote ${generatedLotNumber.toUpperCase()} chegou! 🎉 São ${initialQuantity} unidades a caminho. Custo: ${CurrencyFormatter.format(
+                costPrice
+              )}. Vamos vender!`,
+            },
+          });
+        }
       }
     });
 
     revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL);
     revalidateTag(CACHE_TAGS.TENANT(tenantId).STOCKS.INDEX.ALL);
 
-    return success(undefined);
+    return success(productId);
   } catch (error: unknown) {
     console.error("Failed to create product:", error);
     return failure(new InternalServerError());

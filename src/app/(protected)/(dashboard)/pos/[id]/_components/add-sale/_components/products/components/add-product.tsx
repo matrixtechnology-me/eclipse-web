@@ -26,12 +26,13 @@ import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { z } from "zod";
-import { getProducts, Product } from "../../../../../_actions/get-products";
 import {
   CreateSaleSchema,
   productSchema,
 } from "../../../_utils/validations/create-sale";
 import { toast } from "sonner";
+import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
+import { ProductListItem } from "@/domain/services/product/product-service";
 
 interface IProps {
   tenantId: string;
@@ -85,8 +86,8 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
   };
 
   const loadPaginatedSearchProducts: LoadOptions<
-    DefaultOptionType<Product>,
-    GroupBase<DefaultOptionType<Product>>,
+    DefaultOptionType<ProductListItem>,
+    GroupBase<DefaultOptionType<ProductListItem>>,
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
@@ -97,12 +98,13 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
     const curPage = additional!.page;
     const pageSize = additional!.itemsPerPage;
 
-    const result = await getProducts({
-      searchValue: input.trim(),
+    const result = await getProductsAction({
+      query: input.trim(),
       active: true,
       limit: pageSize,
       page: curPage,
       tenantId,
+      includeAvailableQty: true,
     });
 
     if (result.isFailure) {
@@ -110,7 +112,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
       return { options: [], additional, hasMore: true };
     }
 
-    const products = result.value.results;
+    const { products, pagination } = result.value;
 
     if (products.length === 0) {
       toast.info("Nenhum produto encontrado.");
@@ -122,7 +124,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
         label: product.name,
       })),
       additional: { itemsPerPage: pageSize, page: curPage + 1 },
-      hasMore: curPage * pageSize < result.value.pagination.totalItems,
+      hasMore: curPage * pageSize < pagination.totalCount,
     };
   };
 
@@ -161,7 +163,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                 control={form.control}
                 name="id"
                 render={({ field }) => (
-                  <SelectPaginated<Product>
+                  <SelectPaginated<ProductListItem>
                     className="text-sm"
                     placeholder="Buscar um produto..."
                     menuPlacement="bottom"
@@ -173,8 +175,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                       field.onChange(product.id);
                       form.setValue("name", option!.label);
                       form.setValue("salePrice", product.salePrice);
-                      form.setValue("costPrice", product.costPrice);
-                      setMaxQuantity(product.availableQty);
+                      setMaxQuantity(product.availableQty as number);
                     }}
                     additional={{
                       page: 1,

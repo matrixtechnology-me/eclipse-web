@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-
 import {
   Dialog,
   DialogContent,
@@ -14,9 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { Form, FormMessage } from "@/components/ui/form";
-
 import {
   DefaultOptionType,
   SelectPaginated,
@@ -29,7 +26,8 @@ import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { toast } from "sonner";
 import { createProductCompositionAction } from "../../_actions/create-product-composition";
-import { getProducts, Product } from "../../_actions/get-products";
+import { ProductListItem } from "@/domain/services/product/product-service";
+import { getProductsAction } from "../../../_actions/get-products";
 
 const formSchema = z.object({
   childId: z.string().min(1, "Campo obrigatório"),
@@ -83,8 +81,8 @@ export const AddComposition = ({
   };
 
   const loadPaginatedSearchProducts: LoadOptions<
-    DefaultOptionType<Product>,
-    GroupBase<DefaultOptionType<Product>>,
+    DefaultOptionType<ProductListItem>,
+    GroupBase<DefaultOptionType<ProductListItem>>,
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
@@ -95,13 +93,13 @@ export const AddComposition = ({
     const curPage = additional!.page;
     const pageSize = additional!.itemsPerPage;
 
-    const result = await getProducts({
-      searchValue: input.trim(),
+    const result = await getProductsAction({
+      query: input.trim(),
       active: true,
       limit: pageSize,
       page: curPage,
       tenantId,
-      productId,
+      excludeIds: [productId],
     });
 
     if (result.isFailure) {
@@ -109,7 +107,7 @@ export const AddComposition = ({
       return { options: [], additional, hasMore: true };
     }
 
-    const products = result.value.results;
+    const { products, pagination } = result.value;
 
     if (products.length === 0) {
       toast.info("Nenhum produto encontrado.");
@@ -121,7 +119,7 @@ export const AddComposition = ({
         label: product.name,
       })),
       additional: { itemsPerPage: pageSize, page: curPage + 1 },
-      hasMore: curPage * pageSize < result.value.pagination.totalItems,
+      hasMore: curPage * pageSize < pagination.totalCount,
     };
   };
 
@@ -148,7 +146,7 @@ export const AddComposition = ({
                 control={form.control}
                 name="childId"
                 render={({ field }) => (
-                  <SelectPaginated<Product>
+                  <SelectPaginated<ProductListItem>
                     className="text-sm"
                     placeholder="Buscar um produto..."
                     menuPlacement="bottom"

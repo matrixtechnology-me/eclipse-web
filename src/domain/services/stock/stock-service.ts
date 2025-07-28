@@ -3,8 +3,8 @@ import { InvalidEntityError } from "@/errors/domain/invalid-entity.error";
 import { InvalidParamError } from "@/errors/domain/invalid-param.error";
 import { EStockStrategy } from "@prisma/client";
 import { StockEventService } from "../stock-event/stock-event-service";
-import prisma from "@/lib/prisma";
 import { EitherResult, failure, success } from "@/utils/types/either";
+import { PrismaTransaction } from "@/lib/prisma/types";
 
 export type StockLotDecrement = {
   stockLotId: string;
@@ -17,8 +17,29 @@ export type DecreaseResult = EitherResult<
   InvalidParamError | InvalidEntityError | InsufficientUnitsError
 >;
 
+export type GetAvailableQtyResult = EitherResult<
+  number,
+  InvalidEntityError
+>;
+
 export class StockService {
-  public static async decrease(
+  constructor(
+    private readonly prisma: PrismaTransaction,
+    private readonly stockEventService: StockEventService,
+  ) {};
+
+  // TODO: unit tests.
+  public async getAvailableQty(productId: string): Promise<GetAvailableQtyResult> {
+    // DB get_available_qty function is defined on 
+    // migration "20250723125301_feat".
+    const resultSet = await this.prisma.$queryRaw<{ available_qty: number }[]>`
+      SELECT get_available_qty(${productId}::uuid) AS available_qty
+    `;
+
+    return success(resultSet[0]?.available_qty || 0);
+  }
+
+  public async decrease(
     productId: string, decreaseQuantity: number
   ): Promise<DecreaseResult> {
     try {
@@ -26,7 +47,7 @@ export class StockService {
         new InvalidParamError('Decrease quantity must be greater than 0.')
       );
 
-      const stock = await prisma.stock.findUnique({
+      const stock = await this.prisma.stock.findUnique({
         where: { productId },
       });
 
@@ -43,7 +64,7 @@ export class StockService {
 
       // New query instead of 'populating' to simplify ordering.
       // However this approach lowers performance.
-      const stockLots = await prisma.stockLot.findMany({
+      const stockLots = await this.prisma.stockLot.findMany({
         where: {
           stockId: stock.id,
           totalQty: { gt: 0 },
@@ -93,7 +114,7 @@ export class StockService {
 
       const [, , outputEventsResults] = await Promise.all([
         // Stock quantity.
-        await prisma.stock.update({
+        await this.prisma.stock.update({
           where: { id: stock.id },
           data: {
             availableQty: { decrement: decreaseQuantity },
@@ -102,14 +123,14 @@ export class StockService {
         }),
         // Stock Lots quantity.
         await Promise.all(decrements.map(async (dec) => (
-          await prisma.stockLot.update({
+          await this.prisma.stockLot.update({
             where: { id: dec.stockLotId },
             data: { totalQty: { decrement: dec.quantity } },
           })
         ))),
         // Output events.
         await Promise.all(decrements.map(async (dec) => (
-          await StockEventService.emitOutput({
+          await this.stockEventService.emitOutput({
             tenantId: stock.tenantId,
             stockId: stock.id,
             stockLotId: dec.stockLotId,
@@ -119,7 +140,7 @@ export class StockService {
       ]);
 
       for (const result of outputEventsResults)
-        if (result.isFailure) throw result.error;
+        if (result.isFailure) return failure(result.error);
 
       return success({ stockId: stock.id, decrements });
     }
