@@ -33,7 +33,7 @@ export class StockService {
     // DB get_available_qty function is defined on 
     // migration "20250723125301_feat".
     const resultSet = await this.prisma.$queryRaw<{ available_qty: number }[]>`
-      SELECT get_available_qty(${productId}) AS available_qty
+      SELECT get_available_qty(${productId}::uuid) AS available_qty
     `;
 
     return success(resultSet[0]?.available_qty || 0);

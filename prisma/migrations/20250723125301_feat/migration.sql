@@ -31,6 +31,10 @@ BEGIN
     WHERE pcm.parent_id = product_input_id
   ) AS child_results;
 
-  RETURN result;
+  IF result IS NOT NULL THEN
+    RETURN result;
+  END IF;
+
+  RETURN 0;
 END;
 $$;
