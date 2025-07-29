@@ -15,10 +15,11 @@ export const seedStockModule = async (
         tenantId,
       },
       {
+        // Quebra-Cabeça Alfabeto Divertido
         id: "5d7c9e68-1b2a-4af9-8e37-3f4c2a20ef79",
-        strategy: EStockStrategy.Fifo,
-        availableQty: 50,
-        totalQty: 50,
+        strategy: EStockStrategy.Lifo,
+        availableQty: 100,
+        totalQty: 100,
         productId: "d5c7a1f2-3bfa-46e0-8b22-12f34c56d789",
         tenantId,
       },
@@ -35,8 +36,8 @@ export const seedStockModule = async (
         // Sandália Kids Star Light
         id: "1f4ce6c3-11f9-4456-90f9-122f119e3a75",
         strategy: EStockStrategy.Fifo,
-        availableQty: 60,
-        totalQty: 60,
+        availableQty: 120,
+        totalQty: 120,
         productId: "a1b2c3d4-e5f6-47a8-91b2-c3d4e5f67890",
         tenantId,
       },
@@ -78,6 +79,18 @@ export const seedStockModule = async (
         costPrice: 21.35,
         tenantId,
         stockId: "5d7c9e68-1b2a-4af9-8e37-3f4c2a20ef79",
+        createdAt: new Date(Date.UTC(new Date().getFullYear(), 6, 29)),
+        expiresAt: new Date(Date.UTC(new Date().getFullYear() + 3, 6, 29)),
+      },
+      {
+        id: "207d7be9-6229-4d5f-8c50-f85d6129e076",
+        lotNumber: "dd6dcc",
+        totalQty: 50,
+        costPrice: 21.35,
+        tenantId,
+        stockId: "5d7c9e68-1b2a-4af9-8e37-3f4c2a20ef79",
+        createdAt: new Date(Date.UTC(new Date().getFullYear(), 0, 21)),
+        expiresAt: new Date(Date.UTC(new Date().getFullYear() + 3, 0, 21)),
       },
       {
         id: "f2b1b80f-7c31-4f48-8e0a-7c1a98f2d123",
@@ -88,12 +101,24 @@ export const seedStockModule = async (
         stockId: "e36f9bb1-8d2d-4c5b-91cf-ff4b42b4a701",
       },
       {
+        id: "4c26778e-4309-4887-bc35-0457d51800d2",
+        lotNumber: "b7e2e3",
+        totalQty: 60,
+        costPrice: 33.5,
+        tenantId,
+        stockId: "1f4ce6c3-11f9-4456-90f9-122f119e3a75",
+        createdAt: new Date(Date.UTC(new Date().getFullYear(), 3, 2)),
+        expiresAt: new Date(Date.UTC(new Date().getFullYear() + 3, 3, 2)),
+      },
+      {
         id: "c2d3e4f5-a6b7-48c9-8023-9e0f1a2b3c4d",
         lotNumber: "b7e2d4",
         totalQty: 60,
         costPrice: 33.5,
         tenantId,
         stockId: "1f4ce6c3-11f9-4456-90f9-122f119e3a75",
+        createdAt: new Date(Date.UTC(new Date().getFullYear(), 5, 22)),
+        expiresAt: new Date(Date.UTC(new Date().getFullYear() + 3, 5, 22)),
       },
       {
         id: "7c8d9e0f-1a2b-3c4d-5e6f-7890abcdef12",
@@ -131,6 +156,13 @@ export const seedStockModule = async (
         description: `Lote dd6da9 chegou! 🎉 São 50 unidades a caminho. Custo: $R$1.067,50. Vamos vender!`,
       },
       {
+        id: "edc9fffa-e85c-40be-8c9f-81f481b40d40",
+        type: EStockEventType.Entry,
+        stockId: "5d7c9e68-1b2a-4af9-8e37-3f4c2a20ef79",
+        tenantId,
+        description: `Lote dd6dcc chegou! 🎉 São 50 unidades a caminho. Custo: $R$1.067,50. Vamos vender!`,
+      },
+      {
         id: "9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d",
         type: EStockEventType.Entry,
         stockId: "e36f9bb1-8d2d-4c5b-91cf-ff4b42b4a701",
@@ -143,6 +175,13 @@ export const seedStockModule = async (
         stockId: "1f4ce6c3-11f9-4456-90f9-122f119e3a75",
         tenantId,
         description: `Lote b7e2d4 chegou! 👡 60 unidades da Sandália Star Light recebidas. Custo: R$2.010,00.`,
+      },
+      {
+        id: "08d8a9ef-bb17-4a1f-8a7b-e861a6df1ab2",
+        type: EStockEventType.Entry,
+        stockId: "1f4ce6c3-11f9-4456-90f9-122f119e3a75",
+        tenantId,
+        description: `Lote b7e2e3 chegou! 👡 60 unidades da Sandália Star Light recebidas. Custo: R$2.010,00.`,
       },
       {
         id: "d6e7f890-abcd-4e5f-9012-3456789abcde",
@@ -174,6 +213,11 @@ export const seedStockModule = async (
         description: `Lote DD6DA9 chegou! 🎉 São 50 unidades a caminho. Custo: $R$1.067,50. Vamos vender!`,
       },
       {
+        id: "edc9fffa-e85c-40be-8c9f-81f481b40d40",
+        quantity: 50,
+        description: `Lote DD6DCC chegou! 🎉 São 50 unidades a caminho. Custo: $R$1.067,50. Vamos vender!`,
+      },
+      {
         id: "9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d",
         quantity: 80,
         description: `Lote A3C9F1 chegou! 👗 80 unidades do Vestido Floral Dreams recebidas. Custo: R$3.360,00.`,
@@ -182,6 +226,11 @@ export const seedStockModule = async (
         id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
         quantity: 60,
         description: `Lote B7E2D4 chegou! 👡 60 unidades da Sandália Star Light recebidas. Custo: R$2.010,00.`,
+      },
+      {
+        id: "08d8a9ef-bb17-4a1f-8a7b-e861a6df1ab2",
+        quantity: 60,
+        description: `Lote B7E2E3 chegou! 👡 60 unidades da Sandália Star Light recebidas. Custo: R$2.010,00.`,
       },
       {
         id: "d6e7f890-abcd-4e5f-9012-3456789abcde",
