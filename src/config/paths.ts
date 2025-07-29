@@ -5,6 +5,15 @@ export const PATHS = {
     AUTH: {
       SIGN_IN: "/auth/sign-in",
       FIRST_ACCESS: "/auth/first-access",
+      FORGOT_PASSWORD: "/auth/forgot-password",
+      VERIFY_CODE: (params?: Record<string, string | undefined>) => {
+        const queryParams = generateQueryParams({ ...params });
+        return `/auth/verify-code${queryParams}`;
+      },
+      RESET_PASSWORD: (params?: Record<string, string | undefined>) => {
+        const queryParams = generateQueryParams({ ...params });
+        return `/auth/reset-password${queryParams}`;
+      },
     },
   },
   PROTECTED: {

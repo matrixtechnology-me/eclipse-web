@@ -35,7 +35,8 @@
     "**/*.tsx",
     "./src/types/**/*.ts",
     ".next/types/**/*.ts",
-    "server/index.js"
+    "server/index.js",
+    "src/utils/render-jsx-to-html-string.ts         Perguntar ao ChatGPT"
   ],
   "exclude": [
     "node_modules"
