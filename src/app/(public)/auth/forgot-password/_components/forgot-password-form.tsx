@@ -11,15 +11,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader, Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-import { authenticateUserAction } from "../_actions/authenticate-user";
-import { PasswordInput } from "./password-input";
 import { useState } from "react";
-import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { forgotPasswordAction } from "../_actions/forgot-password";
+import { toast } from "sonner";
 import { PATHS } from "@/config/paths";
 
 const formSchema = z.object({
@@ -27,47 +25,33 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "E-mail é obrigatório." })
     .email({ message: "E-mail inválido." }),
-
-  password: z
-    .string()
-    .min(8, { message: "A senha deve ter pelo menos 8 caracteres." })
-    .regex(/[a-z]/, {
-      message: "A senha deve conter pelo menos uma letra minúscula.",
-    })
-    .regex(/[A-Z]/, {
-      message: "A senha deve conter pelo menos uma letra maiúscula.",
-    })
-    .regex(/[0-9]/, { message: "A senha deve conter pelo menos um número." })
-    .regex(/[^a-zA-Z0-9]/, {
-      message: "A senha deve conter pelo menos um caractere especial.",
-    }),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
 
-export const AuthenticationForm = () => {
-  const [loading, setLoading] = useState<boolean>(false);
-
+export const ForgotPasswordForm = () => {
   const router = useRouter();
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const handleSubmit = async ({ email, password }: FormSchema) => {
+  const handleSubmit = async ({ email }: FormSchema) => {
     setLoading(true);
 
-    const result = await authenticateUserAction({
+    const result = await forgotPasswordAction({
       email,
-      password,
     });
 
     if (result.isFailure) {
       const metadata = result.metadata;
+
+      console.log(result);
 
       setLoading(false);
 
@@ -77,9 +61,14 @@ export const AuthenticationForm = () => {
       });
     }
 
-    const { href } = result.value;
+    const metadata = result.metadata;
 
-    router.push(href);
+    toast(metadata?.attributes.title, {
+      description: metadata?.attributes.description,
+      icon: metadata?.attributes.icon,
+    });
+
+    router.push(PATHS.PUBLIC.AUTH.VERIFY_CODE);
   };
 
   return (
@@ -101,16 +90,6 @@ export const AuthenticationForm = () => {
             </FormItem>
           )}
         />
-        <PasswordInput form={form} name="password" label="Sua senha segura" />
-        <div className="flex items-center justify-between">
-          <div />
-          <Link
-            href={PATHS.PUBLIC.AUTH.FORGOT_PASSWORD}
-            className="text-sm text-muted-foreground"
-          >
-            Esqueceu a senha?
-          </Link>
-        </div>
         <Button
           type="submit"
           className="w-full h-10"
@@ -119,7 +98,7 @@ export const AuthenticationForm = () => {
           {form.formState.isSubmitting || loading ? (
             <Loader className="size-4 animate-spin" />
           ) : (
-            "Entrar"
+            "Continuar"
           )}
         </Button>
       </form>

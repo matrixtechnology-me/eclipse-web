@@ -5,6 +5,9 @@ export const PATHS = {
     AUTH: {
       SIGN_IN: "/auth/sign-in",
       FIRST_ACCESS: "/auth/first-access",
+      FORGOT_PASSWORD: "/auth/forgot-password",
+      VERIFY_CODE: "/auth/verify-code",
+      RESET_PASSWORD: "/auth/reset-password",
     },
   },
   PROTECTED: {
