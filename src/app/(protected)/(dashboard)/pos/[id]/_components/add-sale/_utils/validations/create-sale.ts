@@ -5,7 +5,6 @@ export const productSchema = z.object({
   id: z.string().min(1, { message: "Seleção do item é obrigatória." }),
   name: z.string().min(1, { message: "Seleção do item é obrigatória." }),
   salePrice: z.number().min(1, { message: "Preço de venda é obrigatório." }),
-  costPrice: z.number().min(1, { message: "Preço de custo é obrigatório." }),
   quantity: z
     .string({ required_error: "Quantidade do item é obrigatória." })
     .refine((arg) => !isNaN(Number(arg)) && Number(arg) > 0, {

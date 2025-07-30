@@ -34,6 +34,8 @@ export const deleteProductCompositionAction: Action<
     revalidateTag(
       CACHE_TAGS.TENANT(tenantId).PRODUCTS.PRODUCT(productId).COMPOSITIONS
     );
+    // Operations in compositions modify dynamic Stocks quantities.
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL);
 
     return success({});
   } catch (error) {

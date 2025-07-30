@@ -1,20 +1,27 @@
 import { InsufficientUnitsError } from "@/errors/domain/insufficient-units.error";
 import { InvalidEntityError } from "@/errors/domain/invalid-entity.error";
 import { InvalidParamError } from "@/errors/domain/invalid-param.error";
-import { EStockStrategy } from "@prisma/client";
 import { StockEventService } from "../stock-event/stock-event-service";
 import { EitherResult, failure, success } from "@/utils/types/either";
 import { PrismaTransaction } from "@/lib/prisma/types";
+import { UnprocessableEntityError } from "@/errors";
 
 export type StockLotDecrement = {
+  stockId: string;
   stockLotId: string;
   quantity: number;
   costPrice: number;
 }
 
+export type DecreaseParams = {
+  productId: string;
+  tenantId: string;
+  decreaseQty: number;
+}
+
 export type DecreaseResult = EitherResult<
-  { stockId: string, decrements: StockLotDecrement[] },
-  InvalidParamError | InvalidEntityError | InsufficientUnitsError
+  { decrements: StockLotDecrement[] },
+  InvalidParamError | InsufficientUnitsError | UnprocessableEntityError
 >;
 
 export type GetAvailableQtyResult = EitherResult<
@@ -29,6 +36,7 @@ export class StockService {
   ) {};
 
   // TODO: unit tests.
+  // TODO: raise exception on its database function.
   public async getAvailableQty(productId: string): Promise<GetAvailableQtyResult> {
     // DB get_available_qty function is defined on 
     // migration "20250723125301_feat".
@@ -39,120 +47,84 @@ export class StockService {
     return success(resultSet[0]?.available_qty || 0);
   }
 
-  public async decrease(
-    productId: string, decreaseQuantity: number
-  ): Promise<DecreaseResult> {
+  // TODO: unit tests.
+  public async decrease({
+    productId,
+    decreaseQty,
+    tenantId,
+  }: DecreaseParams): Promise<DecreaseResult> {
     try {
-      if (decreaseQuantity <= 0) return failure(
+      if (decreaseQty <= 0) return failure(
         new InvalidParamError('Decrease quantity must be greater than 0.')
       );
 
-      const stock = await this.prisma.stock.findUnique({
-        where: { productId },
-      });
+      type RESULT_SET = [{
+        to_jsonb: Array<{
+          lot_id: string;
+          qty: number;
+          cost_price: number;
+        }>;
+      }];
 
-      if (!stock) return failure(
-        new InvalidEntityError(`There is no Stock for Product '${productId}'.`)
-      );
+      // DB get_available_qty function is defined on 
+      // migration "20250729135608_feat".
+      const resultSet = await this.prisma.$queryRaw<RESULT_SET>`
+        SELECT to_jsonb(lot_decrements)
+        FROM decrease_stock(${productId}::uuid, ${decreaseQty}::integer)
+        AS lot_decrements;
+      `;
 
-      if (stock.availableQty < decreaseQuantity) return failure(
-        new InsufficientUnitsError(stock.id)
-      );
+      const lotDecrements = resultSet[0].to_jsonb;
+      const mappedDecrements: StockLotDecrement[] = [];
 
-      const orderDirection =
-        stock.strategy === EStockStrategy.Fifo ? "asc" : "desc";
-
-      // New query instead of 'populating' to simplify ordering.
-      // However this approach lowers performance.
-      const stockLots = await this.prisma.stockLot.findMany({
-        where: {
-          stockId: stock.id,
-          totalQty: { gt: 0 },
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
-        },
-        orderBy: [
-          { expiresAt: orderDirection },
-          { createdAt: orderDirection },
-        ],
-      });
-
-      const decrements: StockLotDecrement[] = [];
-      let takenUnits = 0;
-
-      for (const lot of stockLots) {
-        if (takenUnits == decreaseQuantity) break;
-
-        const pendingUnits = decreaseQuantity - takenUnits;
-
-        if (pendingUnits >= lot.totalQty) {
-          decrements.push({
-            stockLotId: lot.id,
-            quantity: lot.totalQty,
-            costPrice: lot.costPrice.toNumber(),
-          });
-
-          takenUnits += lot.totalQty;
-          continue;
-        }
-
-        decrements.push({
-          stockLotId: lot.id,
-          quantity: pendingUnits,
-          costPrice: lot.costPrice.toNumber(),
+      // Emit stock output events.
+      for (const dec of lotDecrements) {
+        const lot = await this.prisma.stockLot.findUnique({
+          where: {
+            id: dec.lot_id,
+            stock: { tenantId },
+          },
         });
 
-        takenUnits += pendingUnits;
-      }
+        if (lot == null) return failure(new UnprocessableEntityError(
+          `Product '${productId}' reach invalid or nonexistent lot.`
+        ));
 
-      // Only happens if Stock available quantity is inconsistent with lots.
-      if (takenUnits != decreaseQuantity) return failure(
-        new InsufficientUnitsError("Inconsistent units between stock and lots.")
-      );
+        const result = await this.stockEventService.emitOutput({
+          stockId: lot.stockId,
+          tenantId: tenantId,
+          stockLotId: dec.lot_id,
+          quantity: dec.qty,
+        });
 
-      const [, , outputEventsResults] = await Promise.all([
-        // Stock quantity.
-        await this.prisma.stock.update({
-          where: { id: stock.id },
-          data: {
-            availableQty: { decrement: decreaseQuantity },
-            totalQty: { decrement: decreaseQuantity },
-          },
-        }),
-        // Stock Lots quantity.
-        await Promise.all(decrements.map(async (dec) => (
-          await this.prisma.stockLot.update({
-            where: { id: dec.stockLotId },
-            data: { totalQty: { decrement: dec.quantity } },
-          })
-        ))),
-        // Output events.
-        await Promise.all(decrements.map(async (dec) => (
-          await this.stockEventService.emitOutput({
-            tenantId: stock.tenantId,
-            stockId: stock.id,
-            stockLotId: dec.stockLotId,
-            quantity: dec.quantity,
-          })
-        ))),
-      ]);
-
-      for (const result of outputEventsResults)
         if (result.isFailure) return failure(result.error);
 
-      return success({ stockId: stock.id, decrements });
+        mappedDecrements.push({
+          stockLotId: dec.lot_id,
+          quantity: dec.qty,
+          costPrice: dec.cost_price,
+          stockId: lot.stockId,
+        });
+      }
+
+      return success({ decrements: mappedDecrements });
     }
-    catch (error) {
+    catch (err) {
       console.error(
-        `StockService.decrease unexpected error: ${JSON.stringify(error)}`
+        `StockService.decrease unexpected error: ${JSON.stringify(err)}`
       );
 
-      return failure(error instanceof Error
-        ? error
-        : new Error(JSON.stringify(error))
-      );
+      if (err instanceof Error) {
+        if (err.message.includes('has no Childs'))
+          return failure(new UnprocessableEntityError(err.message));
+
+        if (err.message.includes('Not enough units on Stock'))
+          return failure(new InsufficientUnitsError(err.message));
+
+        return failure(err);
+      }
+
+      return failure(new Error(JSON.stringify(err)));
     }
   }
 }
