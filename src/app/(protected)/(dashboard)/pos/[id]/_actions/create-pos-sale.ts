@@ -69,14 +69,6 @@ export const createPosSaleAction: Action<
           products.map(async ({ id, totalQty }) => {
             const product = await tx.product.findUnique({
               where: { id, active: true, deletedAt: null },
-              include: {
-                parentCompositions: {
-                  select: {
-                    totalQty: true,
-                    child: { select: { id: true } },
-                  },
-                },
-              },
             });
 
             if (!product) throw new NotFoundError("product not found");
@@ -87,7 +79,6 @@ export const createPosSaleAction: Action<
               description: product.description,
               salePrice: product.salePrice,
               totalQty,
-              compositions: product.parentCompositions,
             };
           })
         );
@@ -111,11 +102,7 @@ export const createPosSaleAction: Action<
             estimatedTotal,
             paidTotal,
             products: {
-              createMany: {
-                data: mappedProducts.map(
-                  ({ compositions, ...rest }) => rest
-                ),
-              },
+              createMany: { data: mappedProducts },
             },
           },
         });
@@ -127,11 +114,7 @@ export const createPosSaleAction: Action<
             customer: { connect: { id: customerId } },
             sale: { connect: { id: sale.id } },
             products: {
-              createMany: {
-                data: mappedProducts.map(
-                  ({ compositions, ...rest }) => rest
-                ),
-              },
+              createMany: { data: mappedProducts },
             },
             posEvent: {
               create: { type: EPosEventType.Sale, posId },
@@ -163,42 +146,31 @@ export const createPosSaleAction: Action<
           })
         );
 
-        const stockService =
-          new StockService(tx, new StockEventService(tx));
+        const stockService = new StockService(tx, new StockEventService(tx));
 
         for (const product of mappedProducts) {
-          // * Decrement composition Childs Stock.
-          for (const composition of product.compositions) {
-            const decreaseQty =
-              composition.totalQty.toNumber() * product.totalQty;
+          const stockResult = await stockService.decrease({
+            productId: product.productId,
+            decreaseQty: product.totalQty,
+            tenantId,
+          });
 
-            const stockResult =
-              await stockService.decrease(composition.child.id, decreaseQty);
+          if (stockResult.isFailure) throw stockResult.error;
+          const { decrements } = stockResult.data;
 
-            if (stockResult.isFailure) throw stockResult.error;
-
-            // Revalidate child stock tags.
-            const stockId = stockResult.data.stockId;
-            const stockTag = TENANT_TAGS.STOCKS.STOCK(stockId);
+          for (const dec of decrements) {
+            // Revalidate stock tags.
+            const stockTag = TENANT_TAGS.STOCKS.STOCK(dec.stockId);
             revalidateTag(stockTag.INDEX);
             revalidateTag(stockTag.LOTS);
             revalidateTag(stockTag.EVENTS);
           }
-
-          // * Decrement Product Stock.
-          const stockResult =
-            await stockService.decrease(product.productId, product.totalQty);
-
-          if (stockResult.isFailure) throw stockResult.error;
-
-          // Revalidate stock tags.
-          const stockId = stockResult.data.stockId;
-          const stockTag = TENANT_TAGS.STOCKS.STOCK(stockId);
-          revalidateTag(stockTag.INDEX);
-          revalidateTag(stockTag.LOTS);
-          revalidateTag(stockTag.EVENTS);
-          revalidateTag(TENANT_TAGS.STOCKS.INDEX.ALL);
         }
+
+        // Revalidate current page of Stock's table.
+        revalidateTag(TENANT_TAGS.STOCKS.INDEX.ALL);
+        // Revalidate Products listing.
+        revalidateTag(TENANT_TAGS.PRODUCTS.INDEX.ALL);
 
         const tenantOwner = await tx.tenantMembership.findFirst({
           where: { tenantId, membership: { role: EMembershipRole.Owner } },

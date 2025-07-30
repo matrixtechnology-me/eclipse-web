@@ -44,7 +44,6 @@ type OrderItemFormType = z.infer<typeof productSchema>;
 const formDefaultValues: OrderItemFormType = {
   id: "",
   name: "",
-  costPrice: 0,
   salePrice: 0,
   quantity: "1",
 };
