@@ -40,6 +40,8 @@ export const createProductCompositionAction: Action<
     revalidateTag(
       CACHE_TAGS.TENANT(tenantId).PRODUCTS.PRODUCT(parentId).COMPOSITIONS
     );
+    // Operations in compositions modify dynamic Stocks quantities.
+    revalidateTag(CACHE_TAGS.TENANT(tenantId).PRODUCTS.INDEX.ALL);
 
     return success({});
   } catch (error) {
