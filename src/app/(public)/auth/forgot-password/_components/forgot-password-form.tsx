@@ -68,7 +68,7 @@ export const ForgotPasswordForm = () => {
       icon: metadata?.attributes.icon,
     });
 
-    router.push(PATHS.PUBLIC.AUTH.VERIFY_CODE());
+    router.push(PATHS.PUBLIC.AUTH.VERIFY_CODE);
   };
 
   return (

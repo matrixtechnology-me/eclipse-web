@@ -70,7 +70,7 @@ export const ForgotPasswordForm = () => {
       icon: metadata?.attributes.icon,
     });
 
-    router.push(PATHS.PUBLIC.AUTH.RESET_PASSWORD());
+    router.push(PATHS.PUBLIC.AUTH.RESET_PASSWORD);
   };
 
   return (

@@ -6,14 +6,8 @@ export const PATHS = {
       SIGN_IN: "/auth/sign-in",
       FIRST_ACCESS: "/auth/first-access",
       FORGOT_PASSWORD: "/auth/forgot-password",
-      VERIFY_CODE: (params?: Record<string, string | undefined>) => {
-        const queryParams = generateQueryParams({ ...params });
-        return `/auth/verify-code${queryParams}`;
-      },
-      RESET_PASSWORD: (params?: Record<string, string | undefined>) => {
-        const queryParams = generateQueryParams({ ...params });
-        return `/auth/reset-password${queryParams}`;
-      },
+      VERIFY_CODE: "/auth/verify-code",
+      RESET_PASSWORD: "/auth/reset-password",
     },
   },
   PROTECTED: {
