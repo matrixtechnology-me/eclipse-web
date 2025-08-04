@@ -19,6 +19,7 @@ import { EPosEventStatus, EPosEventType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { Action } from "@/lib/action";
+import { cancelPosSaleAction } from "../../../_actions/cancel-pos-sale";
 
 type CancelPosEventProps = {
   eventType: EPosEventType;
@@ -38,7 +39,7 @@ const cancelActionMap: Record<
 > = {
   Entry: null,
   Output: null,
-  Sale: null,
+  Sale: cancelPosSaleAction,
   Payment: null,
   Return: null,
   Exchange: null,
