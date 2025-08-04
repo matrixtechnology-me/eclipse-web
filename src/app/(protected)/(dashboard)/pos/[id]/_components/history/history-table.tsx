@@ -98,6 +98,7 @@ export const HistoryTable: FC<HistoryTableProps> = ({
               </TableCell>
               <TableCell>
                 <CancelPosEvent
+                  eventType={item.type}
                   value={item.status}
                   posEventId={item.id}
                   posId={posId}
