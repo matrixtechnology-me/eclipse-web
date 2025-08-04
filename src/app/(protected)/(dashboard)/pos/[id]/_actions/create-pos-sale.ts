@@ -105,6 +105,11 @@ export const createPosSaleAction: Action<
               createMany: { data: mappedProducts },
             },
           },
+          include: {
+            products: {
+              select: { id: true, productId: true },
+            },
+          },
         });
 
         const posEventSale = await tx.posEventSale.create({
@@ -148,17 +153,30 @@ export const createPosSaleAction: Action<
 
         const stockService = new StockService(tx, new StockEventService(tx));
 
-        for (const product of mappedProducts) {
+        for (const item of mappedProducts) {
           const stockResult = await stockService.decrease({
-            productId: product.productId,
-            decreaseQty: product.totalQty,
+            productId: item.productId,
+            decreaseQty: item.totalQty,
             tenantId,
           });
 
           if (stockResult.isFailure) throw stockResult.error;
           const { decrements } = stockResult.data;
 
+          const saleProduct = sale.products
+            .find(p => p.productId == item.productId);
+
+          if (!saleProduct) throw new NotFoundError("sale product not found");
+
           for (const dec of decrements) {
+            await tx.stockLotUsage.create({
+              data: {
+                saleProductId: saleProduct.id,
+                quantity: dec.quantity,
+                stockLotId: dec.stockLotId,
+              },
+            });
+
             // Revalidate stock tags.
             const stockTag = TENANT_TAGS.STOCKS.STOCK(dec.stockId);
             revalidateTag(stockTag.INDEX);
