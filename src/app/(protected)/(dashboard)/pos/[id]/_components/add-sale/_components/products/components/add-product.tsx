@@ -20,60 +20,69 @@ import { Label } from "@/components/ui/label";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { z } from "zod";
-import {
-  CreateSaleSchema,
-  productSchema,
-} from "../../../_utils/validations/create-sale";
+import { productSchema } from "../../../_utils/validations/create-sale";
 import { toast } from "sonner";
 import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
 import { ProductListItem } from "@/domain/services/product/product-service";
+import { UsedStock } from "../../..";
 
 interface IProps {
   tenantId: string;
-  appendProduct: UseFieldArrayAppend<CreateSaleSchema, "products">;
+  appendProduct: (payload: AddProductSchema) => void;
+  usedStock: {
+    state: UsedStock[];
+    set: Dispatch<SetStateAction<UsedStock[]>>;
+  };
 }
 
-type OrderItemFormType = z.infer<typeof productSchema>;
+export type AddProductSchema = z.infer<typeof productSchema>;
 
-const formDefaultValues: OrderItemFormType = {
-  id: "",
+const formDefaultValues: AddProductSchema = {
+  productId: "",
   name: "",
   salePrice: 0,
-  quantity: "1",
+  quantity: 1,
 };
 
-export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
+export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
   const [open, setOpen] = useState(false);
-  const [maxQuantity, setMaxQuantity] = useState<number | null>(null);
+  const [stockQuantity, setStockQuantity] = useState<number | null>(null);
 
-  const form = useForm<OrderItemFormType>({
+  const form = useForm<AddProductSchema>({
     defaultValues: formDefaultValues,
     resolver: zodResolver(productSchema),
   });
 
-  const onSubmit = () => {
-    const submissionFn = form.handleSubmit(
-      (formData) => {
-        const qty = Number(formData.quantity);
-        if (maxQuantity !== null && qty > maxQuantity) {
-          toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
-          return;
-        }
+  const { productId, quantity, salePrice } = form.watch();
 
-        appendProduct(formData);
-        setOpen(false);
-        form.reset(formDefaultValues);
-        setMaxQuantity(null);
-      },
-      (errors) => console.log(errors)
-    );
-    submissionFn();
+  const maxQuantity = useMemo(() => {
+    if (!stockQuantity) return null;
+
+    const usedQuantity = usedStock.state
+      .find(item => item.productId == productId);
+
+    if (!usedQuantity) return stockQuantity;
+
+    return Math.max(stockQuantity - usedQuantity.quantity, 0);
+  }, [stockQuantity, usedStock]);
+
+  const onSubmit = (formData: AddProductSchema) => {
+    const qty = formData.quantity;
+    if (maxQuantity !== null && qty > maxQuantity) {
+      toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
+      return;
+    }
+
+    appendProduct(formData);
+    setOpen(false);
+    form.reset(formDefaultValues);
+    setStockQuantity(null);
   };
 
   const onErrors = (errors: Record<string, { message?: string }>) => {
@@ -90,7 +99,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
-      form.setError("id", { message: "mínimo de 3 caracteres." });
+      form.setError("productId", { message: "mínimo de 3 caracteres." });
       return { options: [], additional, hasMore: true };
     }
 
@@ -127,8 +136,6 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
     };
   };
 
-  const { quantity, salePrice } = form.watch();
-
   const subTotal = useMemo(
     () => salePrice * Number(quantity),
     [quantity, salePrice]
@@ -160,7 +167,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
               <Label>Produto*</Label>
               <Controller
                 control={form.control}
-                name="id"
+                name="productId"
                 render={({ field }) => (
                   <SelectPaginated<ProductListItem>
                     className="text-sm"
@@ -168,13 +175,13 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                     menuPlacement="bottom"
                     loadOptions={loadPaginatedSearchProducts}
                     debounceTimeout={1000}
-                    onInputChange={() => form.clearErrors("id")}
+                    onInputChange={() => form.clearErrors("productId")}
                     onChange={(option) => {
                       const product = option!.value;
                       field.onChange(product.id);
                       form.setValue("name", option!.label);
                       form.setValue("salePrice", product.salePrice);
-                      setMaxQuantity(product.availableQty as number);
+                      setStockQuantity(product.availableQty as number);
                     }}
                     additional={{
                       page: 1,
@@ -183,7 +190,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                   />
                 )}
               />
-              <FormMessage>{form.formState.errors.id?.message}</FormMessage>
+              <FormMessage>{form.formState.errors.productId?.message}</FormMessage>
             </div>
 
             <div className="space-y-2">
@@ -203,7 +210,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                           `Quantidade máxima disponível: ${maxQuantity}`
                         );
                       }
-                      field.onChange(values.value);
+                      field.onChange(value);
                     }}
                     allowNegative={false}
                     isAllowed={(values) => {

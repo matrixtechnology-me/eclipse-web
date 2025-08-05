@@ -44,9 +44,16 @@ type AddSaleProps = {
   tenantId: string;
 };
 
+export type UsedStock = {
+  productId: string;
+  quantity: number;
+}
+
 export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const [usedStock, setUsedStock] = useState<UsedStock[]>([]);
 
   const form = useForm<CreateSaleSchema>({
     resolver: zodResolver(createSaleSchema),
@@ -70,18 +77,19 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
         description: "",
         customerId: values.customerId,
         posId,
-        products: values.products.map((product) => ({
-          id: product.id,
-          totalQty: Number(product.quantity),
+        products: values.products.map((field) => ({
+          id: field.productId,
+          totalQty: field.quantity,
         })),
         tenantId,
         movements: values.movements,
       });
 
       if (result.isFailure) return console.log(result.error);
-
       toast.success("Venda registrada com sucesso");
+
       form.reset();
+      setUsedStock([]);
       setOpen(false);
     } catch (error) {
       toast.error(
@@ -174,7 +182,12 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
               )}
             />
 
-            <Products form={form} tenantId={tenantId} />
+            <Products
+              form={form}
+              tenantId={tenantId}
+              usedStock={{ state: usedStock, set: setUsedStock }}
+            />
+
             <Movements form={form} />
 
             <div className="flex justify-end gap-3 pt-4">

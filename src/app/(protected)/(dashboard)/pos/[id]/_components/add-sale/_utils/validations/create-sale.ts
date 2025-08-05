@@ -2,28 +2,13 @@ import { EPaymentMethod, ESaleMovementType } from "@prisma/client";
 import { z } from "zod";
 
 export const productSchema = z.object({
-  id: z.string().min(1, { message: "Seleção do item é obrigatória." }),
+  productId: z.string().min(1, { message: "Seleção do item é obrigatória." }),
   name: z.string().min(1, { message: "Seleção do item é obrigatória." }),
   salePrice: z.number().min(1, { message: "Preço de venda é obrigatório." }),
   quantity: z
-    .string({ required_error: "Quantidade do item é obrigatória." })
-    .refine((arg) => !isNaN(Number(arg)) && Number(arg) > 0, {
-      message: "Quantidade inválida. Informe um valor numérico maior que zero.",
-    }),
-  // discount: z.object({
-  //   variant: z.enum(["percentage", "cash"], {
-  //     required_error: "Tipo de desconto é obrigatório.",
-  //   }),
-  //   amount: z
-  //     .string({ required_error: "Valor do desconto é obrigatório." })
-  //     .refine(
-  //       (arg) => {
-  //         const numericArg = Number(arg);
-  //         return !isNaN(numericArg) && numericArg >= 0;
-  //       },
-  //       { message: "Valor do desconto inválido." }
-  //     ),
-  // }),
+    .number({ required_error: "Quantidade do item é obrigatória." })
+    .int("Apenas valores inteiros são permitidos.")
+    .gt(0.0, "Quantidade inválida. Informe um valor numérico maior que zero."),
 });
 
 export const movementSchema = z.object({
