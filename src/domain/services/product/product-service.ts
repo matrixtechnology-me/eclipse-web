@@ -13,6 +13,10 @@ export type ProductListItem = {
   active: boolean;
   salePrice: number;
   availableQty: number | undefined;
+  flatComposition: Array<{
+    productId: string;
+    usedQuantity: number;
+  }> | undefined;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -43,6 +47,7 @@ type GetProductsParams = {
   };
   populate?: {
     availableQty?: boolean;
+    flatComposition?: boolean;
   };
 }
 
@@ -99,15 +104,23 @@ export class ProductService {
         active: raw.active,
         salePrice: raw.salePrice.toNumber(),
         availableQty: undefined,
+        flatComposition: undefined,
         createdAt: raw.createdAt,
         updatedAt: raw.updatedAt,
       }
 
       if (populate?.availableQty) {
-        const qtyResult = await this.stockService.getAvailableQty(raw.id);
-        if (qtyResult.isFailure) return failure(qtyResult.error);
+        const result = await this.stockService.getAvailableQty(raw.id);
+        if (result.isFailure) return failure(result.error);
 
-        mappedProduct.availableQty = qtyResult.data;
+        mappedProduct.availableQty = result.data;
+      }
+
+      if (populate?.flatComposition) {
+        const result = await this.stockService.getFlatCompositions(raw.id);
+        if (result.isFailure) return failure(result.error);
+
+        mappedProduct.flatComposition = result.data;
       }
 
       results.push(mappedProduct);
