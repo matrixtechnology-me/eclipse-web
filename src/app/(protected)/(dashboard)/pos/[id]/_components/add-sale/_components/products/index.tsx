@@ -2,65 +2,38 @@ import { useFieldArray, UseFormReturn } from "react-hook-form";
 import { ProductsTable } from "./components/products-summary-table";
 import { AddProduct, AddProductSchema } from "./components/add-product";
 import { CreateSaleSchema } from "../../_utils/validations/create-sale";
-import { UsedStock } from "../..";
-import { Dispatch, SetStateAction } from "react";
 
 interface ProductsProps {
   form: UseFormReturn<CreateSaleSchema>;
   tenantId: string;
-  usedStock: {
-    state: UsedStock[];
-    set: Dispatch<SetStateAction<UsedStock[]>>;
-  };
 }
 
-export const Products = ({ form, tenantId, usedStock }: ProductsProps) => {
+export const Products = ({ form, tenantId }: ProductsProps) => {
   const productsFieldArray = useFieldArray<CreateSaleSchema, "products">({
     name: "products",
     control: form.control,
   });
 
+  const appendProduct = (formData: AddProductSchema) => {
+    const existentProduct = productsFieldArray.fields
+      .find(field => field.productId == formData.productId);
 
-  const appendProduct = (payload: AddProductSchema) => {
-    const { productId } = payload;
-    const quantity = Number(payload.quantity);
+    if (!existentProduct) return productsFieldArray.append(formData);
 
-    const existent = productsFieldArray.fields
-      .find(field => field.productId == productId);
-
-    if (existent) { // Updating
-      productsFieldArray.update(
-        productsFieldArray.fields.indexOf(existent),
-        { ...existent, quantity: existent.quantity + quantity }
-      );
-
-      usedStock.set(prev => {
-        const usedStock = prev.find(item => item.productId == productId);
-        if (!usedStock) throw new Error("Used stock not populated.");
-
-        return prev.map(item => item.productId === productId
-          ? { ...item, quantity: item.quantity + Number(payload.quantity) }
-          : item
-        );
-      });
-
-      return;
-    }
-
-    // Adding
-    productsFieldArray.append(payload);
-    usedStock.set(prev => [
-      ...prev,
-      { productId, quantity: Number(quantity) },
-    ]);
+    productsFieldArray.update(
+      productsFieldArray.fields.indexOf(existentProduct),
+      {
+        ...existentProduct,
+        quantity: existentProduct.quantity + formData.quantity,
+      }
+    );
   }
 
   const removeProduct = (productId: string) => {
-    const idx = productsFieldArray.fields
-      .findIndex(p => p.productId == productId);
+    const field = productsFieldArray.fields.find(f => f.productId == productId);
+    if (!field) throw new Error("No related field to product id.");
 
-    productsFieldArray.remove(idx);
-    usedStock.set(prev => prev.filter(item => item.productId !== productId));
+    productsFieldArray.remove(productsFieldArray.fields.indexOf(field));
   }
 
   return (
@@ -69,7 +42,7 @@ export const Products = ({ form, tenantId, usedStock }: ProductsProps) => {
         <h2 className="text-[15px]">Produtos</h2>
         <AddProduct
           appendProduct={appendProduct}
-          usedStock={usedStock}
+          fields={productsFieldArray.fields}
           tenantId={tenantId}
         />
       </div>

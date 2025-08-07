@@ -44,16 +44,9 @@ type AddSaleProps = {
   tenantId: string;
 };
 
-export type UsedStock = {
-  productId: string;
-  quantity: number;
-}
-
 export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-
-  const [usedStock, setUsedStock] = useState<UsedStock[]>([]);
 
   const form = useForm<CreateSaleSchema>({
     resolver: zodResolver(createSaleSchema),
@@ -89,7 +82,6 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
       toast.success("Venda registrada com sucesso");
 
       form.reset();
-      setUsedStock([]);
       setOpen(false);
     } catch (error) {
       toast.error(
@@ -182,11 +174,7 @@ export const AddSale: FC<AddSaleProps> = ({ posId, posStatus, tenantId }) => {
               )}
             />
 
-            <Products
-              form={form}
-              tenantId={tenantId}
-              usedStock={{ state: usedStock, set: setUsedStock }}
-            />
+            <Products form={form} tenantId={tenantId} />
 
             <Movements form={form} />
 

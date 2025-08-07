@@ -20,57 +20,84 @@ import { Label } from "@/components/ui/label";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { Controller, UseFieldArrayReturn, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { z } from "zod";
-import { productSchema } from "../../../_utils/validations/create-sale";
+import { CreateSaleSchema, productSchema } from "../../../_utils/validations/create-sale";
 import { toast } from "sonner";
 import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
 import { ProductListItem } from "@/domain/services/product/product-service";
-import { UsedStock } from "../../..";
 
 interface IProps {
   tenantId: string;
-  appendProduct: (payload: AddProductSchema) => void;
-  usedStock: {
-    state: UsedStock[];
-    set: Dispatch<SetStateAction<UsedStock[]>>;
-  };
+  appendProduct: (product: AddProductSchema) => void;
+  fields: UseFieldArrayReturn<CreateSaleSchema, "products">["fields"];
 }
 
 export type AddProductSchema = z.infer<typeof productSchema>;
 
-const formDefaultValues: AddProductSchema = {
+const formDefaultValues = {
   productId: "",
   name: "",
   salePrice: 0,
   quantity: 1,
+  flatComposition: [],
+  availableQty: undefined,
 };
 
-export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
+export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
   const [open, setOpen] = useState(false);
-  const [stockQuantity, setStockQuantity] = useState<number | null>(null);
 
   const form = useForm<AddProductSchema>({
     defaultValues: formDefaultValues,
     resolver: zodResolver(productSchema),
   });
 
-  const { productId, quantity, salePrice } = form.watch();
+  const usedStock = useMemo(() => {
+    const map = new Map<string, number>();
 
+    for (const product of fields) {
+      for (const comp of product.flatComposition) {
+        const relativeQuantity = comp.usedQuantity * product.quantity;
+
+        const prevInUse = map.get(product.id) || 0;
+        map.set(comp.productId, prevInUse + relativeQuantity);
+      }
+    }
+
+    return map;
+  }, [fields]);
+
+  const {
+    productId,
+    quantity,
+    availableQty,
+    flatComposition,
+    salePrice,
+  } = form.watch();
+
+  // TODO: comments with explanation.
   const maxQuantity = useMemo(() => {
-    if (!stockQuantity) return null;
+    if (availableQty == undefined) return null;
 
-    const usedQuantity = usedStock.state
-      .find(item => item.productId == productId);
+    let min: number = availableQty;
 
-    if (!usedQuantity) return stockQuantity;
+    for (const comp of flatComposition) {
+      const qtyInUse = usedStock.get(comp.productId);
+      if (!qtyInUse) continue;
 
-    return Math.max(stockQuantity - usedQuantity.quantity, 0);
-  }, [stockQuantity, usedStock]);
+      const lostUnits = Math.ceil(qtyInUse / comp.usedQuantity);
+      const possibleUnits =
+        Math.floor(comp.availableQty / comp.usedQuantity) - lostUnits;
+
+      if (possibleUnits < min) min = possibleUnits;
+    }
+
+    return min;
+  }, [availableQty, flatComposition, usedStock]);
 
   const onSubmit = (formData: AddProductSchema) => {
     const qty = formData.quantity;
@@ -82,8 +109,15 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
     appendProduct(formData);
     setOpen(false);
     form.reset(formDefaultValues);
-    setStockQuantity(null);
   };
+
+  const handleSelectProduct = (selected: ProductListItem) => {
+    form.setValue("productId", selected.id);
+    form.setValue("name", selected.name);
+    form.setValue("salePrice", selected.salePrice);
+    form.setValue("flatComposition", selected.flatComposition!);
+    form.setValue("availableQty", selected.availableQty!);
+  }
 
   const onErrors = (errors: Record<string, { message?: string }>) => {
     Object.entries(errors).forEach(([_, error]) => {
@@ -113,6 +147,7 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
       page: curPage,
       tenantId,
       includeAvailableQty: true,
+      includeFlatComposition: true,
     });
 
     if (result.isFailure) {
@@ -136,14 +171,9 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
     };
   };
 
-  const subTotal = useMemo(
-    () => salePrice * Number(quantity),
-    [quantity, salePrice]
-  );
-
-  useEffect(() => {
-    if (subTotal === undefined || salePrice <= 0) return;
-  }, [subTotal, quantity, salePrice]);
+  const subtotal = !!salePrice && !!quantity
+    ? salePrice * quantity
+    : undefined;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -168,7 +198,7 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
               <Controller
                 control={form.control}
                 name="productId"
-                render={({ field }) => (
+                render={() => (
                   <SelectPaginated<ProductListItem>
                     className="text-sm"
                     placeholder="Buscar um produto..."
@@ -178,10 +208,7 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
                     onInputChange={() => form.clearErrors("productId")}
                     onChange={(option) => {
                       const product = option!.value;
-                      field.onChange(product.id);
-                      form.setValue("name", option!.label);
-                      form.setValue("salePrice", product.salePrice);
-                      setStockQuantity(product.availableQty as number);
+                      handleSelectProduct(product);
                     }}
                     additional={{
                       page: 1,
@@ -225,19 +252,19 @@ export const AddProduct = ({ appendProduct, tenantId, usedStock }: IProps) => {
               </FormMessage>
             </div>
 
-            {maxQuantity !== null && (
+            {(maxQuantity !== null && !!productId) && (
               <p className="text-sm text-muted-foreground">
                 Estoque disponível: {maxQuantity}
               </p>
             )}
 
-            {salePrice > 0 && (
+            {(!!subtotal && !!salePrice) && (
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">
                   Preço unitário: {CurrencyFormatter.format(salePrice)}
                 </p>
                 <p className="text-sm font-medium">
-                  Subtotal: {CurrencyFormatter.format(subTotal)}
+                  Subtotal: {CurrencyFormatter.format(subtotal)}
                 </p>
               </div>
             )}

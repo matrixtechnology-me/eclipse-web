@@ -70,6 +70,7 @@ export const ProductsTable = ({
               </TableCell>
               <TableCell className="text-center">
                 <Button
+                  type="button"
                   variant="outline"
                   className="p-0 size-9"
                   onClick={() => removeProduct(field.productId)}
