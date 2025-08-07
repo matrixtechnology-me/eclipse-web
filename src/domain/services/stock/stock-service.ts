@@ -33,8 +33,9 @@ export type GetFlatCompositionsResult = EitherResult<
   Array<{
     productId: string;
     usedQuantity: number;
+    availableQty: number;
   }>,
-  Error
+  InvalidEntityError
 >;
 
 export class StockService {
@@ -44,6 +45,7 @@ export class StockService {
   ) {};
 
   // TODO: unit tests.
+  // TODO: move to product service.
   public async getFlatCompositions(productId: string): Promise<GetFlatCompositionsResult> {
     type RESULT_SET = [{
       to_jsonb: Array<{
@@ -60,12 +62,18 @@ export class StockService {
       AS flat_compositions;
     `;
 
-    const flatCompositions = resultSet[0].to_jsonb.map(comp => ({
-      productId: comp.product_id,
-      usedQuantity: comp.used_qty,
-    }));
+    const flatCompositions = resultSet[0].to_jsonb.map(async comp => {
+      const result = await this.getAvailableQty(comp.product_id);
+      if (result.isFailure) throw result.error;
 
-    return success(flatCompositions);
+      return {
+        productId: comp.product_id,
+        usedQuantity: comp.used_qty,
+        availableQty: result.data,
+      };
+    });
+
+    return success(await Promise.all(flatCompositions));
   }
 
   // TODO: unit tests.

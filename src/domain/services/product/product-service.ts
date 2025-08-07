@@ -16,6 +16,7 @@ export type ProductListItem = {
   flatComposition: Array<{
     productId: string;
     usedQuantity: number;
+    availableQty: number;
   }> | undefined;
   createdAt: Date;
   updatedAt: Date;
