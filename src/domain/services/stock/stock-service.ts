@@ -29,11 +29,44 @@ export type GetAvailableQtyResult = EitherResult<
   InvalidEntityError
 >;
 
+export type GetFlatCompositionsResult = EitherResult<
+  Array<{
+    productId: string;
+    usedQuantity: number;
+  }>,
+  Error
+>;
+
 export class StockService {
   constructor(
     private readonly prisma: PrismaTransaction,
     private readonly stockEventService: StockEventService,
   ) {};
+
+  // TODO: unit tests.
+  public async getFlatCompositions(productId: string): Promise<GetFlatCompositionsResult> {
+    type RESULT_SET = [{
+      to_jsonb: Array<{
+        product_id: string;
+        used_qty: number;
+      }>;
+    }];
+
+    // DB get_available_qty function is defined on 
+    // migration "20250805114743_feat".
+    const resultSet = await this.prisma.$queryRaw<RESULT_SET>`
+      SELECT to_jsonb(flat_compositions)
+      FROM get_flat_composition(${productId}::uuid)
+      AS flat_compositions;
+    `;
+
+    const flatCompositions = resultSet[0].to_jsonb.map(comp => ({
+      productId: comp.product_id,
+      usedQuantity: comp.used_qty,
+    }));
+
+    return success(flatCompositions);
+  }
 
   // TODO: unit tests.
   // TODO: raise exception on its database function.
