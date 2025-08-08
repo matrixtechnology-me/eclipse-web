@@ -22,6 +22,7 @@ export const createProductSchema = z.object({
     salePrice: z
       .number({ invalid_type_error: "Informe um valor válido." })
       .nonnegative({ message: "O preço de venda deve ser zero ou positivo." }),
+    salable: z.boolean({ required_error: "Campo obrigatório." }),
     productionType: z
       .nativeEnum(ProductionType, {
         message: "Tipo de Produção é obrigatório.",

@@ -13,6 +13,7 @@ type CreateProductActionPayload = {
   description: string;
   salePrice: number;
   barCode: string;
+  salable: boolean;
   composite: boolean;
   initialStock?: {
     initialQuantity: number;
@@ -26,6 +27,7 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
   name,
   description,
   tenantId,
+  salable,
   salePrice,
   barCode,
   initialStock,
@@ -37,7 +39,11 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
     }
 
     const existingProduct = await prisma.product.findFirst({
-      where: { OR: [{ name }, { barCode }], tenantId },
+      where: {
+        tenantId,
+        deletedAt: null,
+        OR: [{ name }, { barCode }],
+      },
     });
     if (existingProduct) throw new ConflictError("Product already exists");
 
@@ -54,6 +60,7 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
           skuCode: generateSkuCode(),
           salePrice,
           barCode,
+          salable,
           internalCode: Math.floor(Math.random() * 0xffffff)
             .toString(16)
             .padStart(6, "0"),

@@ -56,6 +56,7 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
         description: "",
         barCode: "",
         salePrice: 0,
+        salable: true,
         productionType: undefined,
         composite: false,
       },
@@ -190,6 +191,25 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
 
               <FormField
                 control={form.control}
+                name="product.salable"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>É vendável?*</FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="product.salePrice"
                 render={({ field }) => (
                   <FormItem>
@@ -247,7 +267,7 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
               {!composite && <StockInput />}
             </div>
 
-            <div className="flex justify-end gap-3 px-5">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
