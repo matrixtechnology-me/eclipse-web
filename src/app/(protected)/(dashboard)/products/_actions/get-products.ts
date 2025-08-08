@@ -28,6 +28,7 @@ type GetProductsActionPayload = {
   limit: number;
   active: boolean;
   tenantId: string;
+  salable: boolean | undefined;
   query?: string;
   excludeIds?: string[];
   includeAvailableQty?: boolean;
@@ -43,6 +44,7 @@ export const getProductsAction: Action<
   limit,
   query,
   active,
+  salable,
   excludeIds,
   includeAvailableQty,
   includeFlatComposition,
@@ -66,6 +68,7 @@ export const getProductsAction: Action<
           },
           filters: {
             searchValue: query,
+            salable,
             active,
             tenantId,
             excludeIds,

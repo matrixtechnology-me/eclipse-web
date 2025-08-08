@@ -43,6 +43,7 @@ type GetProductsParams = {
   filters: {
     active: boolean;
     tenantId: string;
+    salable?: boolean;
     searchValue?: string;
     excludeIds?: string[];
   };
@@ -64,12 +65,13 @@ export class ProductService {
     pagination,
     populate,
   }: GetProductsParams): Promise<GetProductsResult> {
-    const { active, tenantId, excludeIds, searchValue } = filters;
+    const { active, salable, tenantId, excludeIds, searchValue } = filters;
 
     const whereClause: Prisma.ProductWhereInput = {
       id: { notIn: excludeIds },
       tenantId,
       active,
+      salable,
       deletedAt: null,
       OR: [
         { name: { contains: searchValue, mode: "insensitive" } },

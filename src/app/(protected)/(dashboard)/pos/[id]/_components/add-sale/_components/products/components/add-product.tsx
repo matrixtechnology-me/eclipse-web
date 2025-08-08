@@ -144,6 +144,7 @@ export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
       active: true,
       limit: pageSize,
       page: curPage,
+      salable: true,
       tenantId,
       includeAvailableQty: true,
       includeFlatComposition: true,

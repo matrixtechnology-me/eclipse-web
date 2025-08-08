@@ -25,6 +25,7 @@ export const Products: FC<ProductsProps> = async ({
     active: true,
     page,
     limit: pageSize,
+    salable: undefined,
     query,
     tenantId: session.tenantId,
   });
