@@ -29,12 +29,14 @@ export type GetAvailableQtyResult = EitherResult<
   InvalidEntityError
 >;
 
+export type FlatCompositionItem = {
+  productId: string;
+  usedQuantity: number;
+  availableQty: number;
+}
+
 export type GetFlatCompositionsResult = EitherResult<
-  Array<{
-    productId: string;
-    usedQuantity: number;
-    availableQty: number;
-  }>,
+  FlatCompositionItem[],
   InvalidEntityError
 >;
 
@@ -45,7 +47,6 @@ export class StockService {
   ) {};
 
   // TODO: unit tests.
-  // TODO: move to product service.
   public async getFlatCompositions(productId: string): Promise<GetFlatCompositionsResult> {
     type RESULT_SET = [{
       to_jsonb: Array<{
@@ -62,18 +63,33 @@ export class StockService {
       AS flat_compositions;
     `;
 
-    const flatCompositions = resultSet[0].to_jsonb.map(async comp => {
-      const result = await this.getAvailableQty(comp.product_id);
+    // Assure sum of used quantities in case of same product compositing
+    // different compositions.
+    const map = new Map<string, FlatCompositionItem>();
+
+    for (const item of resultSet[0].to_jsonb) {
+      const existing = map.get(item.product_id);
+
+      if (existing) {
+        map.set(item.product_id, {
+          ...existing,
+          usedQuantity: existing.usedQuantity + item.used_qty,
+        });
+
+        continue;
+      }
+
+      const result = await this.getAvailableQty(item.product_id);
       if (result.isFailure) throw result.error;
 
-      return {
-        productId: comp.product_id,
-        usedQuantity: comp.used_qty,
+      map.set(item.product_id, {
+        productId: item.product_id,
+        usedQuantity: item.used_qty,
         availableQty: result.data,
-      };
-    });
+      });
+    }
 
-    return success(await Promise.all(flatCompositions));
+    return success(Array.from(map.values()));
   }
 
   // TODO: unit tests.

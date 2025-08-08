@@ -63,7 +63,7 @@ export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
       for (const comp of product.flatComposition) {
         const relativeQuantity = comp.usedQuantity * product.quantity;
 
-        const prevInUse = map.get(product.id) || 0;
+        const prevInUse = map.get(comp.productId) || 0;
         map.set(comp.productId, prevInUse + relativeQuantity);
       }
     }
@@ -89,9 +89,8 @@ export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
       const qtyInUse = usedStock.get(comp.productId);
       if (!qtyInUse) continue;
 
-      const lostUnits = Math.ceil(qtyInUse / comp.usedQuantity);
-      const possibleUnits =
-        Math.floor(comp.availableQty / comp.usedQuantity) - lostUnits;
+      const currentUnits = comp.availableQty - qtyInUse;
+      const possibleUnits = Math.floor(currentUnits / comp.usedQuantity);
 
       if (possibleUnits < min) min = possibleUnits;
     }
