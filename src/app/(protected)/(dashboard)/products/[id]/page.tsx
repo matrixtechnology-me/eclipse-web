@@ -19,10 +19,10 @@ import { DeleteProduct } from "./_components/delete-product";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Category } from "./_components/category";
-import { FileUploader } from "./_components/attachments/file-uploader";
 import { Attachments } from "./_components/attachments";
 import { Compositions } from "./_components/compositions";
 import { Subcategory } from "./_components/subcategory";
+import { Salable } from "./_components/salable/salable";
 
 type PageParams = {
   id: string;
@@ -43,9 +43,7 @@ const Page: NextPage<PageProps> = async ({ params }) => {
 
   if (!session) throw new Error("session not found");
 
-  const result = await getProduct({
-    id,
-  });
+  const result = await getProduct({ id });
 
   if (result.isFailure) {
     console.log(result.error);
@@ -119,6 +117,11 @@ const Page: NextPage<PageProps> = async ({ params }) => {
           />
           <Active
             defaultValue={product.active}
+            productId={product.id}
+            tenantId={session.tenantId}
+          />
+          <Salable
+            defaultValue={product.salable}
             productId={product.id}
             tenantId={session.tenantId}
           />
