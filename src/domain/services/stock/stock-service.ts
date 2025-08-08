@@ -29,11 +29,68 @@ export type GetAvailableQtyResult = EitherResult<
   InvalidEntityError
 >;
 
+export type FlatCompositionItem = {
+  productId: string;
+  usedQuantity: number;
+  availableQty: number;
+}
+
+export type GetFlatCompositionsResult = EitherResult<
+  FlatCompositionItem[],
+  InvalidEntityError
+>;
+
 export class StockService {
   constructor(
     private readonly prisma: PrismaTransaction,
     private readonly stockEventService: StockEventService,
   ) {};
+
+  // TODO: unit tests.
+  public async getFlatCompositions(productId: string): Promise<GetFlatCompositionsResult> {
+    type RESULT_SET = [{
+      to_jsonb: Array<{
+        product_id: string;
+        used_qty: number;
+      }>;
+    }];
+
+    // DB get_available_qty function is defined on 
+    // migration "20250805114743_feat".
+    const resultSet = await this.prisma.$queryRaw<RESULT_SET>`
+      SELECT to_jsonb(flat_compositions)
+      FROM get_flat_composition(${productId}::uuid)
+      AS flat_compositions;
+    `;
+
+    // Assure sum of used quantities in case of same product compositing
+    // different compositions.
+    const map = new Map<string, FlatCompositionItem>();
+
+    for (const item of resultSet[0].to_jsonb) {
+      const existing = map.get(item.product_id);
+
+      if (existing) {
+        map.set(item.product_id, {
+          ...existing,
+          usedQuantity: existing.usedQuantity + item.used_qty,
+        });
+
+        continue;
+      }
+
+      const result = await this.getAvailableQty(item.product_id);
+      if (result.isFailure) throw result.error;
+
+      map.set(item.product_id, {
+        productId: item.product_id,
+        usedQuantity: item.used_qty,
+        availableQty: result.data,
+      });
+    }
+
+    return success(Array.from(map.values()));
+  }
 
   // TODO: unit tests.
   // TODO: raise exception on its database function.

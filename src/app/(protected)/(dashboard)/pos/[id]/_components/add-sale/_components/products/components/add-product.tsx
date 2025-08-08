@@ -20,61 +20,103 @@ import { Label } from "@/components/ui/label";
 import { CurrencyFormatter } from "@/utils/formatters/currency";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Controller, UseFieldArrayAppend, useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { Controller, UseFieldArrayReturn, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { GroupBase } from "react-select";
 import { LoadOptions } from "react-select-async-paginate";
 import { z } from "zod";
-import {
-  CreateSaleSchema,
-  productSchema,
-} from "../../../_utils/validations/create-sale";
+import { CreateSaleSchema, productSchema } from "../../../_utils/validations/create-sale";
 import { toast } from "sonner";
 import { getProductsAction } from "@/app/(protected)/(dashboard)/products/_actions/get-products";
 import { ProductListItem } from "@/domain/services/product/product-service";
 
 interface IProps {
   tenantId: string;
-  appendProduct: UseFieldArrayAppend<CreateSaleSchema, "products">;
+  appendProduct: (product: AddProductSchema) => void;
+  fields: UseFieldArrayReturn<CreateSaleSchema, "products">["fields"];
 }
 
-type OrderItemFormType = z.infer<typeof productSchema>;
+export type AddProductSchema = z.infer<typeof productSchema>;
 
-const formDefaultValues: OrderItemFormType = {
-  id: "",
+const formDefaultValues = {
+  productId: "",
   name: "",
   salePrice: 0,
-  quantity: "1",
+  quantity: 1,
+  flatComposition: [],
+  availableQty: undefined,
 };
 
-export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
+export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
   const [open, setOpen] = useState(false);
-  const [maxQuantity, setMaxQuantity] = useState<number | null>(null);
 
-  const form = useForm<OrderItemFormType>({
+  const form = useForm<AddProductSchema>({
     defaultValues: formDefaultValues,
     resolver: zodResolver(productSchema),
   });
 
-  const onSubmit = () => {
-    const submissionFn = form.handleSubmit(
-      (formData) => {
-        const qty = Number(formData.quantity);
-        if (maxQuantity !== null && qty > maxQuantity) {
-          toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
-          return;
-        }
+  const usedStock = useMemo(() => {
+    const map = new Map<string, number>();
 
-        appendProduct(formData);
-        setOpen(false);
-        form.reset(formDefaultValues);
-        setMaxQuantity(null);
-      },
-      (errors) => console.log(errors)
-    );
-    submissionFn();
+    for (const product of fields) {
+      for (const comp of product.flatComposition) {
+        const relativeQuantity = comp.usedQuantity * product.quantity;
+
+        const prevInUse = map.get(comp.productId) || 0;
+        map.set(comp.productId, prevInUse + relativeQuantity);
+      }
+    }
+
+    return map;
+  }, [fields]);
+
+  const {
+    productId,
+    quantity,
+    availableQty,
+    flatComposition,
+    salePrice,
+  } = form.watch();
+
+  // TODO: comments with explanation.
+  const maxQuantity = useMemo(() => {
+    if (availableQty == undefined) return null;
+
+    let min: number = availableQty;
+
+    for (const comp of flatComposition) {
+      const qtyInUse = usedStock.get(comp.productId);
+      if (!qtyInUse) continue;
+
+      const currentUnits = comp.availableQty - qtyInUse;
+      const possibleUnits = Math.floor(currentUnits / comp.usedQuantity);
+
+      if (possibleUnits < min) min = possibleUnits;
+    }
+
+    return min;
+  }, [availableQty, flatComposition, usedStock]);
+
+  const onSubmit = (formData: AddProductSchema) => {
+    const qty = formData.quantity;
+    if (maxQuantity !== null && qty > maxQuantity) {
+      toast.error(`Quantidade máxima disponível: ${maxQuantity}`);
+      return;
+    }
+
+    appendProduct(formData);
+    setOpen(false);
+    form.reset(formDefaultValues);
   };
+
+  const handleSelectProduct = (selected: ProductListItem) => {
+    form.setValue("productId", selected.id);
+    form.setValue("name", selected.name);
+    form.setValue("salePrice", selected.salePrice);
+    form.setValue("flatComposition", selected.flatComposition!);
+    form.setValue("availableQty", selected.availableQty!);
+  }
 
   const onErrors = (errors: Record<string, { message?: string }>) => {
     Object.entries(errors).forEach(([_, error]) => {
@@ -90,7 +132,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
     { page: number; itemsPerPage: number }
   > = async (input, _prevOptions, additional) => {
     if (input.trim().length < 3 && input.trim().length > 0) {
-      form.setError("id", { message: "mínimo de 3 caracteres." });
+      form.setError("productId", { message: "mínimo de 3 caracteres." });
       return { options: [], additional, hasMore: true };
     }
 
@@ -104,6 +146,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
       page: curPage,
       tenantId,
       includeAvailableQty: true,
+      includeFlatComposition: true,
     });
 
     if (result.isFailure) {
@@ -127,16 +170,9 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
     };
   };
 
-  const { quantity, salePrice } = form.watch();
-
-  const subTotal = useMemo(
-    () => salePrice * Number(quantity),
-    [quantity, salePrice]
-  );
-
-  useEffect(() => {
-    if (subTotal === undefined || salePrice <= 0) return;
-  }, [subTotal, quantity, salePrice]);
+  const subtotal = !!salePrice && !!quantity
+    ? salePrice * quantity
+    : undefined;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -160,21 +196,18 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
               <Label>Produto*</Label>
               <Controller
                 control={form.control}
-                name="id"
-                render={({ field }) => (
+                name="productId"
+                render={() => (
                   <SelectPaginated<ProductListItem>
                     className="text-sm"
                     placeholder="Buscar um produto..."
                     menuPlacement="bottom"
                     loadOptions={loadPaginatedSearchProducts}
                     debounceTimeout={1000}
-                    onInputChange={() => form.clearErrors("id")}
+                    onInputChange={() => form.clearErrors("productId")}
                     onChange={(option) => {
                       const product = option!.value;
-                      field.onChange(product.id);
-                      form.setValue("name", option!.label);
-                      form.setValue("salePrice", product.salePrice);
-                      setMaxQuantity(product.availableQty as number);
+                      handleSelectProduct(product);
                     }}
                     additional={{
                       page: 1,
@@ -183,7 +216,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                   />
                 )}
               />
-              <FormMessage>{form.formState.errors.id?.message}</FormMessage>
+              <FormMessage>{form.formState.errors.productId?.message}</FormMessage>
             </div>
 
             <div className="space-y-2">
@@ -203,7 +236,7 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
                           `Quantidade máxima disponível: ${maxQuantity}`
                         );
                       }
-                      field.onChange(values.value);
+                      field.onChange(value);
                     }}
                     allowNegative={false}
                     isAllowed={(values) => {
@@ -218,19 +251,19 @@ export const AddProduct = ({ appendProduct, tenantId }: IProps) => {
               </FormMessage>
             </div>
 
-            {maxQuantity !== null && (
+            {(maxQuantity !== null && !!productId) && (
               <p className="text-sm text-muted-foreground">
                 Estoque disponível: {maxQuantity}
               </p>
             )}
 
-            {salePrice > 0 && (
+            {(!!subtotal && !!salePrice) && (
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">
                   Preço unitário: {CurrencyFormatter.format(salePrice)}
                 </p>
                 <p className="text-sm font-medium">
-                  Subtotal: {CurrencyFormatter.format(subTotal)}
+                  Subtotal: {CurrencyFormatter.format(subtotal)}
                 </p>
               </div>
             )}

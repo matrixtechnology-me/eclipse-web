@@ -31,6 +31,7 @@ type GetProductsActionPayload = {
   query?: string;
   excludeIds?: string[];
   includeAvailableQty?: boolean;
+  includeFlatComposition?: boolean;
 };
 
 export const getProductsAction: Action<
@@ -44,6 +45,7 @@ export const getProductsAction: Action<
   active,
   excludeIds,
   includeAvailableQty,
+  includeFlatComposition,
 }) => {
     "use cache";
     cacheTag(
@@ -68,7 +70,10 @@ export const getProductsAction: Action<
             tenantId,
             excludeIds,
           },
-          populate: { availableQty: includeAvailableQty },
+          populate: {
+            availableQty: includeAvailableQty,
+            flatComposition: includeFlatComposition,
+          },
         });
       });
 

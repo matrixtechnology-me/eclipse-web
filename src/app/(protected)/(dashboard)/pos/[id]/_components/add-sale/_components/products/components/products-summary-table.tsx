@@ -20,11 +20,15 @@ import {
 } from "@/components/ui/tooltip";
 
 interface ProductsTableProps {
-  productsFieldArray: UseFieldArrayReturn<CreateSaleSchema, "products">;
+  productFields: UseFieldArrayReturn<CreateSaleSchema, "products">["fields"];
+  removeProduct: (productId: string) => void;
 }
 
-export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
-  return productsFieldArray.fields.length ? (
+export const ProductsTable = ({
+  productFields,
+  removeProduct,
+}: ProductsTableProps) => {
+  return productFields.length ? (
     <div className="max-w-[462px] relative overflow-x-auto hide-scrollbar border rounded-sm">
       <Table className="min-w-max">
         <TableHeader>
@@ -37,7 +41,7 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {productsFieldArray.fields.map((field) => (
+          {productFields.map((field) => (
             <TableRow key={field.id}>
               <TableCell className="font-medium max-w-[150px]">
                 <TooltipProvider delayDuration={200}>
@@ -66,13 +70,10 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
               </TableCell>
               <TableCell className="text-center">
                 <Button
+                  type="button"
                   variant="outline"
                   className="p-0 size-9"
-                  onClick={() =>
-                    productsFieldArray.remove(
-                      productsFieldArray.fields.indexOf(field)
-                    )
-                  }
+                  onClick={() => removeProduct(field.productId)}
                 >
                   <TrashIcon className="size-4" />
                 </Button>
@@ -85,7 +86,7 @@ export const ProductsTable = ({ productsFieldArray }: ProductsTableProps) => {
             <TableCell colSpan={4}>Total</TableCell>
             <TableCell className="text-left">
               {CurrencyFormatter.format(
-                productsFieldArray.fields.reduce(
+                productFields.reduce(
                   (acc, field) =>
                     acc + field.salePrice * Number(field.quantity),
                   0
