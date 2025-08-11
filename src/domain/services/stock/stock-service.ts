@@ -55,7 +55,7 @@ export class StockService {
       }>;
     }];
 
-    // DB get_available_qty function is defined on 
+    // DB get_flat_composition function is defined on 
     // migration "20250805114743_feat".
     const resultSet = await this.prisma.$queryRaw<RESULT_SET>`
       SELECT to_jsonb(flat_compositions)

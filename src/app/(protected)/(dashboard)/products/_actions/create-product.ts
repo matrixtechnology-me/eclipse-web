@@ -34,7 +34,7 @@ export const createProduct: Action<CreateProductActionPayload> = async ({
   composite,
 }) => {
   try {
-    if (!name || !tenantId || salePrice <= 0) {
+    if (!name || !tenantId || salePrice < 0) {
       throw new BadRequestError("Invalid input parameters");
     }
 
