@@ -56,6 +56,7 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
         description: "",
         barCode: "",
         salePrice: 0,
+        salable: true,
         productionType: undefined,
         composite: false,
       },
@@ -73,6 +74,9 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
 
       const result = await createProduct({
         ...formData.product,
+        salePrice: formData.product.salable
+          ? formData.product.salePrice
+          : 0.0,
         initialStock: formData.stock,
         description: formData.product.description || "",
         tenantId: session.tenantId,
@@ -95,9 +99,10 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
     }
   };
 
-  const [productionType, composite] = form.watch([
+  const [productionType, composite, salable] = form.watch([
     "product.productionType",
-    "product.composite"
+    "product.composite",
+    "product.salable",
   ]);
 
   const toggleProductionType = (input: ProductionType) => {
@@ -190,21 +195,42 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
 
               <FormField
                 control={form.control}
-                name="product.salePrice"
+                name="product.salable"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Preço de Venda*</FormLabel>
-                    <FormControl>
-                      <CurrencyInput
-                        placeholder="R$ 0,00"
-                        onChange={field.onChange}
-                        value={field.value}
-                      />
-                    </FormControl>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>É vendável?*</FormLabel>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {salable && (
+                <FormField
+                  control={form.control}
+                  name="product.salePrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço de Venda*</FormLabel>
+                      <FormControl>
+                        <CurrencyInput
+                          placeholder="R$ 0,00"
+                          onChange={field.onChange}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -219,6 +245,7 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
                         onValueChange={toggleProductionType}
                       />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -247,7 +274,7 @@ export const CreateProduct: FC<CreateProductProps> = ({ tenantId }) => {
               {!composite && <StockInput />}
             </div>
 
-            <div className="flex justify-end gap-3 px-5">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"

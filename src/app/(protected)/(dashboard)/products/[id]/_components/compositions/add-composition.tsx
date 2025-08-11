@@ -96,6 +96,7 @@ export const AddComposition = ({
     const result = await getProductsAction({
       query: input.trim(),
       active: true,
+      salable: undefined,
       limit: pageSize,
       page: curPage,
       tenantId,

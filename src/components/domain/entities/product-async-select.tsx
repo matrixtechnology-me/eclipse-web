@@ -17,12 +17,14 @@ type Props = Omit<React.ComponentProps<typeof Select>, "onValueChange"> & {
   pageSize: number;
   tenantId: string;
   onChange: (selected: ProductListItem) => void;
+  salable: boolean | undefined;
   query?: string;
 };
 
 export const ProductAsyncSelect: FC<Props> = ({
   page,
   pageSize,
+  salable,
   tenantId,
   onChange,
   query,
@@ -36,6 +38,7 @@ export const ProductAsyncSelect: FC<Props> = ({
         page,
         limit: pageSize,
         tenantId,
+        salable,
         query,
         active: true,
         includeAvailableQty: false,

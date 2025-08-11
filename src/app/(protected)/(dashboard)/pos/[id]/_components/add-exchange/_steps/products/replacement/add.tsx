@@ -113,6 +113,7 @@ export const AddReplacementProduct = ({
                       page={PAGE}
                       pageSize={PAGE_SIZE}
                       tenantId={tenantId}
+                      salable={true}
                     />
                   </FormControl>
                 </FormItem>

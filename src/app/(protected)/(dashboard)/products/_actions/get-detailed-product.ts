@@ -19,6 +19,7 @@ export type Product = {
   id: string;
   name: string;
   description: string;
+  salable: boolean;
   active: boolean;
   skuCode: string;
   category: ProductCategory | null;
@@ -96,6 +97,7 @@ export const getProduct: Action<
       id: product.id,
       name: product.name,
       description: product.description,
+      salable: product.salable,
       active: product.active,
       skuCode: product.skuCode,
       salePrice: product.salePrice.toNumber(),

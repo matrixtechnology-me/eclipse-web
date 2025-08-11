@@ -102,6 +102,7 @@ export const AddTransfer = ({ tenantId }: IProps) => {
     const result = await getProductsAction({
       query: input.trim(),
       active: true,
+      salable: undefined,
       limit: pageSize,
       page: curPage,
       tenantId,
