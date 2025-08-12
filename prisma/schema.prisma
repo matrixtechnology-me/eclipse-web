@@ -18,6 +18,11 @@ enum EDiscountVariant {
   Amount     @map("amount")
 }
 
+enum EExchangeMovementType {
+  Payment @map("payment")
+  Change  @map("change")
+}
+
 enum EInstallmentStatus {
   FULLY_PAID     @map(name: "fully-paid")
   PENDING        @map(name: "pending")
@@ -208,6 +213,18 @@ model Folder {
   @@map("folders")
 }
 
+model LotRestoration {
+  id                       String @id @default(uuid()) @db.Uuid
+  quantity                 Int
+  stockLotUsageId          String @map("stock_lot_usage_id") @db.Uuid
+  posEventExchangeReturnId String @map("pos_event_exchange_return_id") @db.Uuid
+
+  lotUsage               StockLotUsage          @relation(fields: [stockLotUsageId], references: [id])
+  PosEventExchangeReturn PosEventExchangeReturn @relation(fields: [posEventExchangeReturnId], references: [id])
+
+  @@map("lot_restorations")
+}
+
 model Membership {
   id          String          @id @default(uuid()) @db.Uuid
   role        EMembershipRole
@@ -277,9 +294,10 @@ model PosEvent {
   updatedAt DateTime        @updatedAt @map(name: "updated_at")
   deletedAt DateTime?       @map(name: "deleted_at")
 
-  entry  PosEventEntry?
-  output PosEventOutput?
-  sale   PosEventSale?
+  entry    PosEventEntry?
+  output   PosEventOutput?
+  sale     PosEventSale?
+  exchange PosEventExchange?
 
   @@map("pos_events")
 }
@@ -292,6 +310,61 @@ model PosEventEntry {
   posEvent PosEvent @relation(fields: [id], references: [id])
 
   @@map("pos_event_entries")
+}
+
+model PosEventExchange {
+  id              String           @id @default(uuid()) @db.Uuid
+  saleId          String           @map("sale_id") @db.Uuid
+  discountVariant EDiscountVariant @default(Percentage) @map("discount_variant")
+  discountValue   Float            @default(0) @map("discount_value")
+
+  returns      PosEventExchangeReturn[]
+  replacements PosEventExchangeReplacement[]
+  movements    PosEventExchangeMovement[]
+
+  posEvent PosEvent @relation(fields: [id], references: [id])
+  sale     Sale     @relation(fields: [saleId], references: [id])
+
+  @@map("pos_event_exchanges")
+}
+
+model PosEventExchangeMovement {
+  id                 String                @id @default(uuid()) @db.Uuid
+  type               EExchangeMovementType
+  method             EPaymentMethod
+  amount             Decimal               @db.Decimal(19, 6)
+  posEventExchangeId String                @map("pos_event_exchange_id") @db.Uuid
+
+  posEventExchange PosEventExchange @relation(fields: [posEventExchangeId], references: [id])
+
+  @@map("pos_event_exchange_movements")
+}
+
+model PosEventExchangeReplacement {
+  id                 String  @id @default(uuid()) @db.Uuid
+  productId          String  @map("product_id") @db.Uuid
+  quantity           Int
+  salePrice          Decimal @map("sale_price") @db.Decimal(19, 6)
+  posEventExchangeId String  @map("pos_event_exchange_id") @db.Uuid
+
+  product          Product          @relation(fields: [productId], references: [id])
+  posEventExchange PosEventExchange @relation(fields: [posEventExchangeId], references: [id])
+
+  @@map("pos_event_exchange_replacements")
+}
+
+model PosEventExchangeReturn {
+  id                 String @id @default(uuid()) @db.Uuid
+  productId          String @map("product_id") @db.Uuid
+  quantity           Int
+  posEventExchangeId String @map("pos_event_exchange_id") @db.Uuid
+
+  lotRestorations LotRestoration[]
+
+  product          Product          @relation(fields: [productId], references: [id])
+  posEventExchange PosEventExchange @relation(fields: [posEventExchangeId], references: [id])
+
+  @@map("pos_event_exchange_returns")
 }
 
 model PosEventOutput {
@@ -406,12 +479,14 @@ model Product {
   category    ProductCategory?    @relation(fields: [categoryId], references: [id])
   subcategory ProductSubcategory? @relation(fields: [subcategoryId], references: [id])
 
-  saleProducts         SaleProduct[]
-  specifications       ProductSpecification[]
-  posEventSaleProducts PosEventSaleProduct[]
-  productAttachments   ProductAttachment[]
-  parentCompositions   ProductComposition[]   @relation(name: "ParentProductComposition")
-  childCompositions    ProductComposition[]   @relation(name: "ChildProductComposition")
+  saleProducts           SaleProduct[]
+  specifications         ProductSpecification[]
+  posEventSaleProducts   PosEventSaleProduct[]
+  productAttachments     ProductAttachment[]
+  parentCompositions     ProductComposition[]          @relation(name: "ParentProductComposition")
+  childCompositions      ProductComposition[]          @relation(name: "ChildProductComposition")
+  exchangeReplacements   PosEventExchangeReplacement[]
+  PosEventExchangeReturn PosEventExchangeReturn[]
 
   @@map("products")
 }
@@ -513,9 +588,10 @@ model Sale {
   products  SaleProduct[]
   movements SaleMovement[]
 
-  customer     Customer       @relation(fields: [customerId], references: [id])
-  tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  PosEventSale PosEventSale[]
+  customer         Customer           @relation(fields: [customerId], references: [id])
+  tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  PosEventSale     PosEventSale[]
+  PosEventExchange PosEventExchange[]
 
   @@map("sales")
 }
@@ -685,8 +761,9 @@ model StockLotUsage {
   stockLotId    String @map("stock_lot_id") @db.Uuid
   saleProductId String @map("sale_product_id") @db.Uuid
 
-  stockLot    StockLot    @relation(fields: [stockLotId], references: [id])
-  saleProduct SaleProduct @relation(fields: [saleProductId], references: [id])
+  stockLot       StockLot         @relation(fields: [stockLotId], references: [id])
+  saleProduct    SaleProduct      @relation(fields: [saleProductId], references: [id])
+  LotRestoration LotRestoration[]
 
   @@map("stock_lot_usages")
 }
