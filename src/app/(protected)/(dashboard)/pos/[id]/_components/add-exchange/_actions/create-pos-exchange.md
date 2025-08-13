@@ -69,10 +69,10 @@
   - Valide a quantidade devolvida; lance erro se for inválida.
   - Atualize o **Uso de Lote de Estoque**:
     - **Decremente** se for retornado parcialmente; ou
-    - **Delete** o **Produto de Venda** se for retornado integralmente.
+    - **Remova** do **Produto de Venda** se for retornado integralmente.
 - Atualize o **Produto de Venda**:
   - **Decremente** se for retornado parcialmente; ou
-  - **Delete** a **Venda** se for retornado integralmente.
+  - **Remova** da **Venda** se for retornado integralmente.
 
 ### 3. Para cada produto levado
 - Se a quantidade levada for **menor ou igual a zero**, lance erro.

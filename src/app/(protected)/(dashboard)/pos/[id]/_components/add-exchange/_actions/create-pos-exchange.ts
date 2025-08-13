@@ -102,23 +102,24 @@ async function handleReturnedProducts(
           `Invalid quantity for Lot Usage ${lr.stockLotUsageId}.`
         );
 
-      if (lr.quantity == lotUsage.quantity) {
-        // LotUsage fully returned, must be deleted from SaleProduct.
-        await tx.stockLotUsage.delete({ where: { id: lotUsage.id } });
-      }
-
       if (lr.quantity < lotUsage.quantity) {
-        // LotUsage must be decremented.
+        // Partially returned: LotUsage must be decremented.
         await tx.stockLotUsage.update({
           data: { quantity: { decrement: lr.quantity } },
           where: { id: lotUsage.id },
         });
       }
+
+      if (lr.quantity == lotUsage.quantity) {
+        // Fully returned: must be deleted from SaleProduct.
+        await tx.stockLotUsage.delete({ where: { id: lotUsage.id } });
+      }
     }
 
     const fullyReturned = item.quantity == saleItem.totalQty;
 
-    if (fullyReturned) { // Remove from sale.
+    if (fullyReturned) {
+      // Remove from sale.
       sale.products = sale.products.filter(i => i.id != saleItem.id);
 
       await tx.saleProduct.delete({
@@ -128,7 +129,8 @@ async function handleReturnedProducts(
           saleId: sale.id,
         },
       });
-    } else { // Decrease quantity.
+    } else {
+      // Just decrement quantity.
       saleItem.totalQty -= item.quantity;
       saleItem.updatedAt = new Date();
 
@@ -186,9 +188,10 @@ async function handleReplacementProducts(
     const saleItem = sale.products.find(i => i.productId == item.productId);
     const incremented = !!saleItem;
 
-    if (incremented) { // Sale price must be updated.
-      saleItem.totalQty += item.quantity;
+    if (incremented) {
+      // Sale price must be updated.
       saleItem.salePrice = tenantProduct.salePrice;
+      saleItem.totalQty += item.quantity;
       saleItem.updatedAt = new Date();
 
       await tx.saleProduct.update({
@@ -211,7 +214,8 @@ async function handleReplacementProducts(
           stockLotId: dec.stockLotId,
         }))
       });
-    } else { // Normal pick-up.
+    } else {
+      // Normal pick-up.
       const createdItem = await tx.saleProduct.create({
         data: {
           name: tenantProduct.name,
