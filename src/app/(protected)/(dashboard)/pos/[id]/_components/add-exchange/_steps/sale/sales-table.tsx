@@ -192,15 +192,19 @@ export const CustomerSalesTable: FC<CustomerSalesTableProps> = ({
     if (!watchedCustomerId) return;
     if (values.length < 1 || columns.length < 1) return;
 
-    if (!watchedSaleId) {
-      return table.getSelectedRowModel().rows.forEach(
-        row => row.toggleSelected(false)
-      );
-    }
+    // Unselect all.
+    table.getSelectedRowModel().rows.forEach(
+      row => row.toggleSelected(false)
+    );
+
+    if (!watchedSaleId) return;
 
     // Select active row based on the form value because the
     // table state is losed when the component unmounts.
-    const activeRow = table.getRowModel().rows.find(row => row.original.id);
+    const activeRow = table.getRowModel().rows.find(
+      row => row.original.id == watchedSaleId
+    );
+
     if (!!activeRow) activeRow.toggleSelected(true);
   }, [columns, watchedSaleId]);
 
