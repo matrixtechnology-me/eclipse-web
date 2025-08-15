@@ -1,5 +1,4 @@
 import { FC, useState } from "react";
-import { ExchangeReturnedProducts } from "./returned";
 import { ExchangeReplacementProducts } from "./replacement";
 import { useFormContext } from "react-hook-form";
 import { FormSchema } from "../..";
@@ -23,14 +22,12 @@ export const ExchangeProductsFormStep: FC<Props> = ({
     setValidating(true);
 
     try {
-      const formValidations = await Promise.all([
-        form.trigger("products.returned", { shouldFocus: true }),
-        form.trigger("products.replacement", { shouldFocus: true }),
-      ]);
+      const valid = await form.trigger("products.replacement", {
+        shouldFocus: true,
+      });
 
-      if (formValidations.some(validation => !validation)) return;
+      if (!valid) return;
       onContinue();
-
     } finally {
       setValidating(false);
     }
@@ -38,8 +35,6 @@ export const ExchangeProductsFormStep: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <ExchangeReturnedProducts />
-
       <ExchangeReplacementProducts tenantId={tenantId} />
 
       <div className="flex justify-end gap-2 mt-2">

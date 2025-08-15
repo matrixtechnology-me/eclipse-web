@@ -19,6 +19,35 @@ type Props = {
   onContinue: () => void;
 };
 
+/* 
+  A função "getSaleProductTrees" busca os produtos da venda e constrói uma árvore para cada. Naturalmente, o nó raíz de cada árvores é o próprio SaleProduct, com sua quantidade e StockLotUsages de forma flat.
+  As próximas camadas de cada árvore são as composições de SaleProduct expandidas. Elas acompanham sua quantidade utilizada na composição.
+*/
+
+/*
+  A biblioteca "@headless-tree" utiliza uma estrutura similar para renderizar os itens. As tipagens utilizadas junto a ela estão em "../../_types/exchange-tree".
+    "root": pai dos ProductSale, necessário para a lib mas não é exibido.
+    "selectable": são os ProductSale, itens selecionáveis para devolução.
+    "inner": árvores de composições internas, filhas de ProductSale.
+
+  O useMemo "items" formata os resultados de "getSaleProductTrees" para o formato esperado pela lib: todos os nós de forma flat num objeto, com seus IDs como chave. Cada nó tem um campo "children", que contém esses IDs.
+
+  Se um Produto aparece mais de uma vez (ex: compondo outro e individualmete), ocorre conflitos ao utilizar somente seu id como chave.
+  Solução: se for Child de um Produto, sua chave é `{parentId}-{childId}`.
+
+  TODO: Integração com react-hook-form:
+  Primeiro seleciona-se a quantidade devolvida de um SaleProduct ("selectable").
+
+  Alternativa 1 (Recomendada):
+  Buscar flat composition, através do StockService.
+  Para cada produto nessa array, sinalizar na estrutura de árvore que o(s) lote(s) precisa(m) ser escolhido(s).
+  Prover uma forma de selecionar os lotes e adicionar/remover no form schema.
+  Fazer validações pertinentes no form schema.
+
+  Alternativa 2:
+  Reaproveitar a estrutura retornada por "getSaleProductTrees" de alguma forma.
+*/
+
 export const ExchangeReturnedFormStep: FC<Props> = ({
   tenantId,
   onPrev,
@@ -129,6 +158,7 @@ export const ExchangeReturnedFormStep: FC<Props> = ({
       ) : (
         <>
           <ReturnedProductsTree items={items} />
+
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="outline" onClick={onPrev}>
               Voltar
