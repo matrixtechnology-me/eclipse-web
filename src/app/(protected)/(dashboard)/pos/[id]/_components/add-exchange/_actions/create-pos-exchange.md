@@ -1,3 +1,5 @@
+# The below Use Case description is obsolete! It still can be uselful somewhat.
+
 ## [en] Use Case - POS Exchange
 
 ### 1. Retrieve the Sale

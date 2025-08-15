@@ -254,164 +254,169 @@ export const createPosExchangeAction: Action<
   movements,
   discount,
 }) => {
-    if (!posId) throw new BadRequestError("Pos ID is required");
-    if (!tenantId) throw new BadRequestError("Tenant ID is required");
-    if (!saleId) throw new BadRequestError("Sale ID is required");
+    throw new Error("Unavailable service.");
 
-    try {
-      return await prisma.$transaction(async tx => {
-        const sale = await tx.sale.findUnique({
-          where: {
-            id: saleId,
-            tenantId,
-            deletedAt: null,
-          },
-          include: {
-            products: { include: { stockLotUsages: true } },
-            movements: { include: { change: true, payment: true } },
-          },
-        });
+    // todo: should be reanalysed after api contract changed.
+    // todo: readme.md is also obsolete, but can be useful.
 
-        if (!sale) throw new InvalidEntityError("Sale does not exist");
+    // if (!posId) throw new BadRequestError("Pos ID is required");
+    // if (!tenantId) throw new BadRequestError("Tenant ID is required");
+    // if (!saleId) throw new BadRequestError("Sale ID is required");
 
-        const stockService = new StockService(tx, new StockEventService(tx));
+    // try {
+    //   return await prisma.$transaction(async tx => {
+    //     const sale = await tx.sale.findUnique({
+    //       where: {
+    //         id: saleId,
+    //         tenantId,
+    //         deletedAt: null,
+    //       },
+    //       include: {
+    //         products: { include: { stockLotUsages: true } },
+    //         movements: { include: { change: true, payment: true } },
+    //       },
+    //     });
 
-        await handleReturnedProducts(products.returned, sale, tx, stockService);
+    //     if (!sale) throw new InvalidEntityError("Sale does not exist");
 
-        await handleReplacementProducts(
-          products.replacement,
-          sale,
-          tx,
-          stockService,
-          tenantId,
-        );
+    //     const stockService = new StockService(tx, new StockEventService(tx));
 
-        // Movements handling.
-        for (const movement of movements) {
-          if (movement.amount <= 0) throw new InvalidEntityError(
-            `Movement amount must be greater than zero.`
-          );
+    //     await handleReturnedProducts(products.returned, sale, tx, stockService);
 
-          const { type, ...baseData } = movement;
+    //     await handleReplacementProducts(
+    //       products.replacement,
+    //       sale,
+    //       tx,
+    //       stockService,
+    //       tenantId,
+    //     );
 
-          const created = await tx.saleMovement.create({
-            data: {
-              type,
-              saleId: sale.id,
-              ...(movement.type == EExchangeMovementType.Change
-                ? { change: { create: baseData } }
-                : { payment: { create: baseData } }
-              ),
-            },
-            include: { change: true, payment: true },
-          });
+    //     // Movements handling.
+    //     for (const movement of movements) {
+    //       if (movement.amount <= 0) throw new InvalidEntityError(
+    //         `Movement amount must be greater than zero.`
+    //       );
 
-          sale.movements.push(created);
-        }
+    //       const { type, ...baseData } = movement;
 
-        const grossTotal = sale.products.reduce(
-          (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
-          0
-        );
+    //       const created = await tx.saleMovement.create({
+    //         data: {
+    //           type,
+    //           saleId: sale.id,
+    //           ...(movement.type == EExchangeMovementType.Change
+    //             ? { change: { create: baseData } }
+    //             : { payment: { create: baseData } }
+    //           ),
+    //         },
+    //         include: { change: true, payment: true },
+    //       });
 
-        const estimatedTotal = SalePricingCalculator.applyDiscount(
-          createDinero(grossTotal), discount,
-        );
+    //       sale.movements.push(created);
+    //     }
 
-        const paidTotal = sale.movements
-          .filter((mv) => mv.type === ESaleMovementType.Payment)
-          .reduce((sum, mv) => sum + mv.payment!.amount.toNumber(), 0);
+    //     const grossTotal = sale.products.reduce(
+    //       (sum, { salePrice, totalQty }) => sum + salePrice.toNumber() * totalQty,
+    //       0
+    //     );
 
-        await tx.sale.update({
-          data: {
-            paidTotal,
-            estimatedTotal: estimatedTotal.toUnit(),
-            discountVariant: discount?.type,
-            discountValue: discount?.amount,
-            updatedAt: new Date(),
-          },
-          where: {
-            id: sale.id,
-            tenantId: tenantId,
-          },
-        });
+    //     const estimatedTotal = SalePricingCalculator.applyDiscount(
+    //       createDinero(grossTotal), discount,
+    //     );
 
-        const posEvent = await tx.posEvent.create({
-          data: {
-            posId,
-            type: EPosEventType.Exchange,
-            status: EPosEventStatus.Processed,
-          },
-        });
+    //     const paidTotal = sale.movements
+    //       .filter((mv) => mv.type === ESaleMovementType.Payment)
+    //       .reduce((sum, mv) => sum + mv.payment!.amount.toNumber(), 0);
 
-        const posEventExchange = await tx.posEventExchange.create({
-          data: {
-            id: posEvent.id,
-            movements: { createMany: { data: movements } },
-            discountVariant: discount?.type,
-            discountValue: discount?.amount,
-            saleId: sale.id,
-          },
-        });
+    //     await tx.sale.update({
+    //       data: {
+    //         paidTotal,
+    //         estimatedTotal: estimatedTotal.toUnit(),
+    //         discountVariant: discount?.type,
+    //         discountValue: discount?.amount,
+    //         updatedAt: new Date(),
+    //       },
+    //       where: {
+    //         id: sale.id,
+    //         tenantId: tenantId,
+    //       },
+    //     });
 
-        for (const item of products.returned) {
-          await tx.posEventExchangeReturn.create({
-            data: {
-              posEventExchangeId: posEventExchange.id,
-              productId: item.productId,
-              quantity: item.quantity,
-              lotRestorations: {
-                createMany: { data: item.lotRestorations },
-              },
-            },
-          });
-        }
+    //     const posEvent = await tx.posEvent.create({
+    //       data: {
+    //         posId,
+    //         type: EPosEventType.Exchange,
+    //         status: EPosEventStatus.Processed,
+    //       },
+    //     });
 
-        for (const item of products.replacement) {
-          const tenantProduct = await tx.product.findUnique({
-            where: {
-              id: item.productId,
-              tenantId,
-              deletedAt: null,
-            },
-          });
+    //     const posEventExchange = await tx.posEventExchange.create({
+    //       data: {
+    //         id: posEvent.id,
+    //         movements: { createMany: { data: movements } },
+    //         discountVariant: discount?.type,
+    //         discountValue: discount?.amount,
+    //         saleId: sale.id,
+    //       },
+    //     });
 
-          if (!tenantProduct) throw new InvalidEntityError(
-            `Product ${item.productId} does not exist.`
-          );
+    //     for (const item of products.returned) {
+    //       await tx.posEventExchangeReturn.create({
+    //         data: {
+    //           posEventExchangeId: posEventExchange.id,
+    //           productId: item.productId,
+    //           quantity: item.quantity,
+    //           lotRestorations: {
+    //             createMany: { data: item.lotRestorations },
+    //           },
+    //         },
+    //       });
+    //     }
 
-          await tx.posEventExchangeReplacement.create({
-            data: {
-              posEventExchangeId: posEventExchange.id,
-              productId: item.productId,
-              quantity: item.quantity,
-              salePrice: tenantProduct.salePrice,
-            },
-          });
-        }
+    //     for (const item of products.replacement) {
+    //       const tenantProduct = await tx.product.findUnique({
+    //         where: {
+    //           id: item.productId,
+    //           tenantId,
+    //           deletedAt: null,
+    //         },
+    //       });
 
-        return success({ posEventExchangeId: posEventExchange.id });
-      });
-    } catch (error: unknown) {
-      console.error("Failed to create pos exchange:", error);
+    //       if (!tenantProduct) throw new InvalidEntityError(
+    //         `Product ${item.productId} does not exist.`
+    //       );
 
-      if (error instanceof Error) {
-        const message = error.message;
+    //       await tx.posEventExchangeReplacement.create({
+    //         data: {
+    //           posEventExchangeId: posEventExchange.id,
+    //           productId: item.productId,
+    //           quantity: item.quantity,
+    //           salePrice: tenantProduct.salePrice,
+    //         },
+    //       });
+    //     }
 
-        switch (error.constructor) {
-          case InvalidParamError:
-            return failure(new UnprocessableEntityError(message));
-          case InvalidEntityError:
-            return failure(new UnprocessableEntityError(message));
-          case InsufficientUnitsError:
-            return failure(new UnprocessableEntityError(message));
-        }
-      }
+    //     return success({ posEventExchangeId: posEventExchange.id });
+    //   });
+    // } catch (error: unknown) {
+    //   console.error("Failed to create pos exchange:", error);
 
-      return failure(
-        new InternalServerError("Erro ao criar troca", {
-          originalError: error instanceof Error ? error.message : String(error),
-        })
-      );
-    }
+    //   if (error instanceof Error) {
+    //     const message = error.message;
+
+    //     switch (error.constructor) {
+    //       case InvalidParamError:
+    //         return failure(new UnprocessableEntityError(message));
+    //       case InvalidEntityError:
+    //         return failure(new UnprocessableEntityError(message));
+    //       case InsufficientUnitsError:
+    //         return failure(new UnprocessableEntityError(message));
+    //     }
+    //   }
+
+    //   return failure(
+    //     new InternalServerError("Erro ao criar troca", {
+    //       originalError: error instanceof Error ? error.message : String(error),
+    //     })
+    //   );
+    // }
   }
