@@ -175,8 +175,13 @@ export const AddProduct = ({ appendProduct, tenantId, fields }: IProps) => {
     ? salePrice * quantity
     : undefined;
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) form.reset(formDefaultValues);
+    setOpen(open);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="h-9 gap-2">
           <PlusIcon className="size-4" />

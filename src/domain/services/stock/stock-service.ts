@@ -19,8 +19,21 @@ export type DecreaseParams = {
   decreaseQty: number;
 }
 
+export type RestoreParams = {
+  lotRestorations: Array<{
+    stockLotUsageId: string;
+    quantity: number;
+  }>;
+  // tenantId: string;
+}
+
 export type DecreaseResult = EitherResult<
   { decrements: StockLotDecrement[] },
+  InvalidParamError | InsufficientUnitsError | UnprocessableEntityError
+>;
+
+export type RestoreResult = EitherResult<
+  void,
   InvalidParamError | InsufficientUnitsError | UnprocessableEntityError
 >;
 
@@ -46,7 +59,7 @@ export class StockService {
     private readonly stockEventService: StockEventService,
   ) {};
 
-  // TODO: unit tests.
+  // todo: tests with postgres instance.
   public async getFlatCompositions(productId: string): Promise<GetFlatCompositionsResult> {
     type RESULT_SET = [{
       to_jsonb: Array<{
@@ -92,8 +105,8 @@ export class StockService {
     return success(Array.from(map.values()));
   }
 
-  // TODO: unit tests.
-  // TODO: raise exception on its database function.
+  // todo: tests with postgres instance.
+  // todo: raise exception on its database function.
   public async getAvailableQty(productId: string): Promise<GetAvailableQtyResult> {
     // DB get_available_qty function is defined on 
     // migration "20250723125301_feat".
@@ -104,7 +117,7 @@ export class StockService {
     return success(resultSet[0]?.available_qty || 0);
   }
 
-  // TODO: unit tests.
+  // todo: tests with postgres instance.
   public async decrease({
     productId,
     decreaseQty,
@@ -182,6 +195,53 @@ export class StockService {
       }
 
       return failure(new Error(JSON.stringify(err)));
+    }
+  }
+
+  // todo: tests with postgres instance.
+  // todo: manual tests.
+  public async restore(lotRestorations: Array<{
+    stockLotUsageId: string;
+    quantity: number;
+  }>) {
+    try {
+      for (const restoration of lotRestorations) {
+        const lotUsage = await this.prisma.stockLotUsage.findUnique({
+          where: { id: restoration.stockLotUsageId },
+          include: { stockLot: true },
+        });
+
+        if (!lotUsage) throw new InvalidEntityError(
+          `Lot Usage ${restoration.stockLotUsageId} does not exist.`
+        );
+
+        const stockLot = lotUsage.stockLot;
+
+        // Increment related Stock Lot.
+        await this.prisma.stockLot.update({
+          data: {
+            totalQty: { increment: restoration.quantity },
+            updatedAt: new Date(),
+          },
+          where: { id: stockLot.id },
+        });
+
+        // Increment related Stock.
+        await this.prisma.stock.update({
+          data: {
+            availableQty: { increment: restoration.quantity },
+            totalQty: { increment: restoration.quantity },
+            updatedAt: new Date(),
+          },
+          where: { id: stockLot.stockId },
+        });
+      }
+    } catch (err) {
+      console.error(`StockService.restore error: ${JSON.stringify(err)}`);
+
+      return failure(
+        err instanceof Error ? err : new Error(JSON.stringify(err))
+      );
     }
   }
 }

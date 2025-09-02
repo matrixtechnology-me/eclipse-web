@@ -146,7 +146,7 @@ export const getSalesAction: Action<
         },
         costPrice: saleCostPrice,
         salePrice: sale.products.reduce(
-          (acc, p) => acc + p.salePrice.toNumber(),
+          (acc, p) => acc + (p.salePrice.toNumber() * p.totalQty),
           0
         ),
         totalItems: sale.products.reduce((acc, p) => acc + p.totalQty, 0),

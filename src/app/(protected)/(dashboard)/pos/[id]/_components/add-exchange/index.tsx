@@ -20,10 +20,9 @@ import TitledStepper from "@/components/titled-stepper";
 import { ExchangeSaleFormStep } from "./_steps/sale";
 import { ExchangeProductsFormStep } from "./_steps/products";
 import { ExchangePricingFormStep } from "./_steps/pricing";
-// import { createPosSalePaymentAction } from "./_actions/create-pos-sale-payment";
-// import { revalidate } from "./_actions/revalidate";
+import { ExchangeReturnedFormStep } from "./_steps/returned";
 
-// This data willa also be used for rendering.
+// This data will also be used for rendering.
 // Not all this structure is used for data collection.
 const formSchema = z.object({
   customerId: z
@@ -173,9 +172,9 @@ export const AddExchange: FC<AddExchangeProps> = ({
     },
     {
       step: 2,
-      title: "Produtos",
+      title: "Devolvidos",
       element:
-        <ExchangeProductsFormStep
+        <ExchangeReturnedFormStep
           tenantId={tenantId}
           onPrev={() => setStep(1)}
           onContinue={() => setStep(3)}
@@ -183,10 +182,20 @@ export const AddExchange: FC<AddExchangeProps> = ({
     },
     {
       step: 3,
+      title: "Produtos",
+      element:
+        <ExchangeProductsFormStep
+          tenantId={tenantId}
+          onPrev={() => setStep(2)}
+          onContinue={() => setStep(4)}
+        />,
+    },
+    {
+      step: 4,
       title: "Precificação",
       element:
         <ExchangePricingFormStep
-          onPrev={() => setStep(2)}
+          onPrev={() => setStep(3)}
           onContinue={form.handleSubmit(onSubmit)}
         />,
     },
