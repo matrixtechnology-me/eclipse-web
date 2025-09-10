@@ -1,7 +1,4 @@
-// Adicionando logs para rastreamento
-const log = (...args: any[]) =>
-  console.log("[authenticateUserAction]", ...args);
-("use server");
+"use server";
 
 import { COOKIE_KEYS } from "@/config/cookie-keys";
 import { PATHS } from "@/config/paths";
@@ -30,6 +27,9 @@ export const authenticateUserAction: Action<
   AuthenticateUserActionPayload,
   AuthenticateUserActionResult
 > = async ({ email, password }) => {
+  const log = (...args: any[]) =>
+    console.log("[authenticateUserAction]", ...args);
+
   try {
     log("Iniciando autenticação", { email });
     if (!email || !password) {
