@@ -44,7 +44,7 @@ export const DoNotDisturb: FC<DoNotDisturbProps> = ({
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-2">
       <Label htmlFor="do-not-disturb-switch">Não perturbe</Label>
       <Switch
         id="do-not-disturb-switch"

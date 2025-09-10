@@ -6,9 +6,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserIcon } from "lucide-react";
+import { SettingsIcon, UserIcon } from "lucide-react";
 import { LogOut } from "./log-out";
 import { ThemeSwitcher } from "./theme-switcher";
+import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 
 export function Account() {
   return (
@@ -23,6 +24,14 @@ export function Account() {
           <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
           <ThemeSwitcher />
         </div>
+        <DropdownMenuSeparator />
+        <Button
+          variant="ghost"
+          className="w-full flex items-center justify-start gap-2"
+        >
+          <SettingsIcon size="size-4" />
+          Configurações
+        </Button>
         <DropdownMenuSeparator />
         <LogOut />
       </DropdownMenuContent>
