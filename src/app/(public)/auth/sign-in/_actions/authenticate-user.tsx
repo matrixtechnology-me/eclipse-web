@@ -1,4 +1,7 @@
-"use server";
+// Adicionando logs para rastreamento
+const log = (...args: any[]) =>
+  console.log("[authenticateUserAction]", ...args);
+("use server");
 
 import { COOKIE_KEYS } from "@/config/cookie-keys";
 import { PATHS } from "@/config/paths";
@@ -28,7 +31,9 @@ export const authenticateUserAction: Action<
   AuthenticateUserActionResult
 > = async ({ email, password }) => {
   try {
+    log("Iniciando autenticação", { email });
     if (!email || !password) {
+      log("Email ou senha não informados");
       return failure(
         new InvalidCredentialsError("Email and password are required", {
           attributes: {
@@ -40,6 +45,7 @@ export const authenticateUserAction: Action<
       );
     }
 
+    log("Buscando usuário no banco de dados");
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
@@ -51,6 +57,7 @@ export const authenticateUserAction: Action<
     });
 
     if (!user) {
+      log("Usuário não encontrado");
       return failure(
         new NotFoundError("User not found", {
           attributes: {
@@ -63,6 +70,7 @@ export const authenticateUserAction: Action<
     }
 
     if (!user.active) {
+      log("Conta do usuário está desativada");
       return failure(
         new InvalidCredentialsError("User account is inactive", {
           attributes: {
@@ -75,14 +83,14 @@ export const authenticateUserAction: Action<
       );
     }
 
+    log("Verificando senha");
     const hashingService = new HashingService();
-
     const passwordMatch = await hashingService.comparePassword(
       password,
       user.password
     );
-
     if (!passwordMatch) {
+      log("Senha incorreta");
       return failure(
         new InvalidCredentialsError("Invalid credentials", {
           attributes: {
@@ -94,6 +102,7 @@ export const authenticateUserAction: Action<
       );
     }
 
+    log("Senha correta, gerando tokens e cookies");
     const jwtService = new JwtService();
     const cookieStore = await cookies();
 
@@ -111,6 +120,7 @@ export const authenticateUserAction: Action<
     });
 
     if (user.firstAccess) {
+      log("Primeiro acesso detectado, redirecionando para onboarding");
       return success({ href: PATHS.PUBLIC.AUTH.FIRST_ACCESS });
     }
 
@@ -135,6 +145,7 @@ export const authenticateUserAction: Action<
       secure: process.env.NODE_ENV === "production",
     });
 
+    log("Buscando tenant do usuário");
     const tenant = await prisma.tenant.findFirst({
       where: {
         memberships: {
@@ -155,6 +166,7 @@ export const authenticateUserAction: Action<
     });
 
     if (!tenant) {
+      log("Nenhum tenant encontrado, redirecionando para onboarding");
       return success({ href: PATHS.PROTECTED.GET_STARTED });
     }
 
@@ -166,9 +178,10 @@ export const authenticateUserAction: Action<
       secure: process.env.NODE_ENV === "production",
     });
 
+    log("Autenticação finalizada com sucesso, redirecionando para dashboard");
     return success({ href: PATHS.PROTECTED.DASHBOARD.HOMEPAGE });
   } catch (error: unknown) {
-    console.error(error);
+    log("Erro inesperado", error);
     return failure(
       new InternalServerError("Unable to authenticate user", {
         attributes: {
